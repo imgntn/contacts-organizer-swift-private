@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support - Contacts Organizer</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #007AFF;
+            border-bottom: 2px solid #007AFF;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #555;
+            margin-top: 30px;
+        }
+        .faq-item {
+            background-color: #F5F5F5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .faq-question {
+            font-weight: bold;
+            color: #007AFF;
+            margin-bottom: 10px;
+        }
+        .contact-box {
+            background-color: #E3F2FD;
+            padding: 20px;
+            border-radius: 5px;
+            border-left: 4px solid #007AFF;
+            margin: 30px 0;
+        }
+        .feature-list {
+            background-color: #F5F5F5;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        code {
+            background-color: #F0F0F0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Contacts Organizer Support</h1>
+    <p>Welcome to Contacts Organizer support. Find answers to common questions and learn how to get the most out of the app.</p>
+
+    <h2>Getting Started</h2>
+    <div class="feature-list">
+        <h3>Key Features:</h3>
+        <ul>
+            <li><strong>Duplicate Detection:</strong> Automatically finds duplicate contacts using smart matching</li>
+            <li><strong>Merge Contacts:</strong> Combine duplicates while preserving all information</li>
+            <li><strong>Data Quality:</strong> Identify contacts with missing or incomplete information</li>
+            <li><strong>Smart Groups:</strong> Automatically organize contacts by organization, criteria, or custom rules</li>
+            <li><strong>Contact Backup:</strong> Create safe backups of your contacts before making changes</li>
+        </ul>
+    </div>
+
+    <h2>Frequently Asked Questions</h2>
+
+    <div class="faq-item">
+        <div class="faq-question">Q: Is my contact data safe?</div>
+        <div class="faq-answer">
+            <p>Yes! All processing happens locally on your Mac. Your contact data never leaves your device. We recommend creating a backup before making any changes.</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-question">Q: How do I grant Contacts permission?</div>
+        <div class="faq-answer">
+            <p>When you first launch the app, you'll be prompted to grant Contacts access. If you denied permission, you can enable it in:</p>
+            <p><code>System Settings → Privacy & Security → Contacts</code></p>
+            <p>Then check the box next to "Contacts Organizer".</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-question">Q: How do I create a backup?</div>
+        <div class="faq-answer">
+            <p>You can create a backup in two ways:</p>
+            <ul>
+                <li><strong>First Launch:</strong> You'll be prompted to create a backup on first launch</li>
+                <li><strong>Settings:</strong> Open Settings (⌘,) → General → Click "Backup All Contacts"</li>
+            </ul>
+            <p>Contacts Organizer creates TWO backups: one in your chosen location and a safety copy in the app's folder.</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-question">Q: How does duplicate detection work?</div>
+        <div class="faq-answer">
+            <p>The app uses multiple matching strategies:</p>
+            <ul>
+                <li>Exact name matching</li>
+                <li>Similar name matching (fuzzy matching)</li>
+                <li>Same phone number</li>
+                <li>Same email address</li>
+            </ul>
+            <p>Each duplicate group shows a confidence score to help you decide which matches are accurate.</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-question">Q: What happens when I merge contacts?</div>
+        <div class="faq-answer">
+            <p>When merging contacts:</p>
+            <ul>
+                <li>All phone numbers, emails, and addresses are combined (no duplicates)</li>
+                <li>Organization info, notes, and photos are preserved</li>
+                <li>The duplicate contacts are deleted</li>
+                <li>You choose which contact becomes the "primary" one to keep</li>
+            </ul>
+            <p><strong>Important:</strong> This action cannot be undone, so create a backup first!</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-question">Q: What are Smart Groups?</div>
+        <div class="faq-answer">
+            <p>Smart Groups automatically organize your contacts based on:</p>
+            <ul>
+                <li><strong>Organization:</strong> Groups contacts by company/organization</li>
+                <li><strong>Custom Rules:</strong> Create groups based on criteria like "has photo", "missing email", etc.</li>
+            </ul>
+            <p>Smart groups are read-only and help you visualize your contact organization.</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-question">Q: Can I undo changes?</div>
+        <div class="faq-answer">
+            <p>Contact merges and deletions cannot be undone within the app. However, you can restore from your backup:</p>
+            <ol>
+                <li>Open the Contacts app</li>
+                <li>Go to File → Import</li>
+                <li>Select your backup .vcf file</li>
+            </ol>
+            <p>This is why we strongly recommend creating a backup before making changes!</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-question">Q: Why can't the app access my contacts?</div>
+        <div class="faq-answer">
+            <p>If you're having permission issues:</p>
+            <ol>
+                <li>Open System Settings → Privacy & Security → Contacts</li>
+                <li>Ensure "Contacts Organizer" is checked</li>
+                <li>If it's not in the list, try restarting the app</li>
+                <li>If problems persist, try restarting your Mac</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-question">Q: How do I reset the onboarding?</div>
+        <div class="faq-answer">
+            <p>To see the onboarding tutorial again:</p>
+            <ol>
+                <li>Open Settings (⌘,)</li>
+                <li>Go to the General tab</li>
+                <li>Scroll to Debug section</li>
+                <li>Click "Reset Onboarding"</li>
+            </ol>
+        </div>
+    </div>
+
+    <h2>Tips & Best Practices</h2>
+    <div class="feature-list">
+        <ul>
+            <li><strong>Always Backup First:</strong> Create a backup before merging or cleaning up contacts</li>
+            <li><strong>Review Duplicates:</strong> Check the confidence score and review matches before merging</li>
+            <li><strong>Use Smart Groups:</strong> Identify contacts missing important information</li>
+            <li><strong>Regular Cleanup:</strong> Periodically check for duplicates and data quality issues</li>
+            <li><strong>Auto-Refresh:</strong> Enable auto-refresh in Settings for the latest contact data</li>
+        </ul>
+    </div>
+
+    <h2>System Requirements</h2>
+    <ul>
+        <li>macOS 14.0 or later</li>
+        <li>Contacts access permission</li>
+    </ul>
+
+    <h2>Known Issues</h2>
+    <p>Currently, there are no known major issues. If you encounter any problems, please contact support.</p>
+
+    <div class="contact-box">
+        <h2>Need More Help?</h2>
+        <p>If you couldn't find the answer to your question, please contact us:</p>
+        <p><strong>Email:</strong> [YOUR_EMAIL_HERE]</p>
+        <p><strong>Developer:</strong> Playable Future LLC</p>
+        <p>We typically respond within 24-48 hours.</p>
+    </div>
+
+    <hr style="margin-top: 40px; border: none; border-top: 1px solid #DDD;">
+    <p style="text-align: center; color: #888; font-size: 0.9em;">
+        © 2025 Playable Future LLC. All rights reserved.<br>
+        <a href="privacy-policy.html">Privacy Policy</a>
+    </p>
+</body>
+</html>

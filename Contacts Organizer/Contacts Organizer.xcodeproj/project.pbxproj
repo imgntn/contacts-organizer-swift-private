@@ -1,0 +1,630 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		7D7093EB2EB6D1B60073F556 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 7D7093DC2EB6D1B60073F556 /* Info.plist */; };
+		7D7093EC2EB6D1B60073F556 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7093E02EB6D1B60073F556 /* DashboardView.swift */; };
+		7D7093ED2EB6D1B60073F556 /* PermissionRequestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7093E62EB6D1B60073F556 /* PermissionRequestView.swift */; };
+		7D7093EE2EB6D1B60073F556 /* DuplicatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7093E12EB6D1B60073F556 /* DuplicatesView.swift */; };
+		7D7093EF2EB6D1B60073F556 /* ContactModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7093D42EB6D1B60073F556 /* ContactModels.swift */; };
+		7D7093F02EB6D1B60073F556 /* ContactsOrganizerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7093D12EB6D1B60073F556 /* ContactsOrganizerApp.swift */; };
+		7D7093F12EB6D1B60073F556 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7093D32EB6D1B60073F556 /* AppState.swift */; };
+		7D7093F22EB6D1B60073F556 /* DuplicateDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7093D92EB6D1B60073F556 /* DuplicateDetector.swift */; };
+		7D7093F32EB6D1B60073F556 /* CleanupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7093DE2EB6D1B60073F556 /* CleanupView.swift */; };
+		7D7093F42EB6D1B60073F556 /* DataQualityAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7093D82EB6D1B60073F556 /* DataQualityAnalyzer.swift */; };
+		7D7093F52EB6D1B60073F556 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7093E52EB6D1B60073F556 /* OnboardingView.swift */; };
+		7D7093F62EB6D1B60073F556 /* ContactsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7093D72EB6D1B60073F556 /* ContactsManager.swift */; };
+		7D7093F72EB6D1B60073F556 /* GroupsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7093E22EB6D1B60073F556 /* GroupsView.swift */; };
+		7D7093F82EB6D1B60073F556 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7093E82EB6D1B60073F556 /* ContentView.swift */; };
+		7D7093F92EB6D1B60073F556 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7093E92EB6D1B60073F556 /* SettingsView.swift */; };
+		7D8C3D642EB7159C0090A507 /* FirstBackupSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D8C3D632EB7159C0090A507 /* FirstBackupSheet.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		7D8C3D6D2EB9A60D0090A507 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7D7093BB2EB6D1340073F556 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7D7093C22EB6D1340073F556;
+			remoteInfo = "Contacts Organizer";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		7D6D47F22EB6F56C007E79AF /* Contacts-Organizer-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Contacts-Organizer-Info.plist"; sourceTree = "<group>"; };
+		7D7093C32EB6D1340073F556 /* Contacts Organizer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Contacts Organizer.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		7D7093D12EB6D1B60073F556 /* ContactsOrganizerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsOrganizerApp.swift; sourceTree = "<group>"; };
+		7D7093D32EB6D1B60073F556 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		7D7093D42EB6D1B60073F556 /* ContactModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactModels.swift; sourceTree = "<group>"; };
+		7D7093D72EB6D1B60073F556 /* ContactsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsManager.swift; sourceTree = "<group>"; };
+		7D7093D82EB6D1B60073F556 /* DataQualityAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataQualityAnalyzer.swift; sourceTree = "<group>"; };
+		7D7093D92EB6D1B60073F556 /* DuplicateDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuplicateDetector.swift; sourceTree = "<group>"; };
+		7D7093DB2EB6D1B60073F556 /* ContactsOrganizer.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ContactsOrganizer.entitlements; sourceTree = "<group>"; };
+		7D7093DC2EB6D1B60073F556 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		7D7093DE2EB6D1B60073F556 /* CleanupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleanupView.swift; sourceTree = "<group>"; };
+		7D7093E02EB6D1B60073F556 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		7D7093E12EB6D1B60073F556 /* DuplicatesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuplicatesView.swift; sourceTree = "<group>"; };
+		7D7093E22EB6D1B60073F556 /* GroupsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupsView.swift; sourceTree = "<group>"; };
+		7D7093E52EB6D1B60073F556 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		7D7093E62EB6D1B60073F556 /* PermissionRequestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionRequestView.swift; sourceTree = "<group>"; };
+		7D7093E82EB6D1B60073F556 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		7D7093E92EB6D1B60073F556 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		7D8C3D622EB70B6F0090A507 /* NSContactsUsageDescription.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = NSContactsUsageDescription.txt; sourceTree = "<group>"; };
+		7D8C3D632EB7159C0090A507 /* FirstBackupSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstBackupSheet.swift; sourceTree = "<group>"; };
+		7D8C3D692EB9A60D0090A507 /* Contacts OrganizerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Contacts OrganizerTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		7D8C3D6A2EB9A60D0090A507 /* Contacts OrganizerTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Contacts OrganizerTests";
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		7D7093C02EB6D1340073F556 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7D8C3D662EB9A60D0090A507 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		7D7093BA2EB6D1340073F556 = {
+			isa = PBXGroup;
+			children = (
+				7D8C3D622EB70B6F0090A507 /* NSContactsUsageDescription.txt */,
+				7D6D47F22EB6F56C007E79AF /* Contacts-Organizer-Info.plist */,
+				7D7093D22EB6D1B60073F556 /* App */,
+				7D7093D52EB6D1B60073F556 /* Models */,
+				7D7093D62EB6D1B60073F556 /* Resources */,
+				7D7093DA2EB6D1B60073F556 /* Services */,
+				7D7093DD2EB6D1B60073F556 /* SupportingFiles */,
+				7D7093EA2EB6D1B60073F556 /* Views */,
+				7D8C3D6A2EB9A60D0090A507 /* Contacts OrganizerTests */,
+				7D7093C42EB6D1340073F556 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		7D7093C42EB6D1340073F556 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				7D7093C32EB6D1340073F556 /* Contacts Organizer.app */,
+				7D8C3D692EB9A60D0090A507 /* Contacts OrganizerTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		7D7093D22EB6D1B60073F556 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				7D7093D12EB6D1B60073F556 /* ContactsOrganizerApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		7D7093D52EB6D1B60073F556 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				7D7093D32EB6D1B60073F556 /* AppState.swift */,
+				7D7093D42EB6D1B60073F556 /* ContactModels.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		7D7093D62EB6D1B60073F556 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		7D7093DA2EB6D1B60073F556 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				7D7093D72EB6D1B60073F556 /* ContactsManager.swift */,
+				7D7093D82EB6D1B60073F556 /* DataQualityAnalyzer.swift */,
+				7D7093D92EB6D1B60073F556 /* DuplicateDetector.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		7D7093DD2EB6D1B60073F556 /* SupportingFiles */ = {
+			isa = PBXGroup;
+			children = (
+				7D7093DB2EB6D1B60073F556 /* ContactsOrganizer.entitlements */,
+				7D7093DC2EB6D1B60073F556 /* Info.plist */,
+			);
+			path = SupportingFiles;
+			sourceTree = "<group>";
+		};
+		7D7093DF2EB6D1B60073F556 /* Cleanup */ = {
+			isa = PBXGroup;
+			children = (
+				7D7093DE2EB6D1B60073F556 /* CleanupView.swift */,
+			);
+			path = Cleanup;
+			sourceTree = "<group>";
+		};
+		7D7093E32EB6D1B60073F556 /* Dashboard */ = {
+			isa = PBXGroup;
+			children = (
+				7D7093E02EB6D1B60073F556 /* DashboardView.swift */,
+				7D7093E12EB6D1B60073F556 /* DuplicatesView.swift */,
+				7D7093E22EB6D1B60073F556 /* GroupsView.swift */,
+			);
+			path = Dashboard;
+			sourceTree = "<group>";
+		};
+		7D7093E42EB6D1B60073F556 /* DuplicateDetection */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = DuplicateDetection;
+			sourceTree = "<group>";
+		};
+		7D7093E72EB6D1B60073F556 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				7D7093E52EB6D1B60073F556 /* OnboardingView.swift */,
+				7D7093E62EB6D1B60073F556 /* PermissionRequestView.swift */,
+				7D8C3D632EB7159C0090A507 /* FirstBackupSheet.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		7D7093EA2EB6D1B60073F556 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				7D7093DF2EB6D1B60073F556 /* Cleanup */,
+				7D7093E32EB6D1B60073F556 /* Dashboard */,
+				7D7093E42EB6D1B60073F556 /* DuplicateDetection */,
+				7D7093E72EB6D1B60073F556 /* Onboarding */,
+				7D7093E82EB6D1B60073F556 /* ContentView.swift */,
+				7D7093E92EB6D1B60073F556 /* SettingsView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		7D7093C22EB6D1340073F556 /* Contacts Organizer */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7D7093CE2EB6D1350073F556 /* Build configuration list for PBXNativeTarget "Contacts Organizer" */;
+			buildPhases = (
+				7D7093BF2EB6D1340073F556 /* Sources */,
+				7D7093C02EB6D1340073F556 /* Frameworks */,
+				7D7093C12EB6D1340073F556 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Contacts Organizer";
+			packageProductDependencies = (
+			);
+			productName = "Contacts Organizer";
+			productReference = 7D7093C32EB6D1340073F556 /* Contacts Organizer.app */;
+			productType = "com.apple.product-type.application";
+		};
+		7D8C3D682EB9A60D0090A507 /* Contacts OrganizerTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7D8C3D6F2EB9A60D0090A507 /* Build configuration list for PBXNativeTarget "Contacts OrganizerTests" */;
+			buildPhases = (
+				7D8C3D652EB9A60D0090A507 /* Sources */,
+				7D8C3D662EB9A60D0090A507 /* Frameworks */,
+				7D8C3D672EB9A60D0090A507 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				7D8C3D6E2EB9A60D0090A507 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				7D8C3D6A2EB9A60D0090A507 /* Contacts OrganizerTests */,
+			);
+			name = "Contacts OrganizerTests";
+			packageProductDependencies = (
+			);
+			productName = "Contacts OrganizerTests";
+			productReference = 7D8C3D692EB9A60D0090A507 /* Contacts OrganizerTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		7D7093BB2EB6D1340073F556 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2600;
+				LastUpgradeCheck = 2600;
+				TargetAttributes = {
+					7D7093C22EB6D1340073F556 = {
+						CreatedOnToolsVersion = 26.0.1;
+					};
+					7D8C3D682EB9A60D0090A507 = {
+						CreatedOnToolsVersion = 26.0.1;
+						TestTargetID = 7D7093C22EB6D1340073F556;
+					};
+				};
+			};
+			buildConfigurationList = 7D7093BE2EB6D1340073F556 /* Build configuration list for PBXProject "Contacts Organizer" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 7D7093BA2EB6D1340073F556;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 7D7093C42EB6D1340073F556 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				7D7093C22EB6D1340073F556 /* Contacts Organizer */,
+				7D8C3D682EB9A60D0090A507 /* Contacts OrganizerTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		7D7093C12EB6D1340073F556 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7D7093EB2EB6D1B60073F556 /* Info.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7D8C3D672EB9A60D0090A507 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		7D7093BF2EB6D1340073F556 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7D7093EC2EB6D1B60073F556 /* DashboardView.swift in Sources */,
+				7D7093ED2EB6D1B60073F556 /* PermissionRequestView.swift in Sources */,
+				7D7093EE2EB6D1B60073F556 /* DuplicatesView.swift in Sources */,
+				7D7093EF2EB6D1B60073F556 /* ContactModels.swift in Sources */,
+				7D7093F02EB6D1B60073F556 /* ContactsOrganizerApp.swift in Sources */,
+				7D7093F12EB6D1B60073F556 /* AppState.swift in Sources */,
+				7D7093F22EB6D1B60073F556 /* DuplicateDetector.swift in Sources */,
+				7D7093F32EB6D1B60073F556 /* CleanupView.swift in Sources */,
+				7D7093F42EB6D1B60073F556 /* DataQualityAnalyzer.swift in Sources */,
+				7D7093F52EB6D1B60073F556 /* OnboardingView.swift in Sources */,
+				7D7093F62EB6D1B60073F556 /* ContactsManager.swift in Sources */,
+				7D7093F72EB6D1B60073F556 /* GroupsView.swift in Sources */,
+				7D7093F82EB6D1B60073F556 /* ContentView.swift in Sources */,
+				7D7093F92EB6D1B60073F556 /* SettingsView.swift in Sources */,
+				7D8C3D642EB7159C0090A507 /* FirstBackupSheet.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7D8C3D652EB9A60D0090A507 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		7D8C3D6E2EB9A60D0090A507 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7D7093C22EB6D1340073F556 /* Contacts Organizer */;
+			targetProxy = 7D8C3D6D2EB9A60D0090A507 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		7D7093CC2EB6D1350073F556 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_ENTITLEMENTS[sdk=*]" = SupportingFiles/ContactsOrganizer.entitlements;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = FBK354237N;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		7D7093CD2EB6D1350073F556 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_ENTITLEMENTS[sdk=*]" = SupportingFiles/ContactsOrganizer.entitlements;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = FBK354237N;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		7D7093CF2EB6D1350073F556 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = FBK354237N;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = NO;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = YES;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Contacts-Organizer-Info.plist";
+				INFOPLIST_KEY_NSContactsUsageDescription = "Contacts Organizer needs access to your contacts so that we can help you get organized.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.playablefuture.Contacts-Organizer";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		7D7093D02EB6D1350073F556 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = FBK354237N;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = NO;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = YES;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Contacts-Organizer-Info.plist";
+				INFOPLIST_KEY_NSContactsUsageDescription = "Contacts Organizer needs access to your contacts so that we can help you get organized.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.playablefuture.Contacts-Organizer";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		7D8C3D702EB9A60D0090A507 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = FBK354237N;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.playablefuture.Contacts-OrganizerTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Contacts Organizer.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Contacts Organizer";
+			};
+			name = Debug;
+		};
+		7D8C3D712EB9A60D0090A507 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = FBK354237N;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.playablefuture.Contacts-OrganizerTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Contacts Organizer.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Contacts Organizer";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		7D7093BE2EB6D1340073F556 /* Build configuration list for PBXProject "Contacts Organizer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7D7093CC2EB6D1350073F556 /* Debug */,
+				7D7093CD2EB6D1350073F556 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7D7093CE2EB6D1350073F556 /* Build configuration list for PBXNativeTarget "Contacts Organizer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7D7093CF2EB6D1350073F556 /* Debug */,
+				7D7093D02EB6D1350073F556 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7D8C3D6F2EB9A60D0090A507 /* Build configuration list for PBXNativeTarget "Contacts OrganizerTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7D8C3D702EB9A60D0090A507 /* Debug */,
+				7D8C3D712EB9A60D0090A507 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 7D7093BB2EB6D1340073F556 /* Project object */;
+}
