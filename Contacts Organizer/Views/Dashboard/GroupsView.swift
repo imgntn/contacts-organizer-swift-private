@@ -11,7 +11,6 @@ import Contacts
 struct GroupsView: View {
     @EnvironmentObject var contactsManager: ContactsManager
     @State private var showCreateGroupSheet = false
-    @State private var showSmartGroupSheet = false
     @State private var smartGroupResults: [SmartGroupResult] = []
     @State private var selectedTab: GroupTab = .manual
     @State private var isCreatingGroups = false
@@ -24,6 +23,7 @@ struct GroupsView: View {
     @State private var isCleaningDuplicates = false
     @State private var showCleanupResults = false
     @State private var cleanupResults: CleanupResults?
+    @State private var isLoadingSmartGroups = false
 
     struct CreationResults {
         let successCount: Int
@@ -42,147 +42,163 @@ struct GroupsView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            HStack {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Contact Groups")
-                        .font(.system(size: 36, weight: .bold))
+        rootAlerts(
+            VStack(spacing: 0) {
+                headerView
+                    .padding(24)
 
-                    Text(headerSubtitle)
-                        .font(.title3)
-                        .foregroundColor(.secondary)
-                }
+                Divider()
 
-                Spacer()
-
-                // Tab selector
-                Picker("Group Type", selection: $selectedTab) {
-                    ForEach(GroupTab.allCases, id: \.self) { tab in
-                        Text(tab.rawValue).tag(tab)
+                // Content based on selected tab
+                Group {
+                    if selectedTab == .manual {
+                        AnyView(manualGroupsContent)
+                    } else {
+                        AnyView(smartGroupsContent)
                     }
                 }
-                .pickerStyle(.segmented)
-                .frame(width: 300)
+            }
+            .task {
+                await contactsManager.fetchAllGroups()
 
-                if selectedTab == .manual {
-                    if duplicateGroupCount > 0 {
-                        Button(action: { showConfirmCleanup = true }) {
-                            HStack {
-                                if isCleaningDuplicates {
-                                    ProgressView()
-                                        .scaleEffect(0.7)
-                                        .frame(width: 16, height: 16)
-                                }
-                                Label(isCleaningDuplicates ? "Cleaning..." : "Clean Up \(duplicateGroupCount) Duplicates", systemImage: "trash")
-                            }
+                // Auto-generate smart groups for display (synthetic/in-memory only)
+                // They won't be created in Contacts.app unless user explicitly clicks "Create in Contacts"
+                await generateSmartGroupsAsync()
+
+                // Check for duplicate groups
+                let duplicates = await contactsManager.findDuplicateGroups()
+                duplicateGroupCount = duplicates.values.reduce(0) { $0 + $1.count - 1 }
+            }
+            .sheet(isPresented: $showCreateGroupSheet) {
+                CreateGroupSheet()
+            }
+            .onChange(of: contactsManager.contacts, initial: false) { _,_  in
+                Task {
+                    await generateSmartGroupsAsync()
+                }
+            }
+        )
+    }
+
+    // Extract all alerts into a helper to reduce root expression complexity
+    private func rootAlerts<V: View>(_ content: V) -> some View {
+        content
+            .alert("Create Smart Group in Contacts?", isPresented: $showConfirmCreate, presenting: groupToCreate) { _ in
+                Button("Cancel", role: .cancel) { }
+                Button("Create") {
+                    Task {
+                        await confirmAndCreateGroup()
+                    }
+                }
+            } message: { result in
+                smartGroupCreateMessage(for: result)
+            }
+            .alert("Clean Up Duplicate Groups?", isPresented: $showConfirmCleanup) {
+                Button("Cancel", role: .cancel) { }
+                Button("Clean Up", role: .destructive) {
+                    Task {
+                        await cleanUpDuplicates()
+                    }
+                }
+            } message: {
+                cleanupConfirmMessage(count: duplicateGroupCount)
+            }
+            .alert("Duplicate Cleanup Complete", isPresented: $showCleanupResults, presenting: cleanupResults) { _ in
+                Button("OK") { }
+            } message: { results in
+                cleanupResultsMessage(results)
+            }
+            .alert("Smart Groups Created", isPresented: $showResultsAlert, presenting: creationResults) { _ in
+                Button("OK") { }
+            } message: { results in
+                creationResultsMessage(results)
+            }
+    }
+
+    private var headerView: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Contact Groups")
+                    .font(.system(size: 36, weight: .bold))
+
+                Text(headerSubtitle)
+                    .font(.title3)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+
+            Picker("Group Type", selection: $selectedTab) {
+                ForEach(GroupTab.allCases, id: \.self) { tab in
+                    Text(tab.rawValue).tag(tab)
+                }
+            }
+            .pickerStyle(.segmented)
+            .frame(width: 300)
+
+            headerActions
+        }
+    }
+
+    @ViewBuilder
+    private var headerActions: some View {
+        if selectedTab == .manual {
+            manualHeaderActions
+        } else {
+            smartHeaderActions
+        }
+    }
+
+    @ViewBuilder
+    private var manualHeaderActions: some View {
+        HStack(spacing: 12) {
+            if duplicateGroupCount > 0 {
+                Button(action: { showConfirmCleanup = true }) {
+                    HStack {
+                        if isCleaningDuplicates {
+                            ProgressView()
+                                .scaleEffect(0.7)
+                                .frame(width: 16, height: 16)
                         }
-                        .buttonStyle(.bordered)
-                        .disabled(isCleaningDuplicates)
+                        Label(
+                            isCleaningDuplicates ? "Cleaning..." : "Clean Up \(duplicateGroupCount) Duplicates",
+                            systemImage: "trash"
+                        )
+                        .labelStyle(.titleAndIcon)
                     }
-
-                    Button(action: { showCreateGroupSheet = true }) {
-                        Label("Create Group", systemImage: "plus")
-                    }
-                    .buttonStyle(.borderedProminent)
-                } else {
-                    Button(action: { showSmartGroupSheet = true }) {
-                        HStack {
-                            if isCreatingGroups {
-                                ProgressView()
-                                    .scaleEffect(0.7)
-                                    .frame(width: 16, height: 16)
-                            }
-                            Label(isCreatingGroups ? "Creating Groups..." : "Generate Smart Groups", systemImage: "sparkles")
-                        }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(isCreatingGroups)
                 }
+                .buttonStyle(.bordered)
+                .disabled(isCleaningDuplicates)
             }
-            .padding(24)
 
-            Divider()
+            Button(action: { showCreateGroupSheet = true }) {
+                Label("Create Group", systemImage: "plus")
+            }
+            .buttonStyle(.borderedProminent)
+        }
+    }
 
-            // Content based on selected tab
-            Group {
-                if selectedTab == .manual {
-                    manualGroupsContent
-                } else {
-                    smartGroupsContent
-                }
-            }
-        }
-        .task {
-            await contactsManager.fetchAllGroups()
-
-            // Auto-generate smart groups for display (synthetic/in-memory only)
-            // They won't be created in Contacts.app unless user explicitly clicks "Create in Contacts"
-            await generateSmartGroupsAsync()
-
-            // Check for duplicate groups
-            let duplicates = await contactsManager.findDuplicateGroups()
-            duplicateGroupCount = duplicates.values.reduce(0) { $0 + $1.count - 1 }
-        }
-        .sheet(isPresented: $showCreateGroupSheet) {
-            CreateGroupSheet()
-        }
-        .sheet(isPresented: $showSmartGroupSheet) {
-            SmartGroupConfigSheet(onGenerate: { definitions in
-                // Use async version to avoid blocking UI
-                Task {
-                    await generateSmartGroupsAsync(definitions: definitions)
-                }
-            })
-        }
-        .alert("Create Smart Group in Contacts?", isPresented: $showConfirmCreate, presenting: groupToCreate) { result in
-            Button("Cancel", role: .cancel) { }
-            Button("Create") {
-                Task {
-                    await confirmAndCreateGroup()
-                }
-            }
-        } message: { result in
-            Text("This will create a new group '\(result.groupName)' with \(result.contacts.count) contact\(result.contacts.count == 1 ? "" : "s") in your Contacts app.")
-        }
-        .alert("Clean Up Duplicate Groups?", isPresented: $showConfirmCleanup) {
-            Button("Cancel", role: .cancel) { }
-            Button("Clean Up", role: .destructive) {
-                Task {
-                    await cleanUpDuplicates()
-                }
-            }
-        } message: {
-            Text("This will delete \(duplicateGroupCount) duplicate group\(duplicateGroupCount == 1 ? "" : "s") from your Contacts app, keeping the first occurrence of each.")
-        }
-        .alert("Duplicate Cleanup Complete", isPresented: $showCleanupResults, presenting: cleanupResults) { results in
-            Button("OK") { }
-        } message: { results in
-            if results.errorCount == 0 {
-                Text("Successfully deleted \(results.deletedCount) duplicate group\(results.deletedCount == 1 ? "" : "s") from Contacts.app!")
-            } else {
-                Text("Deleted \(results.deletedCount) group\(results.deletedCount == 1 ? "" : "s"), but \(results.errorCount) failed. Please check Contacts app permissions.")
-            }
-        }
-        .alert("Smart Groups Created", isPresented: $showResultsAlert, presenting: creationResults) { results in
-            Button("OK") { }
-        } message: { results in
-            if results.failureCount == 0 {
-                Text("Successfully created \(results.successCount) smart group\(results.successCount == 1 ? "" : "s") in Contacts.app!")
-            } else if results.successCount == 0 {
-                Text("Failed to create \(results.failureCount) group\(results.failureCount == 1 ? "" : "s"). Please check Contacts app permissions.")
-            } else {
-                Text("Created \(results.successCount) group\(results.successCount == 1 ? "" : "s") successfully. Failed to create \(results.failureCount) group\(results.failureCount == 1 ? "" : "s"): \(results.failedGroups.joined(separator: ", "))")
-            }
+    @ViewBuilder
+    private var smartHeaderActions: some View {
+        if isLoadingSmartGroups {
+            ProgressView()
+                .scaleEffect(0.9)
+                .padding(.trailing, 8)
+        } else {
+            Label("Smart groups update automatically", systemImage: "sparkles")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
         }
     }
 
     private var headerSubtitle: String {
         if selectedTab == .manual {
             return "\(contactsManager.groups.count) manual groups"
-        } else {
-            return "\(smartGroupResults.count) smart groups"
         }
+        if isLoadingSmartGroups {
+            return "Loading smart groups…"
+        }
+        return "\(smartGroupResults.count) smart groups"
     }
 
     @ViewBuilder
@@ -208,56 +224,38 @@ struct GroupsView: View {
 
     @ViewBuilder
     private var smartGroupsContent: some View {
-        if smartGroupResults.isEmpty {
+        if isLoadingSmartGroups {
             VStack(spacing: 20) {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 60))
-                    .foregroundStyle(.purple.gradient)
+                ProgressView()
+                    .scaleEffect(1.1)
 
                 VStack(spacing: 8) {
-                    Text("Smart Groups")
+                    Text("Fetching Smart Groups")
                         .font(.title.bold())
 
-                    Text("Automatically organize contacts by organization, criteria, or custom rules.")
+                    Text("Hang tight—your smart groups refresh automatically whenever contacts change.")
                         .font(.body)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: 400)
                 }
-
-                VStack(alignment: .leading, spacing: 12) {
-                    FeatureRow(icon: "building.2.fill", text: "Organization-based groups", color: .green)
-                    FeatureRow(icon: "star.fill", text: "Custom smart groups", color: .orange)
-                    FeatureRow(icon: "checkmark.circle.fill", text: "Dynamic criteria", color: .blue)
-                }
-                .padding()
-                .background(Color.secondary.opacity(0.1))
-                .cornerRadius(12)
-
-                Button(action: {
-                    Task {
-                        await generateSmartGroupsAsync()
-                    }
-                }) {
-                    HStack {
-                        if isCreatingGroups {
-                            ProgressView()
-                                .scaleEffect(0.7)
-                                .frame(width: 16, height: 16)
-                        }
-                        Label(isCreatingGroups ? "Creating Groups..." : "Generate Default Smart Groups", systemImage: "sparkles")
-                    }
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(isCreatingGroups)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(24)
+        } else if smartGroupResults.isEmpty {
+            EmptyStateView(
+                icon: "sparkles",
+                title: "No Smart Groups Yet",
+                message: "Smart groups appear automatically once your contacts match the built-in rules.",
+                color: .purple
+            )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding(24)
         } else {
             ScrollView {
                 LazyVStack(spacing: 16) {
                     ForEach(smartGroupResults) { result in
-                        SmartGroupResultCard(result: result) {
+                        SmartGroupResultCard(result: result, isCreating: isCreatingGroups) {
                             Task {
                                 await createSingleSmartGroup(result)
                             }
@@ -270,28 +268,18 @@ struct GroupsView: View {
     }
 
     @MainActor
-    private func generateSmartGroupsAsync(definitions: [SmartGroupDefinition]? = nil) async {
-        let defs = definitions ?? ContactsManager.defaultSmartGroups
-        let results = await contactsManager.generateSmartGroups(definitions: defs)
-
-        if definitions == nil {
-            // Initial load - replace with defaults
-            smartGroupResults = results
-        } else {
-            // User-triggered generation - merge without duplicates
-            for newGroup in results {
-                // Only add if a group with this name doesn't already exist
-                if let index = smartGroupResults.firstIndex(where: { $0.groupName == newGroup.groupName }) {
-                    // Update existing group with fresh data
-                    smartGroupResults[index] = newGroup
-                } else {
-                    // Add new group
-                    smartGroupResults.append(newGroup)
-                }
-            }
+    private func generateSmartGroupsAsync() async {
+        if isLoadingSmartGroups {
+            return
         }
-        // Smart groups are now synthetic (in-memory only)
-        // User must explicitly click "Create in Contacts" button to add them
+
+        isLoadingSmartGroups = true
+        defer { isLoadingSmartGroups = false }
+
+        let results = await contactsManager.generateSmartGroups(definitions: ContactsManager.defaultSmartGroups)
+        smartGroupResults = results
+        // Smart groups are synthetic (in-memory only)
+        // User must explicitly click "Create in Contacts" to add them
     }
 
     @MainActor
@@ -354,38 +342,50 @@ struct GroupsView: View {
         duplicateGroupCount = duplicates.values.reduce(0) { $0 + $1.count - 1 }
     }
 
-    @MainActor
-    private func createSmartGroupsInContactsApp() async {
-        var successCount = 0
-        var failedGroups: [String] = []
+    // MARK: - Alert message helpers
 
-        // Create actual groups in Contacts.app for each smart group result
-        for result in smartGroupResults {
-            let contactIds = result.contacts.map { $0.id }
-            let success = await contactsManager.createGroup(
-                name: result.groupName,
-                contactIds: contactIds
-            )
+    private func smartGroupCreateMessage(for result: SmartGroupResult) -> Text {
+        let count = result.contacts.count
+        let plural = count == 1 ? "" : "s"
+        let name = result.groupName
+        return Text("This will create a new group '\(name)' with \(count) contact\(plural) in your Contacts app.")
+    }
 
-            if success {
-                successCount += 1
-                print("✅ Created group: \(result.groupName) with \(contactIds.count) contacts")
-            } else {
-                failedGroups.append(result.groupName)
-                print("❌ Failed to create group: \(result.groupName)")
-            }
+    private func cleanupConfirmMessage(count: Int) -> Text {
+        let plural = count == 1 ? "" : "s"
+        return Text("This will delete \(count) duplicate group\(plural) from your Contacts app, keeping the first occurrence of each.")
+    }
+
+    private func cleanupResultsMessage(_ results: CleanupResults) -> Text {
+        if results.errorCount == 0 {
+            let c = results.deletedCount
+            let plural = c == 1 ? "" : "s"
+            return Text("Successfully deleted \(c) duplicate group\(plural) from Contacts.app!")
+        } else {
+            let c = results.deletedCount
+            let cPlural = c == 1 ? "" : "s"
+            let e = results.errorCount
+            return Text("Deleted \(c) group\(cPlural), but \(e) failed. Please check Contacts app permissions.")
         }
+    }
 
-        // Refresh the manual groups list to show newly created groups
-        await contactsManager.fetchAllGroups()
-
-        // Show results to user
-        creationResults = CreationResults(
-            successCount: successCount,
-            failureCount: failedGroups.count,
-            failedGroups: failedGroups
-        )
-        showResultsAlert = true
+    private func creationResultsMessage(_ results: CreationResults) -> Text {
+        if results.failureCount == 0 {
+            let c = results.successCount
+            let plural = c == 1 ? "" : "s"
+            return Text("Successfully created \(c) smart group\(plural) in Contacts.app!")
+        } else if results.successCount == 0 {
+            let f = results.failureCount
+            let plural = f == 1 ? "" : "s"
+            return Text("Failed to create \(f) group\(plural). Please check Contacts app permissions.")
+        } else {
+            let s = results.successCount
+            let sPlural = s == 1 ? "" : "s"
+            let f = results.failureCount
+            let fPlural = f == 1 ? "" : "s"
+            let failed = results.failedGroups.joined(separator: ", ")
+            return Text("Created \(s) group\(sPlural) successfully. Failed to create \(f) group\(fPlural): \(failed)")
+        }
     }
 }
 
@@ -423,21 +423,23 @@ struct GroupRowView: View {
     }
 
     private func openGroupInContacts(groupName: String) {
+        // Try the URL scheme first (often not reliable for groups)
+        if let encodedName = groupName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+           let url = URL(string: "addressbook://group/name/\(encodedName)"),
+           NSWorkspace.shared.open(url) {
+            print("✅ Opened Contacts via name URL for group: \(groupName)")
+            return
+        }
+
+        // Activate or launch Contacts
         let bundleIdentifier = "com.apple.AddressBook"
-
-        // Check if Contacts is already running
-        let runningApps = NSWorkspace.shared.runningApplications
-        let contactsApp = runningApps.first { $0.bundleIdentifier == bundleIdentifier }
-
+        let contactsApp = NSWorkspace.shared.runningApplications.first { $0.bundleIdentifier == bundleIdentifier }
         if let app = contactsApp {
-            // App is running - activate it (this actually works from sandboxed apps!)
             app.activate()
         } else {
-            // App not running - launch it using modern API
             let appURL = URL(fileURLWithPath: "/System/Applications/Contacts.app")
             let configuration = NSWorkspace.OpenConfiguration()
             configuration.activates = true
-
             NSWorkspace.shared.openApplication(at: appURL, configuration: configuration) { _, error in
                 if let error = error {
                     print("❌ Failed to launch Contacts: \(error)")
@@ -445,15 +447,45 @@ struct GroupRowView: View {
             }
         }
 
-        // Wait for app to be ready, then select group
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            let escapedName = groupName.replacingOccurrences(of: "\"", with: "\\\"")
+        // Bring Contacts to front explicitly before scripting
+        let bringFrontScript = """
+        tell application "System Events"
+            if exists process "Contacts" then set frontmost of process "Contacts" to true
+        end tell
+        """
+        _ = NSAppleScript(source: bringFrontScript)?.executeAndReturnError(nil)
 
-            // NOTE: Removed "activate" from AppleScript - NSWorkspace handles that
+        // Give Contacts a moment, but rely on internal waits in AppleScript below
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            let escapedName = groupName
+                .replacingOccurrences(of: "\\", with: "\\\\")
+                .replacingOccurrences(of: "\"", with: "\\\"")
+
+            // AppleScript: activate, wait for groups, find by name, reveal and select the first match
             let script = """
             tell application "Contacts"
-                if group "\(escapedName)" exists then
-                    set selected of group "\(escapedName)" to true
+                activate
+                repeat with i from 1 to 80
+                    try
+                        if (count of groups) > 0 then exit repeat
+                    end try
+                    delay 0.1
+                end repeat
+
+                set matchingGroups to {}
+                try
+                    repeat with g in groups
+                        if (name of g as string) is "\(escapedName)" then
+                            set end of matchingGroups to g
+                        end if
+                    end repeat
+                end try
+
+                if (count of matchingGroups) > 0 then
+                    set targetGroup to item 1 of matchingGroups
+                    reveal targetGroup
+                    delay 0.1
+                    set selected groups to {targetGroup}
                 end if
             end tell
             """
@@ -462,28 +494,102 @@ struct GroupRowView: View {
             if let scriptObject = NSAppleScript(source: script) {
                 scriptObject.executeAndReturnError(&error)
                 if let error = error {
-                    print("❌ Failed to select group: \(error)")
+                    print("❌ AppleScript failed to select group by name: \(error)")
+
+                    // UI scripting fallback: robust for macOS 15/16 (26)
+                    let uiScript = """
+                    tell application "System Events"
+                        if not (exists process "Contacts") then return
+                        tell process "Contacts"
+                            set frontmost to true
+
+                            -- Wait for main window
+                            repeat with attempt from 1 to 80
+                                try
+                                    if (exists window 1) then exit repeat
+                                end try
+                                delay 0.1
+                            end repeat
+
+                            try
+                                set theWindow to window 1
+
+                                -- Resolve the sidebar outline; handle both hierarchies (extra 'group' container on newer macOS)
+                                set theOutline to missing value
+                                repeat with attempt from 1 to 80
+                                    try
+                                        if (exists outline 1 of scroll area 1 of splitter group 1 of theWindow) then
+                                            set theOutline to outline 1 of scroll area 1 of splitter group 1 of theWindow
+                                            exit repeat
+                                        end if
+                                    end try
+                                    try
+                                        if (exists outline 1 of group 1 of scroll area 1 of splitter group 1 of theWindow) then
+                                            set theOutline to outline 1 of group 1 of scroll area 1 of splitter group 1 of theWindow
+                                            exit repeat
+                                        end if
+                                    end try
+                                    delay 0.1
+                                end repeat
+
+                                if theOutline is missing value then return
+
+                                -- Expand disclosure triangles to ensure groups are visible
+                                try
+                                    repeat with aRow in rows of theOutline
+                                        try
+                                            if exists disclosure triangle 1 of aRow then
+                                                if value of disclosure triangle 1 of aRow is 0 then click disclosure triangle 1 of aRow
+                                            end if
+                                        end try
+                                    end repeat
+                                end try
+
+                                -- Click the row whose text matches the group name
+                                set didClick to false
+                                repeat with aRow in rows of theOutline
+                                    try
+                                        if (exists static text 1 of aRow) then
+                                            if (value of static text 1 of aRow as string) is "\(escapedName)" then
+                                                click static text 1 of aRow
+                                                set didClick to true
+                                                exit repeat
+                                            end if
+                                        end if
+                                    end try
+                                end repeat
+
+                                -- If clicking text failed, try pressing the row
+                                if didClick is false then
+                                    repeat with aRow in rows of theOutline
+                                        try
+                                            if (exists static text 1 of aRow) then
+                                                if (value of static text 1 of aRow as string) is "\(escapedName)" then
+                                                    perform action "AXPress" of aRow
+                                                    exit repeat
+                                                end if
+                                            end if
+                                        end try
+                                    end repeat
+                                end if
+                            end try
+                        end tell
+                    end tell
+                    """
+
+                    if let uiScriptObject = NSAppleScript(source: uiScript) {
+                        var uiError: NSDictionary?
+                        uiScriptObject.executeAndReturnError(&uiError)
+                        if let uiError = uiError {
+                            print("❌ UI scripting fallback failed: \(uiError)")
+                        } else {
+                            print("✅ Selected group via UI scripting fallback: \(groupName)")
+                        }
+                    }
                 } else {
-                    print("✅ Opened group in Contacts: \(groupName)")
+                    print("✅ Opened group in Contacts via AppleScript: \(groupName)")
                 }
             }
-        }
-    }
-}
-
-struct FeatureRow: View {
-    let icon: String
-    let text: String
-    let color: Color
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .foregroundColor(color)
-                .frame(width: 24)
-
-            Text(text)
-                .font(.body)
         }
     }
 }
@@ -492,6 +598,7 @@ struct FeatureRow: View {
 
 struct SmartGroupResultCard: View {
     let result: SmartGroupResult
+    let isCreating: Bool
     let onCreateInContacts: () -> Void
 
     var body: some View {
@@ -513,10 +620,20 @@ struct SmartGroupResultCard: View {
                 Spacer()
 
                 Button(action: onCreateInContacts) {
-                    Label("Create in Contacts", systemImage: "plus.app")
+                    if isCreating {
+                        HStack(spacing: 6) {
+                            ProgressView()
+                                .scaleEffect(0.75)
+                            Text("Creating…")
+                                .font(.caption.bold())
+                        }
+                    } else {
+                        Label("Create in Contacts", systemImage: "plus.app")
+                    }
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
+                .disabled(isCreating)
 
                 Button(action: {
                     openContactsForGroup()
@@ -527,29 +644,39 @@ struct SmartGroupResultCard: View {
                 .controlSize(.small)
             }
 
-            // Show preview of contacts
-            if result.contacts.count > 0 {
-                VStack(alignment: .leading, spacing: 6) {
-                    ForEach(result.contacts.prefix(3)) { contact in
-                        HStack(spacing: 8) {
-                            Image(systemName: "person.circle.fill")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+            // Show scrollable list of contacts inside the card
+            if !result.contacts.isEmpty {
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 6) {
+                        ForEach(result.contacts) { contact in
+                            Button(action: {
+                                openContact(contact)
+                            }) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "person.circle.fill")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
 
-                            Text(contact.fullName)
-                                .font(.caption)
+                                    Text(contact.fullName)
+                                        .font(.caption)
+                                        .foregroundColor(.primary)
 
-                            Spacer()
+                                    Spacer()
+
+                                    Image(systemName: "arrow.up.forward")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
+                                .padding(.vertical, 4)
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
-
-                    if result.contacts.count > 3 {
-                        Text("+ \(result.contacts.count - 3) more")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
+                    .padding(.vertical, 8)
                 }
-                .padding()
+                .frame(maxHeight: 200)
+                .padding(.horizontal)
                 .background(Color.secondary.opacity(0.05))
                 .cornerRadius(6)
             }
@@ -587,6 +714,11 @@ struct SmartGroupResultCard: View {
                 NSWorkspace.shared.open(url)
             }
         }
+    }
+
+    private func openContact(_ contact: ContactSummary) {
+        guard let url = URL(string: "addressbook://\(contact.id)") else { return }
+        NSWorkspace.shared.open(url)
     }
 }
 
