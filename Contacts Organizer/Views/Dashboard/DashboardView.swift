@@ -46,7 +46,8 @@ struct DashboardView: View {
                 case .overview:
                     OverviewView(
                         duplicateGroups: duplicateGroups,
-                        dataQualityIssues: dataQualityIssues
+                        dataQualityIssues: dataQualityIssues,
+                        selectedTab: $selectedTab
                     )
 
                 case .duplicates:
@@ -153,6 +154,9 @@ struct DashboardView: View {
             self.duplicateGroups = result.0
             self.dataQualityIssues = result.1
             self.isAnalyzing = false
+
+            // Update statistics with issue severity counts for accurate health score
+            self.contactsManager.updateStatisticsWithIssues(result.1)
         }
 
         // Return immediately - UI can render while analysis happens in background
@@ -163,8 +167,10 @@ struct DashboardView: View {
 
 struct OverviewView: View {
     @EnvironmentObject var contactsManager: ContactsManager
+    @Environment(\.openSettings) private var openSettings
     let duplicateGroups: [DuplicateGroup]
     let dataQualityIssues: [DataQualityIssue]
+    @Binding var selectedTab: DashboardView.DashboardTab
     @State private var showBackupReminder = true
 
     var body: some View {
@@ -203,13 +209,19 @@ struct OverviewView: View {
                         Spacer()
 
                         Button(action: {
-                            // Open Settings
-                            NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
+                            // Open Settings window using official API
+                            openSettings()
                         }) {
-                            Text("Open Settings")
+                            HStack(spacing: 4) {
+                                Text("Open Settings")
+                                Text("(⌘,)")
+                                    .font(.caption2)
+                                    .foregroundColor(.white.opacity(0.7))
+                            }
                         }
                         .buttonStyle(.borderedProminent)
                         .controlSize(.small)
+                        .help("Open Settings or press ⌘,")
 
                         Button(action: {
                             showBackupReminder = false
@@ -253,19 +265,22 @@ struct OverviewView: View {
                             title: "With Organization",
                             value: "\(stats.contactsWithOrganization)",
                             icon: "building.2.fill",
-                            color: .orange
+                            color: .orange,
+                            action: { selectedTab = .groups }
                         )
                         StatCard(
                             title: "With Photos",
                             value: "\(stats.contactsWithPhoto)",
                             icon: "photo.fill",
-                            color: .pink
+                            color: .pink,
+                            action: { selectedTab = .groups }
                         )
                         StatCard(
                             title: "Data Quality",
                             value: String(format: "%.0f%%", stats.dataQualityScore),
                             icon: "chart.bar.fill",
-                            color: .cyan
+                            color: .cyan,
+                            action: { selectedTab = .cleanup }
                         )
                     }
                 }
@@ -284,17 +299,20 @@ struct OverviewView: View {
                         IssueCard(
                             count: duplicateGroups.count,
                             title: "Duplicate Groups",
-                            color: .red
+                            color: .red,
+                            action: { selectedTab = .duplicates }
                         )
                         IssueCard(
                             count: dataQualityIssues.filter { $0.severity == .high }.count,
                             title: "High Priority Issues",
-                            color: .orange
+                            color: .orange,
+                            action: { selectedTab = .cleanup }
                         )
                         IssueCard(
                             count: dataQualityIssues.count,
                             title: "Total Issues",
-                            color: .yellow
+                            color: .yellow,
+                            action: { selectedTab = .cleanup }
                         )
                     }
                 }
@@ -314,8 +332,23 @@ struct StatCard: View {
     let value: String
     let icon: String
     let color: Color
+    var action: (() -> Void)? = nil
 
     var body: some View {
+        Group {
+            if let action = action {
+                Button(action: action) {
+                    cardContent
+                }
+                .buttonStyle(.plain)
+                .help("Tap to view details")
+            } else {
+                cardContent
+            }
+        }
+    }
+
+    private var cardContent: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: icon)
@@ -332,8 +365,12 @@ struct StatCard: View {
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.secondary.opacity(0.1))
+        .background(action != nil ? color.opacity(0.15) : Color.secondary.opacity(0.1))
         .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(action != nil ? color.opacity(0.3) : Color.clear, lineWidth: 1)
+        )
     }
 }
 
@@ -341,8 +378,23 @@ struct IssueCard: View {
     let count: Int
     let title: String
     let color: Color
+    var action: (() -> Void)? = nil
 
     var body: some View {
+        Group {
+            if let action = action {
+                Button(action: action) {
+                    cardContent
+                }
+                .buttonStyle(.plain)
+                .help("Tap to view \(title.lowercased())")
+            } else {
+                cardContent
+            }
+        }
+    }
+
+    private var cardContent: some View {
         VStack(spacing: 8) {
             Text("\(count)")
                 .font(.system(size: 28, weight: .bold))
@@ -355,8 +407,12 @@ struct IssueCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(color.opacity(0.1))
+        .background(action != nil ? color.opacity(0.15) : color.opacity(0.1))
         .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(action != nil ? color.opacity(0.4) : Color.clear, lineWidth: 1)
+        )
     }
 }
 

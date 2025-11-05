@@ -191,6 +191,100 @@ final class SmartGroupTests: XCTestCase {
         XCTAssertEqual(results.count, 0, "Should not generate groups for disabled definitions")
     }
 
+    // MARK: - Phase 1 Smart Groups
+
+    func testPhase1NoCriticalInfo() {
+        let contacts = [
+            ContactSummary(id: "1", fullName: "John Smith", organization: nil, phoneNumbers: [], emailAddresses: [], hasProfileImage: false, creationDate: nil, modificationDate: nil),
+            ContactSummary(id: "2", fullName: "Jane Doe", organization: nil, phoneNumbers: ["555-1234"], emailAddresses: [], hasProfileImage: false, creationDate: nil, modificationDate: nil),
+            ContactSummary(id: "3", fullName: "Bob Johnson", organization: nil, phoneNumbers: [], emailAddresses: ["bob@example.com"], hasProfileImage: false, creationDate: nil, modificationDate: nil)
+        ]
+
+        let criteria = CustomCriteria(rules: [
+            CustomCriteria.Rule(field: .noCriticalInfo, condition: .exists)
+        ])
+        let definition = SmartGroupDefinition(name: "Missing Critical Info", groupingType: .custom(criteria))
+        let results = ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
+
+        XCTAssertEqual(results.count, 1, "Should create one group")
+        XCTAssertEqual(results.first?.contacts.count, 1, "Should contain one contact with no phone or email")
+        XCTAssertEqual(results.first?.contacts.first?.id, "1", "Should be the contact with no critical info")
+    }
+
+    func testPhase1PhoneOnly() {
+        let contacts = [
+            ContactSummary(id: "1", fullName: "John Smith", organization: nil, phoneNumbers: ["555-1234"], emailAddresses: [], hasProfileImage: false, creationDate: nil, modificationDate: nil),
+            ContactSummary(id: "2", fullName: "Jane Doe", organization: nil, phoneNumbers: [], emailAddresses: ["jane@example.com"], hasProfileImage: false, creationDate: nil, modificationDate: nil),
+            ContactSummary(id: "3", fullName: "Bob Johnson", organization: nil, phoneNumbers: ["555-5678"], emailAddresses: ["bob@example.com"], hasProfileImage: false, creationDate: nil, modificationDate: nil)
+        ]
+
+        let criteria = CustomCriteria(rules: [
+            CustomCriteria.Rule(field: .phoneOnly, condition: .exists)
+        ])
+        let definition = SmartGroupDefinition(name: "Phone Only", groupingType: .custom(criteria))
+        let results = ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
+
+        XCTAssertEqual(results.count, 1, "Should create one group")
+        XCTAssertEqual(results.first?.contacts.count, 1, "Should contain one contact with phone only")
+        XCTAssertEqual(results.first?.contacts.first?.id, "1", "Should be the contact with phone only")
+    }
+
+    func testPhase1EmailOnly() {
+        let contacts = [
+            ContactSummary(id: "1", fullName: "John Smith", organization: nil, phoneNumbers: ["555-1234"], emailAddresses: [], hasProfileImage: false, creationDate: nil, modificationDate: nil),
+            ContactSummary(id: "2", fullName: "Jane Doe", organization: nil, phoneNumbers: [], emailAddresses: ["jane@example.com"], hasProfileImage: false, creationDate: nil, modificationDate: nil),
+            ContactSummary(id: "3", fullName: "Bob Johnson", organization: nil, phoneNumbers: ["555-5678"], emailAddresses: ["bob@example.com"], hasProfileImage: false, creationDate: nil, modificationDate: nil)
+        ]
+
+        let criteria = CustomCriteria(rules: [
+            CustomCriteria.Rule(field: .emailOnly, condition: .exists)
+        ])
+        let definition = SmartGroupDefinition(name: "Email Only", groupingType: .custom(criteria))
+        let results = ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
+
+        XCTAssertEqual(results.count, 1, "Should create one group")
+        XCTAssertEqual(results.first?.contacts.count, 1, "Should contain one contact with email only")
+        XCTAssertEqual(results.first?.contacts.first?.id, "2", "Should be the contact with email only")
+    }
+
+    func testPhase1MultiplePhones() {
+        let contacts = [
+            ContactSummary(id: "1", fullName: "John Smith", organization: nil, phoneNumbers: ["555-1234", "555-5678"], emailAddresses: [], hasProfileImage: false, creationDate: nil, modificationDate: nil),
+            ContactSummary(id: "2", fullName: "Jane Doe", organization: nil, phoneNumbers: ["555-9999"], emailAddresses: [], hasProfileImage: false, creationDate: nil, modificationDate: nil),
+            ContactSummary(id: "3", fullName: "Bob Johnson", organization: nil, phoneNumbers: ["555-1111", "555-2222", "555-3333"], emailAddresses: [], hasProfileImage: false, creationDate: nil, modificationDate: nil)
+        ]
+
+        let criteria = CustomCriteria(rules: [
+            CustomCriteria.Rule(field: .multiplePhones, condition: .exists)
+        ])
+        let definition = SmartGroupDefinition(name: "Multiple Phones", groupingType: .custom(criteria))
+        let results = ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
+
+        XCTAssertEqual(results.count, 1, "Should create one group")
+        XCTAssertEqual(results.first?.contacts.count, 2, "Should contain two contacts with multiple phones")
+        XCTAssertTrue(results.first?.contacts.contains { $0.id == "1" } ?? false, "Should include contact 1")
+        XCTAssertTrue(results.first?.contacts.contains { $0.id == "3" } ?? false, "Should include contact 3")
+    }
+
+    func testPhase1MultipleEmails() {
+        let contacts = [
+            ContactSummary(id: "1", fullName: "John Smith", organization: nil, phoneNumbers: [], emailAddresses: ["john@work.com", "john@personal.com"], hasProfileImage: false, creationDate: nil, modificationDate: nil),
+            ContactSummary(id: "2", fullName: "Jane Doe", organization: nil, phoneNumbers: [], emailAddresses: ["jane@example.com"], hasProfileImage: false, creationDate: nil, modificationDate: nil),
+            ContactSummary(id: "3", fullName: "Bob Johnson", organization: nil, phoneNumbers: [], emailAddresses: ["bob1@example.com", "bob2@example.com", "bob3@example.com"], hasProfileImage: false, creationDate: nil, modificationDate: nil)
+        ]
+
+        let criteria = CustomCriteria(rules: [
+            CustomCriteria.Rule(field: .multipleEmails, condition: .exists)
+        ])
+        let definition = SmartGroupDefinition(name: "Multiple Emails", groupingType: .custom(criteria))
+        let results = ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
+
+        XCTAssertEqual(results.count, 1, "Should create one group")
+        XCTAssertEqual(results.first?.contacts.count, 2, "Should contain two contacts with multiple emails")
+        XCTAssertTrue(results.first?.contacts.contains { $0.id == "1" } ?? false, "Should include contact 1")
+        XCTAssertTrue(results.first?.contacts.contains { $0.id == "3" } ?? false, "Should include contact 3")
+    }
+
     // MARK: - Default Smart Groups
 
     func testDefaultSmartGroups() {

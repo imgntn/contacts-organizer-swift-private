@@ -142,11 +142,25 @@ struct ContactStatistics {
     let contactsWithPhoto: Int
     let duplicateGroups: Int
     let dataQualityIssues: Int
+    let highPriorityIssues: Int
+    let mediumPriorityIssues: Int
+    let lowPriorityIssues: Int
 
     var dataQualityScore: Double {
-        guard totalContacts > 0 else { return 0 }
-        let completeContacts = Double(contactsWithBoth)
-        return (completeContacts / Double(totalContacts)) * 100
+        guard totalContacts > 0 else { return 100.0 }
+
+        // Calculate quality score based on issue severity:
+        // - High priority issues: -10 points each (critical problems)
+        // - Medium priority issues: -3 points each (significant problems)
+        // - Low priority issues: -0.5 points each (minor issues, max 5% impact)
+
+        let highPenalty = Double(highPriorityIssues) * 10.0
+        let mediumPenalty = Double(mediumPriorityIssues) * 3.0
+        let lowPenalty = min(Double(lowPriorityIssues) * 0.5, 5.0) // Cap low priority at 5%
+
+        let totalPenalty = highPenalty + mediumPenalty + lowPenalty
+
+        return max(0, 100.0 - totalPenalty)
     }
 }
 
@@ -209,6 +223,12 @@ struct CustomCriteria: Codable {
             case hasPhoto = "Has Photo"
             case organizationContains = "Organization Contains"
             case nameContains = "Name Contains"
+            // Phase 1: Quick wins using existing data
+            case phoneOnly = "Phone Only (No Email)"
+            case emailOnly = "Email Only (No Phone)"
+            case noCriticalInfo = "No Critical Info"
+            case multiplePhones = "Multiple Phones"
+            case multipleEmails = "Multiple Emails"
         }
 
         enum Condition: String, Codable {

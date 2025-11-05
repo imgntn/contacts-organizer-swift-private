@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Contacts
+import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @EnvironmentObject var contactsManager: ContactsManager
@@ -21,6 +22,12 @@ struct SettingsView: View {
                     Label("General", systemImage: "gearshape")
                 }
 
+            DeveloperSettingsView()
+                .environmentObject(contactsManager)
+                .tabItem {
+                    Label("Developer", systemImage: "hammer.fill")
+                }
+
             PrivacySettingsView()
                 .tabItem {
                     Label("Privacy", systemImage: "lock.shield")
@@ -31,7 +38,7 @@ struct SettingsView: View {
                     Label("About", systemImage: "info.circle")
                 }
         }
-        .frame(width: 500, height: 400)
+        .frame(width: 500, height: 500)
     }
 }
 
@@ -46,6 +53,7 @@ struct GeneralSettingsView: View {
     @State private var backupSuccess = false
     @State private var userBackupURL: URL?
     @State private var appBackupURL: URL?
+    @State private var showSavePanel = false
 
     var body: some View {
         Form {
@@ -58,7 +66,7 @@ struct GeneralSettingsView: View {
             }
 
             Section {
-                Button(action: createBackup) {
+                Button(action: { showSavePanel = true }) {
                     HStack {
                         if isCreatingBackup {
                             ProgressView()
@@ -109,6 +117,14 @@ struct GeneralSettingsView: View {
             }
         }
         .padding(20)
+        .fileExporter(
+            isPresented: $showSavePanel,
+            document: BackupDocument(),
+            contentType: .vCard,
+            defaultFilename: generateBackupFilename()
+        ) { result in
+            handleBackupSave(result)
+        }
         .alert("Backup Created", isPresented: $backupSuccess) {
             Button("Show in Finder") {
                 if let url = userBackupURL {
@@ -125,21 +141,257 @@ struct GeneralSettingsView: View {
         }
     }
 
-    private func createBackup() {
+    private func generateBackupFilename() -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
+        let timestamp = dateFormatter.string(from: Date())
+        return "Contacts_Backup_\(timestamp).vcf"
+    }
+
+    private func handleBackupSave(_ result: Result<URL, Error>) {
         isCreatingBackup = true
 
         Task {
-            let (userURL, appURL) = await contactsManager.createBackup()
+            do {
+                let saveURL = try result.get()
+                let (userURL, appURL) = await contactsManager.createBackup(saveToURL: saveURL)
 
-            await MainActor.run {
-                isCreatingBackup = false
-                if userURL != nil {
-                    userBackupURL = userURL
-                    appBackupURL = appURL
-                    backupSuccess = true
+                await MainActor.run {
+                    isCreatingBackup = false
+                    if userURL != nil {
+                        userBackupURL = userURL
+                        appBackupURL = appURL
+                        backupSuccess = true
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    isCreatingBackup = false
+                    contactsManager.errorMessage = "Failed to save backup: \(error.localizedDescription)"
                 }
             }
         }
+    }
+}
+
+// MARK: - Developer Settings
+
+struct DeveloperSettingsView: View {
+    @EnvironmentObject var contactsManager: ContactsManager
+    @State private var isLoadingTest = false
+    @State private var isImporting = false
+    @State private var isExporting = false
+    @State private var showImportPicker = false
+    @State private var showExportPicker = false
+    @State private var testContactCount = 100
+    @State private var showSuccessAlert = false
+    @State private var successMessage = ""
+
+    var body: some View {
+        Form {
+            Section {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("Test Contacts:")
+                        Stepper("\(testContactCount)", value: $testContactCount, in: 10...1000, step: 10)
+                            .frame(width: 120)
+                    }
+
+                    Button(action: loadTestData) {
+                        HStack {
+                            if isLoadingTest {
+                                ProgressView()
+                                    .scaleEffect(0.7)
+                                    .frame(width: 16, height: 16)
+                                Text("Loading...")
+                            } else {
+                                Image(systemName: "doc.on.doc.fill")
+                                Text("Load Test Database")
+                            }
+                        }
+                    }
+                    .disabled(isLoadingTest)
+
+                    Text("Generates realistic test contacts with duplicates and incomplete data for testing")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            } header: {
+                Text("Test Data")
+            }
+
+            Section {
+                Button(action: { showImportPicker = true }) {
+                    HStack {
+                        if isImporting {
+                            ProgressView()
+                                .scaleEffect(0.7)
+                                .frame(width: 16, height: 16)
+                            Text("Importing...")
+                        } else {
+                            Image(systemName: "square.and.arrow.down")
+                            Text("Import Contacts")
+                        }
+                    }
+                }
+                .disabled(isImporting)
+
+                Button(action: { showExportPicker = true }) {
+                    HStack {
+                        if isExporting {
+                            ProgressView()
+                                .scaleEffect(0.7)
+                                .frame(width: 16, height: 16)
+                            Text("Exporting...")
+                        } else {
+                            Image(systemName: "square.and.arrow.up")
+                            Text("Export Contacts")
+                        }
+                    }
+                }
+                .disabled(isExporting || contactsManager.contacts.isEmpty)
+
+                Text("Import/export contacts as JSON. Current contacts: \(contactsManager.contacts.count)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            } header: {
+                Text("Import/Export")
+            }
+
+            Section {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("• Load test database to populate with sample contacts")
+                    Text("• Test duplicate detection and data quality features")
+                    Text("• Export current contacts to backup or share")
+                    Text("• Import previously exported contacts")
+                }
+                .font(.caption)
+                .foregroundColor(.secondary)
+            } header: {
+                Text("Usage")
+            }
+        }
+        .padding(20)
+        .fileImporter(
+            isPresented: $showImportPicker,
+            allowedContentTypes: [.json],
+            allowsMultipleSelection: false
+        ) { result in
+            handleImport(result)
+        }
+        .fileExporter(
+            isPresented: $showExportPicker,
+            document: ContactsDocument(contacts: contactsManager.contacts),
+            contentType: .json,
+            defaultFilename: "contacts_export.json"
+        ) { result in
+            handleExport(result)
+        }
+        .alert("Success", isPresented: $showSuccessAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(successMessage)
+        }
+    }
+
+    private func loadTestData() {
+        isLoadingTest = true
+
+        Task {
+            await contactsManager.loadTestContacts(count: testContactCount)
+
+            await MainActor.run {
+                isLoadingTest = false
+                successMessage = "Loaded \(testContactCount) test contacts successfully!"
+                showSuccessAlert = true
+            }
+        }
+    }
+
+    private func handleImport(_ result: Result<[URL], Error>) {
+        isImporting = true
+
+        Task {
+            do {
+                let url = try result.get().first!
+                await contactsManager.importContacts(from: url)
+
+                await MainActor.run {
+                    isImporting = false
+                    successMessage = "Imported \(contactsManager.contacts.count) contacts successfully!"
+                    showSuccessAlert = true
+                }
+            } catch {
+                await MainActor.run {
+                    isImporting = false
+                    contactsManager.errorMessage = "Import failed: \(error.localizedDescription)"
+                }
+            }
+        }
+    }
+
+    private func handleExport(_ result: Result<URL, Error>) {
+        isExporting = true
+
+        Task {
+            do {
+                let url = try result.get()
+                let success = await contactsManager.exportContacts(to: url)
+
+                await MainActor.run {
+                    isExporting = false
+                    if success {
+                        successMessage = "Exported \(contactsManager.contacts.count) contacts to \(url.lastPathComponent)"
+                        showSuccessAlert = true
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    isExporting = false
+                    contactsManager.errorMessage = "Export failed: \(error.localizedDescription)"
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Documents (for FileExporter)
+
+// Empty document for backup file exporter (actual backup is created by ContactsManager)
+struct BackupDocument: FileDocument {
+    static var readableContentTypes: [UTType] = [.vCard]
+
+    init() {}
+
+    init(configuration: ReadConfiguration) throws {
+        // Not used for backup export
+    }
+
+    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
+        // Return empty wrapper - actual backup is created by ContactsManager
+        return FileWrapper(regularFileWithContents: Data())
+    }
+}
+
+struct ContactsDocument: FileDocument {
+    static var readableContentTypes: [UTType] = [.json]
+
+    var contacts: [ContactSummary]
+
+    init(contacts: [ContactSummary]) {
+        self.contacts = contacts
+    }
+
+    init(configuration: ReadConfiguration) throws {
+        guard let data = configuration.file.regularFileContents else {
+            throw CocoaError(.fileReadCorruptFile)
+        }
+        contacts = try ImportExportService.shared.importContactsFromData(data)
+    }
+
+    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
+        let data = try ImportExportService.shared.exportContactsToJSON(contacts)
+        return FileWrapper(regularFileWithContents: data)
     }
 }
 

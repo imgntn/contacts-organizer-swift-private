@@ -165,6 +165,63 @@ final class DataQualityAnalyzerTests: XCTestCase {
         let summary = analyzer.generateSummary(issues: issues)
 
         XCTAssertLessThan(summary.healthScore, 100.0, "Health score should decrease with issues")
+        XCTAssertEqual(summary.healthScore, 90.0, accuracy: 0.1, "High priority issue should reduce score by 10 points")
+    }
+
+    func testHealthScoreSeverityWeighting() {
+        // Test high priority: -10 points each
+        let highIssues = [
+            DataQualityIssue(contactId: "1", contactName: "Test", issueType: .missingName, description: "Test", severity: .high),
+            DataQualityIssue(contactId: "2", contactName: "Test", issueType: .noContactInfo, description: "Test", severity: .high)
+        ]
+        let highSummary = analyzer.generateSummary(issues: highIssues)
+        XCTAssertEqual(highSummary.healthScore, 80.0, accuracy: 0.1, "2 high priority issues should reduce score by 20 points")
+
+        // Test medium priority: -3 points each
+        let mediumIssues = [
+            DataQualityIssue(contactId: "1", contactName: "Test", issueType: .missingPhone, description: "Test", severity: .medium),
+            DataQualityIssue(contactId: "2", contactName: "Test", issueType: .missingPhone, description: "Test", severity: .medium)
+        ]
+        let mediumSummary = analyzer.generateSummary(issues: mediumIssues)
+        XCTAssertEqual(mediumSummary.healthScore, 94.0, accuracy: 0.1, "2 medium priority issues should reduce score by 6 points")
+
+        // Test low priority: -0.5 points each
+        let lowIssues = [
+            DataQualityIssue(contactId: "1", contactName: "Test", issueType: .missingEmail, description: "Test", severity: .low),
+            DataQualityIssue(contactId: "2", contactName: "Test", issueType: .missingEmail, description: "Test", severity: .low)
+        ]
+        let lowSummary = analyzer.generateSummary(issues: lowIssues)
+        XCTAssertEqual(lowSummary.healthScore, 99.0, accuracy: 0.1, "2 low priority issues should reduce score by 1 point")
+    }
+
+    func testHealthScoreLowPriorityCappedAt5Percent() {
+        // Create 20 low priority issues (would be 10 points without cap)
+        var lowIssues: [DataQualityIssue] = []
+        for i in 0..<20 {
+            lowIssues.append(
+                DataQualityIssue(contactId: "\(i)", contactName: "Test", issueType: .missingEmail, description: "Test", severity: .low)
+            )
+        }
+
+        let summary = analyzer.generateSummary(issues: lowIssues)
+
+        // Should be capped at 5% penalty = 95% score
+        XCTAssertEqual(summary.healthScore, 95.0, accuracy: 0.1, "Low priority issues should be capped at 5% impact")
+    }
+
+    func testHealthScoreMixedSeverities() {
+        let mixedIssues = [
+            DataQualityIssue(contactId: "1", contactName: "Test", issueType: .missingName, description: "Test", severity: .high),        // -10
+            DataQualityIssue(contactId: "2", contactName: "Test", issueType: .missingPhone, description: "Test", severity: .medium),     // -3
+            DataQualityIssue(contactId: "3", contactName: "Test", issueType: .missingPhone, description: "Test", severity: .medium),     // -3
+            DataQualityIssue(contactId: "4", contactName: "Test", issueType: .missingEmail, description: "Test", severity: .low),        // -0.5
+            DataQualityIssue(contactId: "5", contactName: "Test", issueType: .incompleteData, description: "Test", severity: .low)       // -0.5
+        ]
+        // Total: -10 - 3 - 3 - 0.5 - 0.5 = -17 points
+
+        let summary = analyzer.generateSummary(issues: mixedIssues)
+
+        XCTAssertEqual(summary.healthScore, 83.0, accuracy: 0.1, "Mixed severity issues should be weighted correctly")
     }
 
     // MARK: - Empty Input

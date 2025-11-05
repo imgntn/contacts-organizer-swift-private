@@ -116,13 +116,18 @@ class ContactsManager: ObservableObject {
 
     // MARK: - Statistics
 
-    nonisolated private func calculateStatistics(from contacts: [ContactSummary]) -> ContactStatistics {
+    nonisolated private func calculateStatistics(from contacts: [ContactSummary], issues: [DataQualityIssue]? = nil) -> ContactStatistics {
         let totalContacts = contacts.count
         let contactsWithPhone = contacts.filter { !$0.phoneNumbers.isEmpty }.count
         let contactsWithEmail = contacts.filter { !$0.emailAddresses.isEmpty }.count
         let contactsWithBoth = contacts.filter { !$0.phoneNumbers.isEmpty && !$0.emailAddresses.isEmpty }.count
         let contactsWithOrg = contacts.filter { $0.organization != nil }.count
         let contactsWithPhoto = contacts.filter { $0.hasProfileImage }.count
+
+        // Count issues by severity
+        let highPriority = issues?.filter { $0.severity == .high }.count ?? 0
+        let mediumPriority = issues?.filter { $0.severity == .medium }.count ?? 0
+        let lowPriority = issues?.filter { $0.severity == .low }.count ?? 0
 
         return ContactStatistics(
             totalContacts: totalContacts,
@@ -132,7 +137,10 @@ class ContactsManager: ObservableObject {
             contactsWithOrganization: contactsWithOrg,
             contactsWithPhoto: contactsWithPhoto,
             duplicateGroups: 0, // Will be calculated by duplicate detector
-            dataQualityIssues: 0 // Will be calculated by data quality analyzer
+            dataQualityIssues: issues?.count ?? 0,
+            highPriorityIssues: highPriority,
+            mediumPriorityIssues: mediumPriority,
+            lowPriorityIssues: lowPriority
         )
     }
 
@@ -585,6 +593,22 @@ class ContactsManager: ObservableObject {
                 }
                 return false
             }
+
+        // Phase 1: Quick wins using existing data
+        case .phoneOnly:
+            return !contact.phoneNumbers.isEmpty && contact.emailAddresses.isEmpty
+
+        case .emailOnly:
+            return !contact.emailAddresses.isEmpty && contact.phoneNumbers.isEmpty
+
+        case .noCriticalInfo:
+            return contact.phoneNumbers.isEmpty && contact.emailAddresses.isEmpty
+
+        case .multiplePhones:
+            return contact.phoneNumbers.count >= 2
+
+        case .multipleEmails:
+            return contact.emailAddresses.count >= 2
         }
     }
 
@@ -614,8 +638,110 @@ class ContactsManager: ObservableObject {
                 groupingType: .custom(CustomCriteria(rules: [
                     CustomCriteria.Rule(field: .hasPhoto, condition: .exists)
                 ]))
+            ),
+
+            // Phase 1: Quick wins using existing data
+            SmartGroupDefinition(
+                name: "Missing Critical Info",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .noCriticalInfo, condition: .exists)
+                ]))
+            ),
+            SmartGroupDefinition(
+                name: "Phone Only (No Email)",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .phoneOnly, condition: .exists)
+                ]))
+            ),
+            SmartGroupDefinition(
+                name: "Email Only (No Phone)",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .emailOnly, condition: .exists)
+                ]))
+            ),
+            SmartGroupDefinition(
+                name: "Multiple Phone Numbers",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .multiplePhones, condition: .exists)
+                ]))
+            ),
+            SmartGroupDefinition(
+                name: "Multiple Email Addresses",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .multipleEmails, condition: .exists)
+                ]))
             )
         ]
+    }
+
+    // MARK: - Test Data & Import/Export
+
+    @MainActor
+    func updateStatisticsWithIssues(_ issues: [DataQualityIssue]) {
+        // Recalculate statistics with issue severity counts
+        self.statistics = calculateStatistics(from: self.contacts, issues: issues)
+    }
+
+    func loadTestContacts(count: Int = 100) async {
+        await MainActor.run {
+            isLoading = true
+        }
+
+        let testContacts = TestDataGenerator.shared.generateTestContacts(count: count)
+
+        await MainActor.run {
+            self.contacts = testContacts
+            self.statistics = calculateStatistics(from: testContacts)
+            self.isLoading = false
+        }
+    }
+
+    func importContacts(from url: URL) async {
+        await MainActor.run {
+            isLoading = true
+            errorMessage = nil
+        }
+
+        do {
+            let importedContacts = try ImportExportService.shared.importContacts(from: url)
+
+            await MainActor.run {
+                self.contacts = importedContacts
+                self.statistics = calculateStatistics(from: importedContacts)
+                self.isLoading = false
+            }
+        } catch {
+            await MainActor.run {
+                self.errorMessage = "Failed to import contacts: \(error.localizedDescription)"
+                self.isLoading = false
+            }
+        }
+    }
+
+    func exportContacts(to url: URL) async -> Bool {
+        do {
+            try ImportExportService.shared.exportContacts(contacts, to: url)
+            return true
+        } catch {
+            await MainActor.run {
+                self.errorMessage = "Failed to export contacts: \(error.localizedDescription)"
+            }
+            return false
+        }
+    }
+
+    func generateTestDatabase(count: Int = 100, saveTo url: URL? = nil) async -> Bool {
+        let destination = url ?? ImportExportService.shared.defaultTestDatabaseURL()
+
+        do {
+            try ImportExportService.shared.generateAndSaveTestDatabase(count: count, to: destination)
+            return true
+        } catch {
+            await MainActor.run {
+                self.errorMessage = "Failed to generate test database: \(error.localizedDescription)"
+            }
+            return false
+        }
     }
 
     // MARK: - Utility

@@ -140,14 +140,17 @@ struct DataQualitySummary {
         // Calculate a health score based on severity distribution
         guard totalIssues > 0 else { return 100.0 }
 
-        let weightedScore = Double(
-            highSeverityCount * 3 +
-            mediumSeverityCount * 2 +
-            lowSeverityCount * 1
-        )
+        // Use same weights as ContactStatistics for consistency:
+        // - High priority issues: -10 points each (critical problems)
+        // - Medium priority issues: -3 points each (significant problems)
+        // - Low priority issues: -0.5 points each, CAPPED AT 5% max impact
 
-        // Assuming average of 1 issue per contact would be 50% health
-        // Adjust based on your preferences
-        return max(0, 100 - (weightedScore * 5))
+        let highPenalty = Double(highSeverityCount) * 10.0
+        let mediumPenalty = Double(mediumSeverityCount) * 3.0
+        let lowPenalty = min(Double(lowSeverityCount) * 0.5, 5.0) // Cap low priority at 5%
+
+        let totalPenalty = highPenalty + mediumPenalty + lowPenalty
+
+        return max(0, 100.0 - totalPenalty)
     }
 }

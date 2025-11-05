@@ -23,6 +23,8 @@
 		7D7093F82EB6D1B60073F556 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7093E82EB6D1B60073F556 /* ContentView.swift */; };
 		7D7093F92EB6D1B60073F556 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7093E92EB6D1B60073F556 /* SettingsView.swift */; };
 		7D8C3D642EB7159C0090A507 /* FirstBackupSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D8C3D632EB7159C0090A507 /* FirstBackupSheet.swift */; };
+		7D8C3D822EBA01430090A507 /* ImportExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D8C3D802EBA01430090A507 /* ImportExportService.swift */; };
+		7D8C3D832EBA01430090A507 /* TestDataGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D8C3D812EBA01430090A507 /* TestDataGenerator.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,6 +59,8 @@
 		7D8C3D622EB70B6F0090A507 /* NSContactsUsageDescription.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = NSContactsUsageDescription.txt; sourceTree = "<group>"; };
 		7D8C3D632EB7159C0090A507 /* FirstBackupSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstBackupSheet.swift; sourceTree = "<group>"; };
 		7D8C3D692EB9A60D0090A507 /* Contacts OrganizerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Contacts OrganizerTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		7D8C3D802EBA01430090A507 /* ImportExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportExportService.swift; sourceTree = "<group>"; };
+		7D8C3D812EBA01430090A507 /* TestDataGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestDataGenerator.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -137,6 +141,8 @@
 		7D7093DA2EB6D1B60073F556 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				7D8C3D802EBA01430090A507 /* ImportExportService.swift */,
+				7D8C3D812EBA01430090A507 /* TestDataGenerator.swift */,
 				7D7093D72EB6D1B60073F556 /* ContactsManager.swift */,
 				7D7093D82EB6D1B60073F556 /* DataQualityAnalyzer.swift */,
 				7D7093D92EB6D1B60073F556 /* DuplicateDetector.swift */,
@@ -313,6 +319,8 @@
 				7D7093EE2EB6D1B60073F556 /* DuplicatesView.swift in Sources */,
 				7D7093EF2EB6D1B60073F556 /* ContactModels.swift in Sources */,
 				7D7093F02EB6D1B60073F556 /* ContactsOrganizerApp.swift in Sources */,
+				7D8C3D822EBA01430090A507 /* ImportExportService.swift in Sources */,
+				7D8C3D832EBA01430090A507 /* TestDataGenerator.swift in Sources */,
 				7D7093F12EB6D1B60073F556 /* AppState.swift in Sources */,
 				7D7093F22EB6D1B60073F556 /* DuplicateDetector.swift in Sources */,
 				7D7093F32EB6D1B60073F556 /* CleanupView.swift in Sources */,
