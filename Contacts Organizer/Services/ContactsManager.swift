@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import Contacts
+@preconcurrency import Contacts
 import SwiftUI
 import Combine
 
@@ -21,6 +21,9 @@ class ContactsManager: ObservableObject {
     @Published var errorMessage: String?
     @Published var statistics: ContactStatistics?
     @Published var groups: [CNGroup] = []
+
+    // Use a dedicated queue for CNContactStore I/O to avoid QoS inversions
+    private let contactsQueue = DispatchQueue(label: "com.playablefuture.contactsorganizer.contacts", qos: .utility)
 
     private init() {
         updateAuthorizationStatus()
@@ -69,37 +72,42 @@ class ContactsManager: ObservableObject {
             errorMessage = nil
         }
 
-        // Run blocking operation on background thread (detached to avoid main thread blocking)
-        let result = await Task.detached { [weak self] in
-            guard let self = self else { return Result<([ContactSummary], ContactStatistics), Error>.failure(NSError(domain: "ContactsManager", code: -1)) }
-
-            do {
-                let keysToFetch: [CNKeyDescriptor] = [
-                    CNContactGivenNameKey as CNKeyDescriptor,
-                    CNContactFamilyNameKey as CNKeyDescriptor,
-                    CNContactMiddleNameKey as CNKeyDescriptor,
-                    CNContactOrganizationNameKey as CNKeyDescriptor,
-                    CNContactPhoneNumbersKey as CNKeyDescriptor,
-                    CNContactEmailAddressesKey as CNKeyDescriptor,
-                    CNContactImageDataAvailableKey as CNKeyDescriptor,
-                    CNContactDatesKey as CNKeyDescriptor,
-                    CNContactFormatter.descriptorForRequiredKeys(for: .fullName)
-                ]
-
-                let request = CNContactFetchRequest(keysToFetch: keysToFetch)
-                var fetchedContacts: [ContactSummary] = []
-
-                try self.store.enumerateContacts(with: request) { contact, _ in
-                    fetchedContacts.append(ContactSummary(from: contact))
+        // Run CNContactStore work on a utility queue to avoid QoS inversion
+        let result = await withCheckedContinuation { (continuation: CheckedContinuation<Result<([ContactSummary], ContactStatistics), Error>, Never>) in
+            contactsQueue.async { [weak self] in
+                guard let self = self else {
+                    continuation.resume(returning: .failure(NSError(domain: "ContactsManager", code: -1)))
+                    return
                 }
 
-                let stats = self.calculateStatistics(from: fetchedContacts)
+                do {
+                    let keysToFetch: [CNKeyDescriptor] = [
+                        CNContactGivenNameKey as CNKeyDescriptor,
+                        CNContactFamilyNameKey as CNKeyDescriptor,
+                        CNContactMiddleNameKey as CNKeyDescriptor,
+                        CNContactOrganizationNameKey as CNKeyDescriptor,
+                        CNContactPhoneNumbersKey as CNKeyDescriptor,
+                        CNContactEmailAddressesKey as CNKeyDescriptor,
+                        CNContactImageDataAvailableKey as CNKeyDescriptor,
+                        CNContactDatesKey as CNKeyDescriptor,
+                        CNContactBirthdayKey as CNKeyDescriptor,
+                        CNContactFormatter.descriptorForRequiredKeys(for: .fullName)
+                    ]
 
-                return .success((fetchedContacts, stats))
-            } catch {
-                return .failure(error)
+                    let request = CNContactFetchRequest(keysToFetch: keysToFetch)
+                    var fetchedContacts: [ContactSummary] = []
+
+                    try self.store.enumerateContacts(with: request) { contact, _ in
+                        fetchedContacts.append(ContactSummary(from: contact))
+                    }
+
+                    let stats = self.calculateStatistics(from: fetchedContacts)
+                    continuation.resume(returning: .success((fetchedContacts, stats)))
+                } catch {
+                    continuation.resume(returning: .failure(error))
+                }
             }
-        }.value
+        }
 
         await MainActor.run {
             switch result {
@@ -349,30 +357,50 @@ class ContactsManager: ObservableObject {
     func createGroup(name: String, contactIds: [String]) async -> Bool {
         guard authorizationStatus == .authorized else { return false }
 
-        do {
-            let group = CNMutableGroup()
-            group.name = name
+        // Use the dedicated queue instead of Task.detached
+        return await withCheckedContinuation { continuation in
+            contactsQueue.async { [weak self] in
+                guard let self = self else {
+                    continuation.resume(returning: false)
+                    return
+                }
 
-            let saveRequest = CNSaveRequest()
-            saveRequest.add(group, toContainerWithIdentifier: nil)
+                do {
+                    // Check if group with this name already exists
+                    let existingGroups = try self.store.groups(matching: nil)
+                    if existingGroups.contains(where: { $0.name == name }) {
+                        Task { @MainActor in
+                            self.errorMessage = "Group '\(name)' already exists"
+                        }
+                        continuation.resume(returning: false)
+                        return
+                    }
 
-            // Add contacts to group
-            for contactId in contactIds {
-                if let contact = try? store.unifiedContact(
-                    withIdentifier: contactId,
-                    keysToFetch: [CNContactGivenNameKey as CNKeyDescriptor]
-                ) {
-                    saveRequest.addMember(contact, to: group)
+                    let group = CNMutableGroup()
+                    group.name = name
+
+                    let saveRequest = CNSaveRequest()
+                    saveRequest.add(group, toContainerWithIdentifier: nil)
+
+                    // Add contacts to group
+                    for contactId in contactIds {
+                        if let contact = try? self.store.unifiedContact(
+                            withIdentifier: contactId,
+                            keysToFetch: [CNContactGivenNameKey as CNKeyDescriptor]
+                        ) {
+                            saveRequest.addMember(contact, to: group)
+                        }
+                    }
+
+                    try self.store.execute(saveRequest)
+                    continuation.resume(returning: true)
+                } catch {
+                    Task { @MainActor in
+                        self.errorMessage = "Failed to create group: \(error.localizedDescription)"
+                    }
+                    continuation.resume(returning: false)
                 }
             }
-
-            try store.execute(saveRequest)
-            return true
-        } catch {
-            await MainActor.run {
-                errorMessage = "Failed to create group: \(error.localizedDescription)"
-            }
-            return false
         }
     }
 
@@ -386,17 +414,103 @@ class ContactsManager: ObservableObject {
             return
         }
 
-        do {
-            let fetchedGroups = try store.groups(matching: nil)
-
-            await MainActor.run {
-                self.groups = fetchedGroups
+        let result = await withCheckedContinuation { (continuation: CheckedContinuation<Result<[CNGroup], Error>, Never>) in
+            contactsQueue.async { [weak self] in
+                guard let self = self else {
+                    continuation.resume(returning: .failure(NSError(domain: "ContactsManager", code: -1)))
+                    return
+                }
+                do {
+                    let fetchedGroups = try self.store.groups(matching: nil)
+                    continuation.resume(returning: .success(fetchedGroups))
+                } catch {
+                    continuation.resume(returning: .failure(error))
+                }
             }
-        } catch {
-            await MainActor.run {
+        }
+
+        await MainActor.run {
+            switch result {
+            case .success(let fetchedGroups):
+                self.groups = fetchedGroups
+            case .failure(let error):
                 self.errorMessage = "Failed to fetch groups: \(error.localizedDescription)"
             }
         }
+    }
+
+    // MARK: - Duplicate Group Detection & Cleanup
+
+    func findDuplicateGroups() async -> [String: [CNGroup]] {
+        guard authorizationStatus == .authorized else { return [:] }
+
+        let result = await withCheckedContinuation { (continuation: CheckedContinuation<Result<[CNGroup], Error>, Never>) in
+            contactsQueue.async { [weak self] in
+                guard let self = self else {
+                    continuation.resume(returning: .failure(NSError(domain: "ContactsManager", code: -1)))
+                    return
+                }
+                do {
+                    let fetchedGroups = try self.store.groups(matching: nil)
+                    continuation.resume(returning: .success(fetchedGroups))
+                } catch {
+                    continuation.resume(returning: .failure(error))
+                }
+            }
+        }
+
+        switch result {
+        case .success(let fetchedGroups):
+            var groupsByName: [String: [CNGroup]] = [:]
+            for group in fetchedGroups {
+                groupsByName[group.name, default: []].append(group)
+            }
+            return groupsByName.filter { $0.value.count > 1 }
+        case .failure(let error):
+            await MainActor.run {
+                self.errorMessage = "Failed to find duplicates: \(error.localizedDescription)"
+            }
+            return [:]
+        }
+    }
+
+    func deleteDuplicateGroups(keepFirst: Bool = true) async -> (deleted: Int, errors: Int) {
+        guard authorizationStatus == .authorized else { return (0, 0) }
+
+        let duplicates = await findDuplicateGroups()
+        var deletedCount = 0
+        var errorCount = 0
+
+        for (_, groups) in duplicates {
+            // Keep the first one, delete the rest
+            let groupsToDelete = keepFirst ? Array(groups.dropFirst()) : Array(groups.dropLast())
+
+            for group in groupsToDelete {
+                let result = await withCheckedContinuation { (continuation: CheckedContinuation<Bool, Never>) in
+                    contactsQueue.async { [weak self] in
+                        guard let self = self else {
+                            continuation.resume(returning: false)
+                            return
+                        }
+                        let saveRequest = CNSaveRequest()
+                        saveRequest.delete(group.mutableCopy() as! CNMutableGroup)
+                        do {
+                            try self.store.execute(saveRequest)
+                            continuation.resume(returning: true)
+                        } catch {
+                            print("Failed to delete duplicate group '\(group.name)': \(error)")
+                            continuation.resume(returning: false)
+                        }
+                    }
+                }
+                if result { deletedCount += 1 } else { errorCount += 1 }
+            }
+        }
+
+        // Refresh groups list
+        await fetchAllGroups()
+
+        return (deletedCount, errorCount)
     }
 
     // MARK: - Backup
@@ -409,67 +523,70 @@ class ContactsManager: ObservableObject {
             return (nil, nil)
         }
 
-        // Run blocking operation on background thread (detached to avoid main thread blocking)
-        let result = await Task.detached { [weak self] in
-            guard let self = self else { return Result<(URL?, URL?), Error>.failure(NSError(domain: "ContactsManager", code: -1)) }
-
-            do {
-                // Fetch all contacts with all available keys
-                let keysToFetch: [CNKeyDescriptor] = [
-                    CNContactVCardSerialization.descriptorForRequiredKeys()
-                ]
-
-                let request = CNContactFetchRequest(keysToFetch: keysToFetch)
-                var allContacts: [CNContact] = []
-
-                try self.store.enumerateContacts(with: request) { contact, _ in
-                    allContacts.append(contact)
+        let result = await withCheckedContinuation { (continuation: CheckedContinuation<Result<(URL?, URL?), Error>, Never>) in
+            contactsQueue.async { [weak self] in
+                guard let self = self else {
+                    continuation.resume(returning: .failure(NSError(domain: "ContactsManager", code: -1)))
+                    return
                 }
 
-                // Convert to vCard data
-                let vCardData = try CNContactVCardSerialization.data(with: allContacts)
+                do {
+                    // Fetch all contacts with all available keys
+                    let keysToFetch: [CNKeyDescriptor] = [
+                        CNContactVCardSerialization.descriptorForRequiredKeys()
+                    ]
 
-                // Create filename with timestamp
-                let dateFormatter = DateFormatter()
-                dateFormatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
-                let timestamp = dateFormatter.string(from: Date())
-                let filename = "Contacts_Backup_\(timestamp).vcf"
+                    let request = CNContactFetchRequest(keysToFetch: keysToFetch)
+                    var allContacts: [CNContact] = []
 
-                var userBackupURL: URL?
-                var appBackupURL: URL?
+                    try self.store.enumerateContacts(with: request) { contact, _ in
+                        allContacts.append(contact)
+                    }
 
-                // Save to user-specified location (if provided)
-                if let saveToURL = saveToURL {
-                    try vCardData.write(to: saveToURL)
-                    userBackupURL = saveToURL
-                    print("✅ User backup created: \(saveToURL.path)")
-                } else {
-                    // Default to Downloads folder
-                    let downloadsURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
-                    let fileURL = downloadsURL.appendingPathComponent(filename)
-                    try vCardData.write(to: fileURL)
-                    userBackupURL = fileURL
-                    print("✅ User backup created: \(fileURL.path)")
+                    // Convert to vCard data
+                    let vCardData = try CNContactVCardSerialization.data(with: allContacts)
+
+                    // Create filename with timestamp
+                    let dateFormatter = DateFormatter()
+                    dateFormatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
+                    let timestamp = dateFormatter.string(from: Date())
+                    let filename = "Contacts_Backup_\(timestamp).vcf"
+
+                    var userBackupURL: URL?
+                    var appBackupURL: URL?
+
+                    // Save to user-specified location (if provided)
+                    if let saveToURL = saveToURL {
+                        try vCardData.write(to: saveToURL)
+                        userBackupURL = saveToURL
+                        print("✅ User backup created: \(saveToURL.path)")
+                    } else {
+                        // Default to Downloads folder
+                        let downloadsURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
+                        let fileURL = downloadsURL.appendingPathComponent(filename)
+                        try vCardData.write(to: fileURL)
+                        userBackupURL = fileURL
+                        print("✅ User backup created: \(fileURL.path)")
+                    }
+
+                    // Always save a safety copy to app's Application Support directory
+                    let appSupportURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+                    let appBackupFolder = appSupportURL.appendingPathComponent("com.playablefuture.contactsorganizer/Backups", isDirectory: true)
+
+                    // Create backup directory if it doesn't exist
+                    try FileManager.default.createDirectory(at: appBackupFolder, withIntermediateDirectories: true)
+
+                    let appBackupFile = appBackupFolder.appendingPathComponent(filename)
+                    try vCardData.write(to: appBackupFile)
+                    appBackupURL = appBackupFile
+                    print("✅ Safety backup created: \(appBackupFile.path)")
+
+                    continuation.resume(returning: .success((userBackupURL, appBackupURL)))
+                } catch {
+                    continuation.resume(returning: .failure(error))
                 }
-
-                // Always save a safety copy to app's Application Support directory
-                let appSupportURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-                let appBackupFolder = appSupportURL.appendingPathComponent("com.playablefuture.contactsorganizer/Backups", isDirectory: true)
-
-                // Create backup directory if it doesn't exist
-                try FileManager.default.createDirectory(at: appBackupFolder, withIntermediateDirectories: true)
-
-                let appBackupFile = appBackupFolder.appendingPathComponent(filename)
-                try vCardData.write(to: appBackupFile)
-                appBackupURL = appBackupFile
-                print("✅ Safety backup created: \(appBackupFile.path)")
-
-                return .success((userBackupURL, appBackupURL))
-
-            } catch {
-                return .failure(error)
             }
-        }.value
+        }
 
         switch result {
         case .success(let urls):
@@ -484,24 +601,36 @@ class ContactsManager: ObservableObject {
 
     // MARK: - Smart Groups
 
-    func generateSmartGroups(definitions: [SmartGroupDefinition], using testContacts: [ContactSummary]? = nil) -> [SmartGroupResult] {
-        var results: [SmartGroupResult] = []
-        let contactsList = testContacts ?? self.contacts  // Use test contacts if provided, otherwise use real contacts
+    func generateSmartGroups(definitions: [SmartGroupDefinition], using testContacts: [ContactSummary]? = nil) async -> [SmartGroupResult] {
+        // Keep this as CPU-bound work; not CNContactStore I/O
+        return await Task.detached(priority: .userInitiated) { [weak self] in
+            guard let self = self else { return [] }
 
-        for definition in definitions where definition.isEnabled {
-            switch definition.groupingType {
-            case .geographic(let criteria):
-                results.append(contentsOf: Self.groupByGeography(contactsList, criteria: criteria))
+            var results: [SmartGroupResult] = []
 
-            case .organization:
-                results.append(contentsOf: Self.groupByOrganization(contactsList))
-
-            case .custom(let criteria):
-                results.append(contentsOf: Self.groupByCustomCriteria(contactsList, name: definition.name, criteria: criteria))
+            // Use test contacts if provided, otherwise use real contacts
+            let contactsList: [ContactSummary]
+            if let testContacts = testContacts {
+                contactsList = testContacts
+            } else {
+                contactsList = await MainActor.run { self.contacts }
             }
-        }
 
-        return results
+            for definition in definitions where definition.isEnabled {
+                switch definition.groupingType {
+                case .geographic(let criteria):
+                    results.append(contentsOf: Self.groupByGeography(contactsList, criteria: criteria))
+
+                case .organization:
+                    results.append(contentsOf: Self.groupByOrganization(contactsList))
+
+                case .custom(let criteria):
+                    results.append(contentsOf: Self.groupByCustomCriteria(contactsList, name: definition.name, criteria: criteria))
+                }
+            }
+
+            return results
+        }.value
     }
 
     nonisolated private static func groupByGeography(_ contacts: [ContactSummary], criteria: GeographicCriteria) -> [SmartGroupResult] {
@@ -609,6 +738,58 @@ class ContactsManager: ObservableObject {
 
         case .multipleEmails:
             return contact.emailAddresses.count >= 2
+
+        // Phase 2: Time-based criteria
+        case .recentlyAdded:
+            guard let creationDate = contact.creationDate else { return false }
+            let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: Date())!
+            return creationDate >= thirtyDaysAgo
+
+        case .recentlyModified:
+            guard let modificationDate = contact.modificationDate else { return false }
+            let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: Date())!
+            return modificationDate >= thirtyDaysAgo
+
+        case .staleContact:
+            guard let modificationDate = contact.modificationDate else { return false }
+            let oneYearAgo = Calendar.current.date(byAdding: .year, value: -1, to: Date())!
+            return modificationDate < oneYearAgo
+
+        case .birthdayThisMonth:
+            guard let birthday = contact.birthday else { return false }
+            let calendar = Calendar.current
+            let now = Date()
+            let birthdayMonth = calendar.component(.month, from: birthday)
+            let currentMonth = calendar.component(.month, from: now)
+            return birthdayMonth == currentMonth
+
+        case .birthdayThisWeek:
+            guard let birthday = contact.birthday else { return false }
+            let calendar = Calendar.current
+            let now = Date()
+
+            // Get current week's start and end dates
+            guard let weekStart = calendar.dateInterval(of: .weekOfYear, for: now)?.start,
+                  let weekEnd = calendar.dateInterval(of: .weekOfYear, for: now)?.end else {
+                return false
+            }
+
+            // Get birthday's day and month
+            let birthdayDay = calendar.component(.day, from: birthday)
+            let birthdayMonth = calendar.component(.month, from: birthday)
+
+            // Create this year's birthday date
+            var birthdayComponents = DateComponents()
+            birthdayComponents.month = birthdayMonth
+            birthdayComponents.day = birthdayDay
+            birthdayComponents.year = calendar.component(.year, from: now)
+
+            guard let thisYearBirthday = calendar.date(from: birthdayComponents) else {
+                return false
+            }
+
+            // Check if birthday falls within this week
+            return thisYearBirthday >= weekStart && thisYearBirthday < weekEnd
         }
     }
 
@@ -669,6 +850,38 @@ class ContactsManager: ObservableObject {
                 name: "Multiple Email Addresses",
                 groupingType: .custom(CustomCriteria(rules: [
                     CustomCriteria.Rule(field: .multipleEmails, condition: .exists)
+                ]))
+            ),
+
+            // Phase 2: Time-based smart groups
+            SmartGroupDefinition(
+                name: "Recently Added (Last 30 Days)",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .recentlyAdded, condition: .exists)
+                ]))
+            ),
+            SmartGroupDefinition(
+                name: "Recently Modified (Last 30 Days)",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .recentlyModified, condition: .exists)
+                ]))
+            ),
+            SmartGroupDefinition(
+                name: "Stale Contacts (1+ Year)",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .staleContact, condition: .exists)
+                ]))
+            ),
+            SmartGroupDefinition(
+                name: "Birthday This Month",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .birthdayThisMonth, condition: .exists)
+                ]))
+            ),
+            SmartGroupDefinition(
+                name: "Birthday This Week",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .birthdayThisWeek, condition: .exists)
                 ]))
             )
         ]
@@ -750,3 +963,4 @@ class ContactsManager: ObservableObject {
         errorMessage = nil
     }
 }
+

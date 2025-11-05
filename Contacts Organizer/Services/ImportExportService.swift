@@ -73,7 +73,7 @@ class ImportExportService {
 
 extension ContactSummary: Codable {
     enum CodingKeys: String, CodingKey {
-        case id, fullName, organization, phoneNumbers, emailAddresses, hasProfileImage, creationDate, modificationDate
+        case id, fullName, organization, phoneNumbers, emailAddresses, hasProfileImage, creationDate, modificationDate, birthday
     }
 
     init(from decoder: Decoder) throws {
@@ -86,6 +86,7 @@ extension ContactSummary: Codable {
         hasProfileImage = try container.decode(Bool.self, forKey: .hasProfileImage)
         creationDate = try container.decodeIfPresent(Date.self, forKey: .creationDate)
         modificationDate = try container.decodeIfPresent(Date.self, forKey: .modificationDate)
+        birthday = try container.decodeIfPresent(Date.self, forKey: .birthday)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -98,5 +99,6 @@ extension ContactSummary: Codable {
         try container.encode(hasProfileImage, forKey: .hasProfileImage)
         try container.encodeIfPresent(creationDate, forKey: .creationDate)
         try container.encodeIfPresent(modificationDate, forKey: .modificationDate)
+        try container.encodeIfPresent(birthday, forKey: .birthday)
     }
 }

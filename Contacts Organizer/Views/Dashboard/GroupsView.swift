@@ -14,6 +14,27 @@ struct GroupsView: View {
     @State private var showSmartGroupSheet = false
     @State private var smartGroupResults: [SmartGroupResult] = []
     @State private var selectedTab: GroupTab = .manual
+    @State private var isCreatingGroups = false
+    @State private var showResultsAlert = false
+    @State private var creationResults: CreationResults?
+    @State private var showConfirmCreate = false
+    @State private var groupToCreate: SmartGroupResult?
+    @State private var duplicateGroupCount = 0
+    @State private var showConfirmCleanup = false
+    @State private var isCleaningDuplicates = false
+    @State private var showCleanupResults = false
+    @State private var cleanupResults: CleanupResults?
+
+    struct CreationResults {
+        let successCount: Int
+        let failureCount: Int
+        let failedGroups: [String]
+    }
+
+    struct CleanupResults {
+        let deletedCount: Int
+        let errorCount: Int
+    }
 
     enum GroupTab: String, CaseIterable {
         case manual = "Manual Groups"
@@ -45,15 +66,38 @@ struct GroupsView: View {
                 .frame(width: 300)
 
                 if selectedTab == .manual {
+                    if duplicateGroupCount > 0 {
+                        Button(action: { showConfirmCleanup = true }) {
+                            HStack {
+                                if isCleaningDuplicates {
+                                    ProgressView()
+                                        .scaleEffect(0.7)
+                                        .frame(width: 16, height: 16)
+                                }
+                                Label(isCleaningDuplicates ? "Cleaning..." : "Clean Up \(duplicateGroupCount) Duplicates", systemImage: "trash")
+                            }
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(isCleaningDuplicates)
+                    }
+
                     Button(action: { showCreateGroupSheet = true }) {
                         Label("Create Group", systemImage: "plus")
                     }
                     .buttonStyle(.borderedProminent)
                 } else {
                     Button(action: { showSmartGroupSheet = true }) {
-                        Label("Generate Smart Groups", systemImage: "sparkles")
+                        HStack {
+                            if isCreatingGroups {
+                                ProgressView()
+                                    .scaleEffect(0.7)
+                                    .frame(width: 16, height: 16)
+                            }
+                            Label(isCreatingGroups ? "Creating Groups..." : "Generate Smart Groups", systemImage: "sparkles")
+                        }
                     }
                     .buttonStyle(.borderedProminent)
+                    .disabled(isCreatingGroups)
                 }
             }
             .padding(24)
@@ -71,15 +115,65 @@ struct GroupsView: View {
         }
         .task {
             await contactsManager.fetchAllGroups()
-            generateSmartGroups()
+
+            // Auto-generate smart groups for display (synthetic/in-memory only)
+            // They won't be created in Contacts.app unless user explicitly clicks "Create in Contacts"
+            await generateSmartGroupsAsync()
+
+            // Check for duplicate groups
+            let duplicates = await contactsManager.findDuplicateGroups()
+            duplicateGroupCount = duplicates.values.reduce(0) { $0 + $1.count - 1 }
         }
         .sheet(isPresented: $showCreateGroupSheet) {
             CreateGroupSheet()
         }
         .sheet(isPresented: $showSmartGroupSheet) {
             SmartGroupConfigSheet(onGenerate: { definitions in
-                smartGroupResults = contactsManager.generateSmartGroups(definitions: definitions)
+                // Use async version to avoid blocking UI
+                Task {
+                    await generateSmartGroupsAsync(definitions: definitions)
+                }
             })
+        }
+        .alert("Create Smart Group in Contacts?", isPresented: $showConfirmCreate, presenting: groupToCreate) { result in
+            Button("Cancel", role: .cancel) { }
+            Button("Create") {
+                Task {
+                    await confirmAndCreateGroup()
+                }
+            }
+        } message: { result in
+            Text("This will create a new group '\(result.groupName)' with \(result.contacts.count) contact\(result.contacts.count == 1 ? "" : "s") in your Contacts app.")
+        }
+        .alert("Clean Up Duplicate Groups?", isPresented: $showConfirmCleanup) {
+            Button("Cancel", role: .cancel) { }
+            Button("Clean Up", role: .destructive) {
+                Task {
+                    await cleanUpDuplicates()
+                }
+            }
+        } message: {
+            Text("This will delete \(duplicateGroupCount) duplicate group\(duplicateGroupCount == 1 ? "" : "s") from your Contacts app, keeping the first occurrence of each.")
+        }
+        .alert("Duplicate Cleanup Complete", isPresented: $showCleanupResults, presenting: cleanupResults) { results in
+            Button("OK") { }
+        } message: { results in
+            if results.errorCount == 0 {
+                Text("Successfully deleted \(results.deletedCount) duplicate group\(results.deletedCount == 1 ? "" : "s") from Contacts.app!")
+            } else {
+                Text("Deleted \(results.deletedCount) group\(results.deletedCount == 1 ? "" : "s"), but \(results.errorCount) failed. Please check Contacts app permissions.")
+            }
+        }
+        .alert("Smart Groups Created", isPresented: $showResultsAlert, presenting: creationResults) { results in
+            Button("OK") { }
+        } message: { results in
+            if results.failureCount == 0 {
+                Text("Successfully created \(results.successCount) smart group\(results.successCount == 1 ? "" : "s") in Contacts.app!")
+            } else if results.successCount == 0 {
+                Text("Failed to create \(results.failureCount) group\(results.failureCount == 1 ? "" : "s"). Please check Contacts app permissions.")
+            } else {
+                Text("Created \(results.successCount) group\(results.successCount == 1 ? "" : "s") successfully. Failed to create \(results.failureCount) group\(results.failureCount == 1 ? "" : "s"): \(results.failedGroups.joined(separator: ", "))")
+            }
         }
     }
 
@@ -141,11 +235,21 @@ struct GroupsView: View {
                 .cornerRadius(12)
 
                 Button(action: {
-                    generateSmartGroups()
+                    Task {
+                        await generateSmartGroupsAsync()
+                    }
                 }) {
-                    Label("Generate Default Smart Groups", systemImage: "sparkles")
+                    HStack {
+                        if isCreatingGroups {
+                            ProgressView()
+                                .scaleEffect(0.7)
+                                .frame(width: 16, height: 16)
+                        }
+                        Label(isCreatingGroups ? "Creating Groups..." : "Generate Default Smart Groups", systemImage: "sparkles")
+                    }
                 }
                 .buttonStyle(.borderedProminent)
+                .disabled(isCreatingGroups)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding(24)
@@ -153,7 +257,11 @@ struct GroupsView: View {
             ScrollView {
                 LazyVStack(spacing: 16) {
                     ForEach(smartGroupResults) { result in
-                        SmartGroupResultCard(result: result)
+                        SmartGroupResultCard(result: result) {
+                            Task {
+                                await createSingleSmartGroup(result)
+                            }
+                        }
                     }
                 }
                 .padding(24)
@@ -161,8 +269,123 @@ struct GroupsView: View {
         }
     }
 
-    private func generateSmartGroups() {
-        smartGroupResults = contactsManager.generateSmartGroups(definitions: ContactsManager.defaultSmartGroups)
+    @MainActor
+    private func generateSmartGroupsAsync(definitions: [SmartGroupDefinition]? = nil) async {
+        let defs = definitions ?? ContactsManager.defaultSmartGroups
+        let results = await contactsManager.generateSmartGroups(definitions: defs)
+
+        if definitions == nil {
+            // Initial load - replace with defaults
+            smartGroupResults = results
+        } else {
+            // User-triggered generation - merge without duplicates
+            for newGroup in results {
+                // Only add if a group with this name doesn't already exist
+                if let index = smartGroupResults.firstIndex(where: { $0.groupName == newGroup.groupName }) {
+                    // Update existing group with fresh data
+                    smartGroupResults[index] = newGroup
+                } else {
+                    // Add new group
+                    smartGroupResults.append(newGroup)
+                }
+            }
+        }
+        // Smart groups are now synthetic (in-memory only)
+        // User must explicitly click "Create in Contacts" button to add them
+    }
+
+    @MainActor
+    private func createSingleSmartGroup(_ result: SmartGroupResult) async {
+        groupToCreate = result
+        showConfirmCreate = true
+    }
+
+    @MainActor
+    private func confirmAndCreateGroup() async {
+        guard let result = groupToCreate else { return }
+
+        isCreatingGroups = true
+
+        let contactIds = result.contacts.map { $0.id }
+        let success = await contactsManager.createGroup(
+            name: result.groupName,
+            contactIds: contactIds
+        )
+
+        isCreatingGroups = false
+
+        // Show result
+        if success {
+            creationResults = CreationResults(
+                successCount: 1,
+                failureCount: 0,
+                failedGroups: []
+            )
+        } else {
+            creationResults = CreationResults(
+                successCount: 0,
+                failureCount: 1,
+                failedGroups: [result.groupName]
+            )
+        }
+        showResultsAlert = true
+
+        // Refresh groups list
+        await contactsManager.fetchAllGroups()
+    }
+
+    @MainActor
+    private func cleanUpDuplicates() async {
+        isCleaningDuplicates = true
+
+        let (deleted, errors) = await contactsManager.deleteDuplicateGroups(keepFirst: true)
+
+        isCleaningDuplicates = false
+
+        // Show cleanup result (separate from creation results)
+        cleanupResults = CleanupResults(
+            deletedCount: deleted,
+            errorCount: errors
+        )
+        showCleanupResults = true
+
+        // Refresh duplicate count
+        let duplicates = await contactsManager.findDuplicateGroups()
+        duplicateGroupCount = duplicates.values.reduce(0) { $0 + $1.count - 1 }
+    }
+
+    @MainActor
+    private func createSmartGroupsInContactsApp() async {
+        var successCount = 0
+        var failedGroups: [String] = []
+
+        // Create actual groups in Contacts.app for each smart group result
+        for result in smartGroupResults {
+            let contactIds = result.contacts.map { $0.id }
+            let success = await contactsManager.createGroup(
+                name: result.groupName,
+                contactIds: contactIds
+            )
+
+            if success {
+                successCount += 1
+                print("✅ Created group: \(result.groupName) with \(contactIds.count) contacts")
+            } else {
+                failedGroups.append(result.groupName)
+                print("❌ Failed to create group: \(result.groupName)")
+            }
+        }
+
+        // Refresh the manual groups list to show newly created groups
+        await contactsManager.fetchAllGroups()
+
+        // Show results to user
+        creationResults = CreationResults(
+            successCount: successCount,
+            failureCount: failedGroups.count,
+            failedGroups: failedGroups
+        )
+        showResultsAlert = true
     }
 }
 
@@ -269,6 +492,7 @@ struct FeatureRow: View {
 
 struct SmartGroupResultCard: View {
     let result: SmartGroupResult
+    let onCreateInContacts: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -287,6 +511,12 @@ struct SmartGroupResultCard: View {
                 }
 
                 Spacer()
+
+                Button(action: onCreateInContacts) {
+                    Label("Create in Contacts", systemImage: "plus.app")
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.small)
 
                 Button(action: {
                     openContactsForGroup()

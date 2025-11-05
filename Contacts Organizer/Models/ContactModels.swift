@@ -18,6 +18,7 @@ struct ContactSummary: Identifiable, Hashable, Sendable {
     let hasProfileImage: Bool
     let creationDate: Date?
     let modificationDate: Date?
+    let birthday: Date?
 
     init(from contact: CNContact) {
         self.id = contact.identifier
@@ -28,10 +29,11 @@ struct ContactSummary: Identifiable, Hashable, Sendable {
         self.hasProfileImage = contact.imageDataAvailable
         self.creationDate = contact.dates.first?.value as? Date
         self.modificationDate = contact.dates.last?.value as? Date
+        self.birthday = contact.birthday?.date
     }
 
     // Initializer for testing
-    init(id: String, fullName: String, organization: String?, phoneNumbers: [String], emailAddresses: [String], hasProfileImage: Bool, creationDate: Date?, modificationDate: Date?) {
+    init(id: String, fullName: String, organization: String?, phoneNumbers: [String], emailAddresses: [String], hasProfileImage: Bool, creationDate: Date?, modificationDate: Date?, birthday: Date? = nil) {
         self.id = id
         self.fullName = fullName
         self.organization = organization
@@ -40,6 +42,7 @@ struct ContactSummary: Identifiable, Hashable, Sendable {
         self.hasProfileImage = hasProfileImage
         self.creationDate = creationDate
         self.modificationDate = modificationDate
+        self.birthday = birthday
     }
 }
 
@@ -229,6 +232,12 @@ struct CustomCriteria: Codable {
             case noCriticalInfo = "No Critical Info"
             case multiplePhones = "Multiple Phones"
             case multipleEmails = "Multiple Emails"
+            // Phase 2: Time-based criteria
+            case recentlyAdded = "Recently Added"
+            case recentlyModified = "Recently Modified"
+            case staleContact = "Stale Contact"
+            case birthdayThisMonth = "Birthday This Month"
+            case birthdayThisWeek = "Birthday This Week"
         }
 
         enum Condition: String, Codable {

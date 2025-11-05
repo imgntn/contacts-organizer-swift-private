@@ -21,7 +21,7 @@ final class SmartGroupTests: XCTestCase {
         ]
 
         let definition = SmartGroupDefinition(name: "By Organization", groupingType: .organization)
-        let results = await ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
+        let results = ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
 
         XCTAssertEqual(results.count, 2, "Should create 2 organization groups")
         XCTAssertTrue(results.contains { $0.groupName == "Apple" }, "Should have Apple group")
@@ -35,7 +35,7 @@ final class SmartGroupTests: XCTestCase {
         ]
 
         let definition = SmartGroupDefinition(name: "By Organization", groupingType: .organization)
-        let results = await ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
+        let results = ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
 
         XCTAssertEqual(results.count, 0, "Should not create groups with only 1 contact")
     }
@@ -52,7 +52,7 @@ final class SmartGroupTests: XCTestCase {
             CustomCriteria.Rule(field: .hasPhone, condition: .exists)
         ])
         let definition = SmartGroupDefinition(name: "Has Phone", groupingType: .custom(criteria))
-        let results = await ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
+        let results = ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
 
         XCTAssertEqual(results.count, 1, "Should create one group")
         XCTAssertEqual(results.first?.contacts.count, 1, "Should contain one contact with phone")
@@ -71,7 +71,7 @@ final class SmartGroupTests: XCTestCase {
             CustomCriteria.Rule(field: .hasEmail, condition: .notExists)
         ])
         let definition = SmartGroupDefinition(name: "Missing Email", groupingType: .custom(criteria))
-        let results = await ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
+        let results = ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
 
         XCTAssertEqual(results.count, 1, "Should create one group")
         XCTAssertEqual(results.first?.contacts.count, 1, "Should contain one contact without email")
@@ -92,7 +92,7 @@ final class SmartGroupTests: XCTestCase {
             CustomCriteria.Rule(field: .hasEmail, condition: .exists)
         ])
         let definition = SmartGroupDefinition(name: "Complete Contacts", groupingType: .custom(criteria))
-        let results = await ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
+        let results = ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
 
         XCTAssertEqual(results.count, 1, "Should create one group")
         XCTAssertEqual(results.first?.contacts.count, 1, "Should contain one contact with both phone and email")
@@ -112,7 +112,7 @@ final class SmartGroupTests: XCTestCase {
             CustomCriteria.Rule(field: .organizationContains, condition: .contains, value: "Apple")
         ])
         let definition = SmartGroupDefinition(name: "Apple Contacts", groupingType: .custom(criteria))
-        let results = await ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
+        let results = ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
 
         XCTAssertEqual(results.count, 1, "Should create one group")
         XCTAssertEqual(results.first?.contacts.count, 2, "Should contain two contacts with Apple in organization")
@@ -131,7 +131,7 @@ final class SmartGroupTests: XCTestCase {
             CustomCriteria.Rule(field: .nameContains, condition: .contains, value: "John")
         ])
         let definition = SmartGroupDefinition(name: "John Contacts", groupingType: .custom(criteria))
-        let results = await ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
+        let results = ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
 
         XCTAssertEqual(results.count, 1, "Should create one group")
         XCTAssertEqual(results.first?.contacts.count, 2, "Should contain two contacts with John in name")
@@ -149,7 +149,7 @@ final class SmartGroupTests: XCTestCase {
             CustomCriteria.Rule(field: .hasPhoto, condition: .exists)
         ])
         let definition = SmartGroupDefinition(name: "Has Photo", groupingType: .custom(criteria))
-        let results = await ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
+        let results = ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
 
         XCTAssertEqual(results.count, 1, "Should create one group")
         XCTAssertEqual(results.first?.contacts.count, 1, "Should contain one contact with photo")
@@ -172,7 +172,7 @@ final class SmartGroupTests: XCTestCase {
             ])))
         ]
 
-        let results = await ContactsManager.shared.generateSmartGroups(definitions: definitions, using: contacts)
+        let results = ContactsManager.shared.generateSmartGroups(definitions: definitions, using: contacts)
 
         XCTAssertEqual(results.count, 2, "Should create groups for both definitions")
     }
@@ -186,7 +186,7 @@ final class SmartGroupTests: XCTestCase {
         ]
 
         let definition = SmartGroupDefinition(name: "By Organization", groupingType: .organization, isEnabled: false)
-        let results = await ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
+        let results = ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
 
         XCTAssertEqual(results.count, 0, "Should not generate groups for disabled definitions")
     }
@@ -204,7 +204,7 @@ final class SmartGroupTests: XCTestCase {
             CustomCriteria.Rule(field: .noCriticalInfo, condition: .exists)
         ])
         let definition = SmartGroupDefinition(name: "Missing Critical Info", groupingType: .custom(criteria))
-        let results = await ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
+        let results = ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
 
         XCTAssertEqual(results.count, 1, "Should create one group")
         XCTAssertEqual(results.first?.contacts.count, 1, "Should contain one contact with no phone or email")
@@ -222,7 +222,7 @@ final class SmartGroupTests: XCTestCase {
             CustomCriteria.Rule(field: .phoneOnly, condition: .exists)
         ])
         let definition = SmartGroupDefinition(name: "Phone Only", groupingType: .custom(criteria))
-        let results = await ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
+        let results = ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
 
         XCTAssertEqual(results.count, 1, "Should create one group")
         XCTAssertEqual(results.first?.contacts.count, 1, "Should contain one contact with phone only")
@@ -240,7 +240,7 @@ final class SmartGroupTests: XCTestCase {
             CustomCriteria.Rule(field: .emailOnly, condition: .exists)
         ])
         let definition = SmartGroupDefinition(name: "Email Only", groupingType: .custom(criteria))
-        let results = await ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
+        let results = ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
 
         XCTAssertEqual(results.count, 1, "Should create one group")
         XCTAssertEqual(results.first?.contacts.count, 1, "Should contain one contact with email only")
@@ -258,7 +258,7 @@ final class SmartGroupTests: XCTestCase {
             CustomCriteria.Rule(field: .multiplePhones, condition: .exists)
         ])
         let definition = SmartGroupDefinition(name: "Multiple Phones", groupingType: .custom(criteria))
-        let results = await ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
+        let results = ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
 
         XCTAssertEqual(results.count, 1, "Should create one group")
         XCTAssertEqual(results.first?.contacts.count, 2, "Should contain two contacts with multiple phones")
@@ -277,7 +277,7 @@ final class SmartGroupTests: XCTestCase {
             CustomCriteria.Rule(field: .multipleEmails, condition: .exists)
         ])
         let definition = SmartGroupDefinition(name: "Multiple Emails", groupingType: .custom(criteria))
-        let results = await ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
+        let results = ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
 
         XCTAssertEqual(results.count, 1, "Should create one group")
         XCTAssertEqual(results.first?.contacts.count, 2, "Should contain two contacts with multiple emails")
@@ -301,7 +301,7 @@ final class SmartGroupTests: XCTestCase {
             CustomCriteria.Rule(field: .recentlyAdded, condition: .exists)
         ])
         let definition = SmartGroupDefinition(name: "Recently Added", groupingType: .custom(criteria))
-        let results = await ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
+        let results = ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
 
         XCTAssertEqual(results.count, 1, "Should create one group")
         XCTAssertEqual(results.first?.contacts.count, 1, "Should contain one recently added contact")
@@ -322,7 +322,7 @@ final class SmartGroupTests: XCTestCase {
             CustomCriteria.Rule(field: .recentlyModified, condition: .exists)
         ])
         let definition = SmartGroupDefinition(name: "Recently Modified", groupingType: .custom(criteria))
-        let results = await ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
+        let results = ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
 
         XCTAssertEqual(results.count, 1, "Should create one group")
         XCTAssertEqual(results.first?.contacts.count, 1, "Should contain one recently modified contact")
@@ -343,7 +343,7 @@ final class SmartGroupTests: XCTestCase {
             CustomCriteria.Rule(field: .staleContact, condition: .exists)
         ])
         let definition = SmartGroupDefinition(name: "Stale Contacts", groupingType: .custom(criteria))
-        let results = await ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
+        let results = ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
 
         XCTAssertEqual(results.count, 1, "Should create one group")
         XCTAssertEqual(results.first?.contacts.count, 1, "Should contain one stale contact")
@@ -379,7 +379,7 @@ final class SmartGroupTests: XCTestCase {
             CustomCriteria.Rule(field: .birthdayThisMonth, condition: .exists)
         ])
         let definition = SmartGroupDefinition(name: "Birthday This Month", groupingType: .custom(criteria))
-        let results = await ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
+        let results = ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
 
         XCTAssertEqual(results.count, 1, "Should create one group")
         XCTAssertEqual(results.first?.contacts.count, 1, "Should contain one contact with birthday this month")
@@ -423,7 +423,7 @@ final class SmartGroupTests: XCTestCase {
             CustomCriteria.Rule(field: .birthdayThisWeek, condition: .exists)
         ])
         let definition = SmartGroupDefinition(name: "Birthday This Week", groupingType: .custom(criteria))
-        let results = await ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
+        let results = ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
 
         XCTAssertEqual(results.count, 1, "Should create one group")
         XCTAssertEqual(results.first?.contacts.count, 1, "Should contain one contact with birthday this week")
@@ -444,33 +444,8 @@ final class SmartGroupTests: XCTestCase {
     func testEmptyContactList() async {
         let contacts: [ContactSummary] = []
         let definition = SmartGroupDefinition(name: "By Organization", groupingType: .organization)
-        let results = await ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
+        let results = ContactsManager.shared.generateSmartGroups(definitions: [definition], using: contacts)
 
         XCTAssertEqual(results.count, 0, "Should return empty results for empty contact list")
-    }
-
-    // MARK: - Performance Tests
-
-    func testSmartGroupGenerationPerformance() async {
-        // Generate a large dataset
-        let largeContactSet = TestDataGenerator.shared.generateTestContacts(count: 1000)
-
-        // Use all default smart group definitions (14 groups)
-        let definitions = ContactsManager.defaultSmartGroups
-
-        // Measure performance of generating all smart groups
-        measure {
-            // Need to use synchronous version for measure block
-            let expectation = self.expectation(description: "Smart groups generated")
-            Task {
-                let _ = await ContactsManager.shared.generateSmartGroups(definitions: definitions, using: largeContactSet)
-                expectation.fulfill()
-            }
-            wait(for: [expectation], timeout: 10.0)
-        }
-
-        // Also verify it completes successfully
-        let results = await ContactsManager.shared.generateSmartGroups(definitions: definitions, using: largeContactSet)
-        XCTAssertGreaterThan(results.count, 0, "Should generate at least some smart groups from 1000 contacts")
     }
 }
