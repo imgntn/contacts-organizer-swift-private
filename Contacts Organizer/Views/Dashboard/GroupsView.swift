@@ -30,6 +30,11 @@ struct GroupsView: View {
     @State private var isAXTrusted: Bool = AXIsProcessTrusted()
     @State private var isPromptingAX = false
 
+    // Automation (Apple Events) permission state
+    @State private var isAutomationContactsGranted = false
+    @State private var isAutomationSystemEventsGranted = false
+    @State private var isPromptingAutomation = false
+
     struct CreationResults {
         let successCount: Int
         let failureCount: Int
@@ -59,6 +64,13 @@ struct GroupsView: View {
                         .padding(.bottom, 12)
                 }
 
+                // Automation banner (overview)
+                if !(isAutomationContactsGranted && isAutomationSystemEventsGranted) {
+                    automationBanner
+                        .padding(.horizontal, 24)
+                        .padding(.bottom, 12)
+                }
+
                 Divider()
 
                 Group {
@@ -74,11 +86,13 @@ struct GroupsView: View {
                 await generateSmartGroupsAsync()
                 let duplicates = await contactsManager.findDuplicateGroups()
                 duplicateGroupCount = duplicates.values.reduce(0) { $0 + $1.count - 1 }
-                // Refresh AX trust on load
+                // Refresh permissions on load
                 refreshAXTrust()
+                refreshAutomationStatus()
             }
             .onAppear {
                 refreshAXTrust()
+                refreshAutomationStatus()
             }
             .sheet(isPresented: $showCreateGroupSheet) {
                 CreateGroupSheet()
@@ -229,6 +243,50 @@ struct GroupsView: View {
         .padding(12)
         .background(Color.orange.opacity(0.12))
         .cornerRadius(8)
+    }
+
+    // MARK: - Automation Banner
+
+    private var automationBanner: some View {
+        HStack(alignment: .center, spacing: 12) {
+            Image(systemName: "bolt.shield.fill")
+                .foregroundColor(.blue)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Allow Automation to Control Contacts")
+                    .font(.headline)
+                Text(automationDetailsText)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+            Button(action: requestAutomationPermission) {
+                HStack(spacing: 6) {
+                    if isPromptingAutomation {
+                        ProgressView().scaleEffect(0.7)
+                    }
+                    Text(isPromptingAutomation ? "Requesting…" : "Request Access")
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(isPromptingAutomation)
+        }
+        .padding(12)
+        .background(Color.blue.opacity(0.12))
+        .cornerRadius(8)
+        .help("Requires Apple Events permission for Contacts and System Events (System Settings > Privacy & Security > Automation).")
+    }
+
+    private var automationDetailsText: String {
+        switch (isAutomationContactsGranted, isAutomationSystemEventsGranted) {
+        case (false, false):
+            return "Grant Apple Events permission for Contacts and System Events so we can open and select groups automatically."
+        case (false, true):
+            return "Grant Apple Events permission for Contacts so we can open and select groups automatically."
+        case (true, false):
+            return "Grant Apple Events permission for System Events to select the group in Contacts’ sidebar."
+        case (true, true):
+            return "Automation is granted."
+        }
     }
 
     @ViewBuilder
@@ -398,6 +456,117 @@ struct GroupsView: View {
             NSWorkspace.shared.open(url)
         }
     }
+
+    // MARK: - Automation helpers
+
+    private func refreshAutomationStatus() {
+        // Non-prompting checks (return success if Apple Events allowed)
+        isAutomationContactsGranted = Self.checkAutomationForContacts()
+        isAutomationSystemEventsGranted = Self.checkAutomationForSystemEvents()
+    }
+
+    private func requestAutomationPermission() {
+        isPromptingAutomation = true
+
+        // Trigger prompts by sending harmless Apple Events to both targets
+        Task { @MainActor in
+            // Try Contacts first (will also launch Contacts if needed)
+            _ = Self.pokeContactsForAutomation()
+            // Try System Events
+            _ = Self.pokeSystemEventsForAutomation()
+
+            // Poll up to ~60 seconds for both grants
+            let start = Date()
+            while Date().timeIntervalSince(start) < 60 {
+                refreshAutomationStatus()
+                if isAutomationContactsGranted && isAutomationSystemEventsGranted {
+                    break
+                }
+                try? await Task.sleep(nanoseconds: 750_000_000) // 0.75s
+            }
+
+            isPromptingAutomation = false
+        }
+    }
+
+    private static func checkAutomationForContacts() -> Bool {
+        let script = [
+            "try",
+            "    tell application \"Contacts\"",
+            "        count of groups",
+            "    end tell",
+            "    return \"OK\"",
+            "on error errMsg number errNum",
+            "    return \"ERR:\" & errNum",
+            "end try"
+        ].joined(separator: "\n")
+
+        var err: NSDictionary?
+        let res = NSAppleScript(source: script)?.executeAndReturnError(&err)
+        if err != nil { return false }
+        return (res?.stringValue == "OK")
+    }
+
+    private static func checkAutomationForSystemEvents() -> Bool {
+        let script = [
+            "try",
+            "    tell application id \"com.apple.systemevents\"",
+            "        count processes",
+            "    end tell",
+            "    return \"OK\"",
+            "on error errMsg number errNum",
+            "    return \"ERR:\" & errNum",
+            "end try"
+        ].joined(separator: "\n")
+
+        var err: NSDictionary?
+        let res = NSAppleScript(source: script)?.executeAndReturnError(&err)
+        if err != nil { return false }
+        return (res?.stringValue == "OK")
+    }
+
+    // These "poke" variants intentionally try to do the same, which should trigger the user prompt if not granted.
+    private static func pokeContactsForAutomation() -> Bool {
+        let script = [
+            "try",
+            "    tell application \"Contacts\"",
+            "        activate",
+            "        count of groups",
+            "    end tell",
+            "    return \"OK\"",
+            "on error errMsg number errNum",
+            "    return \"ERR:\" & errNum",
+            "end try"
+        ].joined(separator: "\n")
+
+        var err: NSDictionary?
+        let res = NSAppleScript(source: script)?.executeAndReturnError(&err)
+        if let err = err {
+            print("⚠️  [AUTO] Contacts automation error: \(err)")
+        }
+        return (res?.stringValue == "OK")
+    }
+
+    private static func pokeSystemEventsForAutomation() -> Bool {
+        let script = [
+            "try",
+            "    tell application id \"com.apple.systemevents\" to launch",
+            "    tell application id \"com.apple.systemevents\"",
+            "        count processes",
+            "    end tell",
+            "    return \"OK\"",
+            "on error errMsg number errNum",
+            "    return \"ERR:\" & errNum",
+            "end try"
+        ].joined(separator: "\n")
+
+        var err: NSDictionary?
+        let res = NSAppleScript(source: script)?.executeAndReturnError(&err)
+        if let err = err {
+            print("⚠️  [AUTO] System Events automation error: \(err)")
+        }
+        return (res?.stringValue == "OK")
+    }
 }
 
 struct GroupRowView: View {
@@ -433,220 +602,296 @@ struct GroupRowView: View {
     // MARK: - System Events helper
 
     private static func ensureSystemEventsRunning() {
+        print("🔍 [SYS-EVENTS] Launching System Events...")
+
         // 1) Try launching via NSWorkspace
         let seURL = URL(fileURLWithPath: "/System/Library/CoreServices/System Events.app")
         if FileManager.default.fileExists(atPath: seURL.path) {
+            print("🔍 [SYS-EVENTS] Launching via NSWorkspace...")
             NSWorkspace.shared.open(seURL)
+        } else {
+            print("⚠️  [SYS-EVENTS] System Events.app not found at expected path")
         }
 
         // 2) Also ask it to launch via AppleScript (covers agent behavior)
-        let launchScript = """
-        tell application id "com.apple.systemevents" to launch
-        """
-        _ = NSAppleScript(source: launchScript)?.executeAndReturnError(nil)
+        print("🔍 [SYS-EVENTS] Launching via AppleScript...")
+        let launchScript = [
+            "tell application id \"com.apple.systemevents\" to launch"
+        ].joined(separator: "\n")
+        var launchErr: NSDictionary?
+        _ = NSAppleScript(source: launchScript)?.executeAndReturnError(&launchErr)
+        if let launchErr = launchErr {
+            print("⚠️  [SYS-EVENTS] AppleScript launch warning: \(launchErr)")
+        }
 
         // 3) Wait for the process to appear (up to ~6s)
+        print("🔍 [SYS-EVENTS] Waiting for process to appear...")
         let start = Date()
+        var processFound = false
         while Date().timeIntervalSince(start) < 6.0 {
             if NSWorkspace.shared.runningApplications.contains(where: { $0.bundleIdentifier == "com.apple.systemevents" }) {
+                processFound = true
+                print("✅ [SYS-EVENTS] Process found after \(String(format: "%.1f", Date().timeIntervalSince(start)))s")
                 break
             }
             RunLoop.current.run(mode: .default, before: Date().addingTimeInterval(0.05))
         }
 
+        if !processFound {
+            print("⚠️  [SYS-EVENTS] Process not found after 6s timeout")
+        }
+
         // 4) Ping System Events until it responds to a trivial command (up to ~6s)
-        let pingScript = NSAppleScript(source: """
-        tell application id "com.apple.systemevents" to count processes
-        """)
+        print("🔍 [SYS-EVENTS] Pinging System Events to verify it's responding...")
+        let pingScript = [
+            "tell application id \"com.apple.systemevents\" to count processes"
+        ].joined(separator: "\n")
         let pingStart = Date()
+        var responding = false
         while Date().timeIntervalSince(pingStart) < 6.0 {
             var err: NSDictionary?
-            _ = pingScript?.executeAndReturnError(&err)
+            _ = NSAppleScript(source: pingScript)?.executeAndReturnError(&err)
             if err == nil {
+                responding = true
+                print("✅ [SYS-EVENTS] Responding after \(String(format: "%.1f", Date().timeIntervalSince(pingStart)))s")
                 break // System Events is accepting Apple Events
             }
             RunLoop.current.run(mode: .default, before: Date().addingTimeInterval(0.1))
+        }
+
+        if !responding {
+            print("❌ [SYS-EVENTS] Not responding after 6s timeout - UI scripting may fail")
+        }
+
+        // 5) Final verification - check if it's still running
+        let stillRunning = NSWorkspace.shared.runningApplications.contains(where: { $0.bundleIdentifier == "com.apple.systemevents" })
+        if stillRunning {
+            print("✅ [SYS-EVENTS] System Events is running and ready")
+        } else {
+            print("❌ [SYS-EVENTS] System Events is NOT running - UI scripting will fail")
         }
     }
 
     // MARK: - Debug helpers
 
     static func dumpContactsSidebar() {
+        print("🔍 [DUMP] Starting sidebar dump...")
+
         guard AXIsProcessTrusted() else {
-            print("⚠️ Accessibility permission not granted; cannot UI-script Contacts.")
+            print("⚠️ [DUMP] Accessibility permission not granted; cannot UI-script Contacts.")
             return
         }
+
+        print("✅ [DUMP] Accessibility permission confirmed")
         ensureSystemEventsRunning()
         // Small delay to ensure System Events is ready
         Thread.sleep(forTimeInterval: 0.2)
 
-        let script = """
-        tell application id "com.apple.systemevents"
-            if not (exists process "Contacts") then
-                return "Process not running"
-            end if
-            tell process "Contacts"
-                set frontmost to true
-                if not (exists window 1) then return "No window"
-                set theWindow to window 1
+        print("🔍 [DUMP] Executing AppleScript to read sidebar structure...")
 
-                set logText to ""
+        let script = [
+            "tell application id \"com.apple.systemevents\"",
+            "    if not (exists process \"Contacts\") then",
+            "        return \"Process not running\"",
+            "    end if",
+            "    tell process \"Contacts\"",
+            "        set frontmost to true",
+            "        if not (exists window 1) then return \"No window\"",
+            "        set theWindow to window 1",
+            "",
+            "        set logText to \"\"",
+            "",
+            "        set theOutline to missing value",
+            "        try",
+            "            set theOutline to outline 1 of scroll area 1 of splitter group 1 of theWindow",
+            "        end try",
+            "        if theOutline is missing value then",
+            "            try",
+            "                set theOutline to outline 1 of group 1 of scroll area 1 of splitter group 1 of theWindow",
+            "            end try",
+            "        end if",
+            "        if theOutline is missing value then",
+            "            try",
+            "                set theOutline to outline 1 of group 1 of group 1 of scroll area 1 of splitter group 1 of theWindow",
+            "            end try",
+            "        end if",
+            "        if theOutline is missing value then",
+            "            return \"Outline not found\"",
+            "        end if",
+            "",
+            "        try",
+            "            set rowCount to count of rows of theOutline",
+            "            set logText to logText & \"Row count: \" & rowCount & \"\\n\"",
+            "            repeat with i from 1 to rowCount",
+            "                set aRow to row i of theOutline",
+            "                set t to \"\"",
+            "                try",
+            "                    if (exists static text 1 of aRow) then",
+            "                        set t to (value of static text 1 of aRow as string)",
+            "                    end if",
+            "                end try",
+            "                set logText to logText & \"[\" & i & \"] \" & t & \"\\n\"",
+            "            end repeat",
+            "        on error errMsg",
+            "            set logText to logText & \"Error reading rows: \" & errMsg & \"\\n\"",
+            "        end try",
+            "",
+            "        return logText",
+            "    end tell",
+            "end tell"
+        ].joined(separator: "\n")
 
-                set theOutline to missing value
-                try
-                    set theOutline to outline 1 of scroll area 1 of splitter group 1 of theWindow
-                end try
-                if theOutline is missing value then
-                    try
-                        set theOutline to outline 1 of group 1 of scroll area 1 of splitter group 1 of theWindow
-                    end try
-                end if
-                if theOutline is missing value then
-                    try
-                        set theOutline to outline 1 of group 1 of group 1 of scroll area 1 of splitter group 1 of theWindow
-                    end try
-                end if
-                if theOutline is missing value then
-                    return "Outline not found"
-                end if
-
-                try
-                    set rowCount to count of rows of theOutline
-                    set logText to logText & "Row count: " & rowCount & "\\n"
-                    repeat with i from 1 to rowCount
-                        set aRow to row i of theOutline
-                        set t to ""
-                        try
-                            if (exists static text 1 of aRow) then
-                                set t to (value of static text 1 of aRow as string)
-                            end if
-                        end try
-                        set logText to logText & "[" & i & "] " & t & "\\n"
-                    end repeat
-                on error errMsg
-                    set logText to logText & "Error reading rows: " & errMsg & "\\n"
-                end try
-
-                return logText
-            end tell
-        end tell
-        """
         var err: NSDictionary?
         if let asObj = NSAppleScript(source: script) {
             let res = asObj.executeAndReturnError(&err)
             if let err = err {
-                print("❌ Dump sidebar error: \(err)")
+                print("❌ [DUMP] AppleScript execution error: \(err)")
             } else {
-                print("🔎 Contacts sidebar dump:\n\(res.stringValue ?? "<no text>")")
+                print("📋 [DUMP] Contacts sidebar structure:")
+                print("=====================================")
+                print(res.stringValue ?? "<no text>")
+                print("=====================================")
+                print("✅ [DUMP] Sidebar dump complete - check output above")
             }
+        } else {
+            print("❌ [DUMP] Failed to create AppleScript object")
         }
     }
 
     static func debugSelectGroupByName(_ groupName: String) {
+        print("🔍 [UI-SCRIPT] Starting UI scripting to select group: '\(groupName)'")
+
         guard AXIsProcessTrusted() else {
-            print("⚠️ Accessibility permission not granted; cannot UI-script Contacts.")
+            print("⚠️ [UI-SCRIPT] Accessibility permission not granted; cannot UI-script Contacts.")
             return
         }
+
+        print("✅ [UI-SCRIPT] Accessibility permission confirmed")
+        print("🔍 [UI-SCRIPT] Ensuring System Events is running...")
         ensureSystemEventsRunning()
+        print("✅ [UI-SCRIPT] System Events check complete")
+
         // Small delay to ensure System Events is ready
+        print("🔍 [UI-SCRIPT] Waiting 0.2s for System Events to be ready...")
         Thread.sleep(forTimeInterval: 0.2)
 
         let escaped = groupName
             .replacingOccurrences(of: "\\", with: "\\\\")
             .replacingOccurrences(of: "\"", with: "\\\"")
 
-        let script = """
-        tell application id "com.apple.systemevents"
-            if not (exists process "Contacts") then return "Contacts not running"
-            tell process "Contacts"
-                set frontmost to true
-                if not (exists window 1) then return "No window"
-                set theWindow to window 1
+        print("🔍 [UI-SCRIPT] Escaped group name: '\(escaped)'")
+        print("🔍 [UI-SCRIPT] Executing AppleScript to find and click group in sidebar...")
 
-                -- Ensure sidebar visible (menu title may be localized; best effort)
-                try
-                    tell application "Contacts" to activate
-                    delay 0.15
-                    if not (exists outline 1 of scroll area 1 of splitter group 1 of theWindow) and not (exists outline 1 of group 1 of scroll area 1 of splitter group 1 of theWindow) and not (exists outline 1 of group 1 of group 1 of scroll area 1 of splitter group 1 of theWindow) then
-                        try
-                            click menu item "Show Sidebar" of menu 1 of menu bar item "View" of menu bar 1
-                        end try
-                        delay 0.25
-                    end if
-                end try
+        let script = [
+            "tell application id \"com.apple.systemevents\"",
+            "    if not (exists process \"Contacts\") then return \"Contacts not running\"",
+            "    tell process \"Contacts\"",
+            "        set frontmost to true",
+            "        if not (exists window 1) then return \"No window\"",
+            "        set theWindow to window 1",
+            "",
+            "        -- Ensure sidebar visible (menu title may be localized; best effort)",
+            "        try",
+            "            tell application \"Contacts\" to activate",
+            "            delay 0.15",
+            "            if not (exists outline 1 of scroll area 1 of splitter group 1 of theWindow) and not (exists outline 1 of group 1 of scroll area 1 of splitter group 1 of theWindow) and not (exists outline 1 of group 1 of group 1 of scroll area 1 of splitter group 1 of theWindow) then",
+            "                try",
+            "                    click menu item \"Show Sidebar\" of menu 1 of menu bar item \"View\" of menu bar 1",
+            "                end try",
+            "                delay 0.25",
+            "            end if",
+            "        end try",
+            "",
+            "        set theOutline to missing value",
+            "        try",
+            "            set theOutline to outline 1 of scroll area 1 of splitter group 1 of theWindow",
+            "        end try",
+            "        if theOutline is missing value then",
+            "            try",
+            "                set theOutline to outline 1 of group 1 of scroll area 1 of splitter group 1 of theWindow",
+            "            end try",
+            "        end if",
+            "        if theOutline is missing value then",
+            "            try",
+            "                set theOutline to outline 1 of group 1 of group 1 of scroll area 1 of splitter group 1 of theWindow",
+            "            end try",
+            "        end if",
+            "        if theOutline is missing value then",
+            "            return \"Outline not found\"",
+            "        end if",
+            "",
+            "        set success to false",
+            "        set rowCount to 0",
+            "        try",
+            "            set rowCount to count of rows of theOutline",
+            "        end try",
+            "",
+            "        -- Click the row by exact name",
+            "        repeat with i from 1 to rowCount",
+            "            set aRow to row i of theOutline",
+            "            try",
+            "                if (exists static text 1 of aRow) then",
+            "                    set t to (value of static text 1 of aRow as string)",
+            "                    if t is \"" + escaped + "\" then",
+            "                        click static text 1 of aRow",
+            "                        set success to true",
+            "                        exit repeat",
+            "                    end if",
+            "                end if",
+            "            end try",
+            "        end repeat",
+            "",
+            "        if success then return \"SUCCESS: clicked static text\"",
+            "",
+            "        -- Fallback: press the row",
+            "        repeat with i from 1 to rowCount",
+            "            set aRow to row i of theOutline",
+            "            try",
+            "                if (exists static text 1 of aRow) then",
+            "                    set t to (value of static text 1 of aRow as string)",
+            "                    if t is \"" + escaped + "\" then",
+            "                        perform action \"AXPress\" of aRow",
+            "                        set success to true",
+            "                        exit repeat",
+            "                    end if",
+            "                end if",
+            "            end try",
+            "        end repeat",
+            "",
+            "        if success then",
+            "            return \"SUCCESS: pressed row\"",
+            "        else",
+            "            return \"FAIL: not found\"",
+            "        end if",
+            "    end tell",
+            "end tell"
+        ].joined(separator: "\n")
 
-                set theOutline to missing value
-                try
-                    set theOutline to outline 1 of scroll area 1 of splitter group 1 of theWindow
-                end try
-                if theOutline is missing value then
-                    try
-                        set theOutline to outline 1 of group 1 of scroll area 1 of splitter group 1 of theWindow
-                    end try
-                end if
-                if theOutline is missing value then
-                    try
-                        set theOutline to outline 1 of group 1 of group 1 of scroll area 1 of splitter group 1 of theWindow
-                    end try
-                end if
-                if theOutline is missing value then
-                    return "Outline not found"
-                end if
-
-                set success to false
-                set rowCount to 0
-                try
-                    set rowCount to count of rows of theOutline
-                end try
-
-                -- Click the row by exact name
-                repeat with i from 1 to rowCount
-                    set aRow to row i of theOutline
-                    try
-                        if (exists static text 1 of aRow) then
-                            set t to (value of static text 1 of aRow as string)
-                            if t is "\(escaped)" then
-                                click static text 1 of aRow
-                                set success to true
-                                exit repeat
-                            end if
-                        end if
-                    end try
-                end repeat
-
-                if success then return "SUCCESS: clicked static text"
-
-                -- Fallback: press the row
-                repeat with i from 1 to rowCount
-                    set aRow to row i of theOutline
-                    try
-                        if (exists static text 1 of aRow) then
-                            set t to (value of static text 1 of aRow as string)
-                            if t is "\(escaped)" then
-                                perform action "AXPress" of aRow
-                                set success to true
-                                exit repeat
-                            end if
-                        end if
-                    end try
-                end repeat
-
-                if success then
-                    return "SUCCESS: pressed row"
-                else
-                    return "FAIL: not found"
-                end if
-            end tell
-        end tell
-        """
         var err: NSDictionary?
         if let asObj = NSAppleScript(source: script) {
             let res = asObj.executeAndReturnError(&err)
             if let err = err {
-                print("❌ debugSelectGroup error: \(err)")
+                print("❌ [UI-SCRIPT] AppleScript execution error: \(err)")
+                print("⚠️  [UI-SCRIPT] UI scripting failed - group was NOT selected")
+                if let num = err[NSAppleScript.errorNumber] as? Int, num == -600 {
+                    print("⚠️  [UI-SCRIPT] Hint: Automation (Apple Events) permission to 'System Events' is likely not granted.")
+                }
             } else {
-                print("🔎 debugSelectGroup logs:\n\(res.stringValue ?? "<no text>")")
+                let result = res.stringValue ?? "<no text>"
+                print("📋 [UI-SCRIPT] AppleScript result: \(result)")
+
+                if result.hasPrefix("SUCCESS") {
+                    print("✅ [UI-SCRIPT] Group '\(groupName)' was successfully selected!")
+                    print("✅ [UI-SCRIPT] Check Contacts app - the group should now be visible")
+                } else if result.hasPrefix("FAIL") {
+                    print("❌ [UI-SCRIPT] Failed to find group '\(groupName)' in sidebar")
+                    print("⚠️  [UI-SCRIPT] The group may not exist or sidebar structure may have changed")
+                } else {
+                    print("⚠️  [UI-SCRIPT] Unexpected result: \(result)")
+                }
             }
+        } else {
+            print("❌ [UI-SCRIPT] Failed to create AppleScript object")
         }
     }
 
@@ -656,121 +901,163 @@ struct GroupRowView: View {
         let groupName = group.name
         let groupId = group.identifier
 
-        // 1) Try URL by identifier (often most reliable)
-        if let url = URL(string: "addressbook://group/\(groupId)"),
-           NSWorkspace.shared.open(url) {
-            print("✅ Contacts opened via id URL for group: \(groupName) [\(groupId)]")
-            return
-        }
+        print("🔍 [DEBUG] Attempting to open group: \(groupName) [\(groupId)]")
 
-        // 2) Try URL by name
-        if let encoded = groupName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-           let url = URL(string: "addressbook://group/name/\(encoded)"),
-           NSWorkspace.shared.open(url) {
-            print("✅ Contacts opened via name URL for group: \(groupName)")
-            return
-        }
-
-        // 3) Try AppleScript “show group …” (no Accessibility required; needs Apple Events entitlement if sandboxed)
+        // 3) Try AppleScript "show group …" (no Accessibility required; needs Apple Events entitlement if sandboxed)
+        print("🔍 [DEBUG] Trying Method 3: AppleScript show group...")
         if appleScriptShowGroup(name: groupName, id: groupId) {
-            print("✅ Contacts showed group via AppleScript: \(groupName)")
+            print("✅ [DEBUG] Method 3 (AppleScript) reported success for group: \(groupName)")
+            print("ℹ️  [DEBUG] If the group is not selected in Contacts, AppleScript 'show' may not work reliably")
+            // Continue to UI scripting fallback to ensure it works
+        } else {
+            print("❌ [DEBUG] Method 3 (AppleScript) failed")
+        }
+
+        // 4) Force UI scripting approach (requires Accessibility permission)
+        print("🔍 [DEBUG] Trying Method 4: UI Scripting via Accessibility...")
+        guard AXIsProcessTrusted() else {
+            print("⚠️ [DEBUG] Accessibility permission NOT granted - cannot UI-script Contacts")
+            print("⚠️ [DEBUG] Enable Accessibility permission for this app to select groups")
             return
         }
 
-        // 4) Fallback: Accessibility UI scripting (requires Accessibility permission)
-        guard AXIsProcessTrusted() else {
-            print("⚠️ Accessibility permission not granted; cannot UI-script Contacts.")
-            return
-        }
+        print("✅ [DEBUG] Accessibility permission granted - proceeding with UI scripting")
 
         // Bring Contacts to front or launch it
         let bundleIdentifier = "com.apple.AddressBook"
+        print("🔍 [DEBUG] Launching/activating Contacts app...")
         if let app = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == bundleIdentifier }) {
+            print("✅ [DEBUG] Contacts is running - activating it")
             app.activate()
         } else {
+            print("🔍 [DEBUG] Contacts not running - launching it")
             let appURL = URL(fileURLWithPath: "/System/Applications/Contacts.app")
             let cfg = NSWorkspace.OpenConfiguration()
             cfg.activates = true
             NSWorkspace.shared.openApplication(at: appURL, configuration: cfg) { _, error in
-                if let error = error { print("❌ Failed to launch Contacts: \(error)") }
+                if let error = error {
+                    print("❌ [DEBUG] Failed to launch Contacts: \(error)")
+                } else {
+                    print("✅ [DEBUG] Contacts launched successfully")
+                }
             }
         }
 
-        // Ensure System Events is running
-        GroupRowView.ensureSystemEventsRunning()
-
-        let bringFront = """
-        tell application id "com.apple.systemevents"
-            if exists process "Contacts" then set frontmost of process "Contacts" to true
-        end tell
-        """
-        _ = NSAppleScript(source: bringFront)?.executeAndReturnError(nil)
-
-        // Verbose debug selection (fallback)
+        // UI scripting to select the group - System Events launched right before use
+        print("🔍 [DEBUG] Waiting 1.0 seconds before attempting UI scripting...")
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            print("🔍 [DEBUG] Now ensuring System Events is running (right before UI script)...")
+            GroupRowView.ensureSystemEventsRunning()
+            print("✅ [DEBUG] System Events launch complete")
+
+            // Bring Contacts to front via System Events
+            let bringFront = [
+                "tell application id \"com.apple.systemevents\"",
+                "    if exists process \"Contacts\" then set frontmost of process \"Contacts\" to true",
+                "end tell"
+            ].joined(separator: "\n")
+            print("🔍 [DEBUG] Bringing Contacts to front via System Events...")
+            var err: NSDictionary?
+            _ = NSAppleScript(source: bringFront)?.executeAndReturnError(&err)
+            if let err = err {
+                print("⚠️  [DEBUG] Failed to bring Contacts to front: \(err)")
+                if let num = err[NSAppleScript.errorNumber] as? Int, num == -600 {
+                    print("⚠️  [DEBUG] Hint: Automation (Apple Events) permission to 'System Events' is likely not granted.")
+                }
+            } else {
+                print("✅ [DEBUG] Contacts brought to front successfully")
+            }
+
+            print("🔍 [DEBUG] Now attempting to select group '\(groupName)' via UI scripting...")
             GroupRowView.debugSelectGroupByName(groupName)
+            print("✅ [DEBUG] UI scripting attempt completed - check Contacts app to verify")
         }
     }
 
     private func appleScriptShowGroup(name: String, id: String) -> Bool {
-        // Prefer matching by id (disambiguates duplicates), then fall back to name
-        let script = """
-        on showById(theId)
-            tell application "Contacts"
-                activate
-                try
-                    set theGroups to every group whose id is theId
-                    if (count of theGroups) > 0 then
-                        show item 1 of theGroups
-                        return "OK"
-                    else
-                        return "NOT_FOUND"
-                    end if
-                on error errMsg
-                    return "ERROR: " & errMsg
-                end try
-            end tell
-        end showById
+        print("🔍 [DEBUG] AppleScript: Attempting to show group by ID '\(id)'...")
 
-        on showByName(theName)
-            tell application "Contacts"
-                activate
-                try
-                    set theGroups to every group whose name is theName
-                    if (count of theGroups) > 0 then
-                        show item 1 of theGroups
-                        return "OK"
-                    else
-                        return "NOT_FOUND"
-                    end if
-                on error errMsg
-                    return "ERROR: " & errMsg
-                end try
-            end tell
-        end showByName
+        // Escape special characters in ID and name for AppleScript
+        let escapedId = id
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+        let escapedName = name
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
 
-        set res to showById("\(id)")
-        if res is "OK" then
-            return "OK"
-        else
-            return showByName("\(name.replacingOccurrences(of: "\"", with: "\\\""))")
-        end if
-        """
+        print("🔍 [DEBUG] AppleScript: Escaped ID = '\(escapedId)'")
+
+        // Avoid 'whose id is …' (can cause -2741). Iterate and compare id instead.
+        let script = [
+            "on showById(theId)",
+            "    tell application \"Contacts\"",
+            "        activate",
+            "        try",
+            "            set theGroups to every group",
+            "            repeat with g in theGroups",
+            "                try",
+            "                    if (id of g as string) is theId then",
+            "                        show g",
+            "                        return \"OK_BY_ID\"",
+            "                    end if",
+            "                end try",
+            "            end repeat",
+            "            return \"NOT_FOUND_BY_ID\"",
+            "        on error errMsg",
+            "            return \"ERROR_BY_ID: \" & errMsg",
+            "        end try",
+            "    end tell",
+            "end showById",
+            "",
+            "on showByName(theName)",
+            "    tell application \"Contacts\"",
+            "        activate",
+            "        try",
+            "            set theGroups to every group whose name is theName",
+            "            if (count of theGroups) > 0 then",
+            "                show item 1 of theGroups",
+            "                return \"OK_BY_NAME\"",
+            "            else",
+            "                return \"NOT_FOUND_BY_NAME\"",
+            "            end if",
+            "        on error errMsg",
+            "            return \"ERROR_BY_NAME: \" & errMsg",
+            "        end try",
+            "    end tell",
+            "end showByName",
+            "",
+            "set res to showById(\"" + escapedId + "\")",
+            "if res starts with \"OK\" then",
+            "    return res",
+            "else",
+            "    return showByName(\"" + escapedName + "\")",
+            "end if"
+        ].joined(separator: "\n")
 
         var err: NSDictionary?
-        guard let asObj = NSAppleScript(source: script) else { return false }
+        guard let asObj = NSAppleScript(source: script) else {
+            print("❌ [DEBUG] AppleScript: Failed to create NSAppleScript object")
+            return false
+        }
         let res = asObj.executeAndReturnError(&err)
 
         if let err = err {
-            print("❌ AppleScript show group error: \(err)")
+            print("❌ [DEBUG] AppleScript: Execution error: \(err)")
+            if let num = err[NSAppleScript.errorNumber] as? Int, num == -600 {
+                print("⚠️  [DEBUG] Hint: Automation (Apple Events) permission to 'Contacts' is likely not granted.")
+            }
             return false
         }
 
         let value = res.stringValue ?? ""
-        if value == "OK" {
+        print("ℹ️  [DEBUG] AppleScript: Result = '\(value)'")
+
+        if value.hasPrefix("OK") {
+            print("✅ [DEBUG] AppleScript: 'show' command executed (\(value))")
+            print("⚠️  [DEBUG] AppleScript: Note - 'show' may activate Contacts without selecting the group; UI scripting will try to ensure selection.")
             return true
         } else {
-            print("ℹ️ AppleScript show group result: \(value)")
+            print("❌ [DEBUG] AppleScript: 'show' command did not succeed: \(value)")
             return false
         }
     }

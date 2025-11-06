@@ -38,6 +38,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		7D4C9A912EBC5E070023330A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		7D4C9A932EBC5F880023330A /* Contacts Organizer.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Contacts Organizer.entitlements"; sourceTree = "<group>"; };
 		7D6D47F22EB6F56C007E79AF /* Contacts-Organizer-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Contacts-Organizer-Info.plist"; sourceTree = "<group>"; };
 		7D7093C32EB6D1340073F556 /* Contacts Organizer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Contacts Organizer.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7D7093D12EB6D1B60073F556 /* ContactsOrganizerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsOrganizerApp.swift; sourceTree = "<group>"; };
@@ -173,6 +175,8 @@
 				7D7093E02EB6D1B60073F556 /* DashboardView.swift */,
 				7D7093E12EB6D1B60073F556 /* DuplicatesView.swift */,
 				7D7093E22EB6D1B60073F556 /* GroupsView.swift */,
+				7D4C9A912EBC5E070023330A /* Info.plist */,
+				7D4C9A932EBC5F880023330A /* Contacts Organizer.entitlements */,
 			);
 			path = Dashboard;
 			sourceTree = "<group>";
@@ -357,6 +361,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				AUTOMATION_APPLE_EVENTS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -389,6 +394,8 @@
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = FBK354237N;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -422,6 +429,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				AUTOMATION_APPLE_EVENTS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -454,7 +462,9 @@
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = FBK354237N;
+				ENABLE_APP_SANDBOX = YES;
 				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
@@ -480,6 +490,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				AUTOMATION_APPLE_EVENTS = YES;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -498,11 +509,12 @@
 				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = NO;
 				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
 				ENABLE_RESOURCE_ACCESS_USB = NO;
-				ENABLE_USER_SELECTED_FILES = readonly;
+				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Contacts-Organizer-Info.plist";
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Contacts Organizer needs to control Contacts.app to open specific groups when you click View Group.";
 				INFOPLIST_KEY_NSContactsUsageDescription = "Contacts Organizer needs access to your contacts so that we can help you get organized.";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright 2025 Playable Future LLC";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -532,6 +544,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				AUTOMATION_APPLE_EVENTS = YES;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -550,11 +563,12 @@
 				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = NO;
 				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
 				ENABLE_RESOURCE_ACCESS_USB = NO;
-				ENABLE_USER_SELECTED_FILES = readonly;
+				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Contacts-Organizer-Info.plist";
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Contacts Organizer needs to control Contacts.app to open specific groups when you click View Group.";
 				INFOPLIST_KEY_NSContactsUsageDescription = "Contacts Organizer needs access to your contacts so that we can help you get organized.";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright 2025 Playable Future LLC";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -628,7 +642,7 @@
 				7D7093CD2EB6D1350073F556 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		7D7093CE2EB6D1350073F556 /* Build configuration list for PBXNativeTarget "Contacts Organizer" */ = {
 			isa = XCConfigurationList;
@@ -637,7 +651,7 @@
 				7D7093D02EB6D1350073F556 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		7D8C3D6F2EB9A60D0090A507 /* Build configuration list for PBXNativeTarget "Contacts OrganizerTests" */ = {
 			isa = XCConfigurationList;
@@ -646,7 +660,7 @@
 				7D8C3D712EB9A60D0090A507 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};

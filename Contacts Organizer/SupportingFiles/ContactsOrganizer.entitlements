@@ -4,6 +4,8 @@
 <dict>
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
+	<key>com.apple.security.automation.apple-events</key>
+	<true/>
 	<key>com.apple.security.files.user-selected.read-write</key>
 	<true/>
 	<key>com.apple.security.personal-information.addressbook</key>
@@ -12,7 +14,11 @@
 	<dict>
 		<key>com.apple.AddressBook</key>
 		<array>
-			<string>com.apple.addressbook.group</string>
+			<string>*</string>
+		</array>
+		<key>com.apple.systemevents</key>
+		<array>
+			<string>*</string>
 		</array>
 	</dict>
 </dict>

@@ -2,7 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSAppleEventsUsageDescription</key>
-	<string>Contacts Organizer needs to control Contacts.app to open specific groups when you click View Group.</string>
+	<key></key>
+	<string></string>
 </dict>
 </plist>

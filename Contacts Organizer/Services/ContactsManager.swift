@@ -158,7 +158,7 @@ class ContactsManager: ObservableObject {
         guard authorizationStatus == .authorized else { return false }
 
         do {
-            // Fetch all contacts with all needed keys
+            // Fetch all contacts with all needed keys (exclude CNContactNoteKey to avoid entitlement issues)
             let keysToFetch: [CNKeyDescriptor] = [
                 CNContactGivenNameKey as CNKeyDescriptor,
                 CNContactFamilyNameKey as CNKeyDescriptor,
@@ -172,7 +172,6 @@ class ContactsManager: ObservableObject {
                 CNContactPostalAddressesKey as CNKeyDescriptor,
                 CNContactUrlAddressesKey as CNKeyDescriptor,
                 CNContactBirthdayKey as CNKeyDescriptor,
-                CNContactNoteKey as CNKeyDescriptor,
                 CNContactImageDataKey as CNKeyDescriptor,
                 CNContactSocialProfilesKey as CNKeyDescriptor,
                 CNContactInstantMessageAddressesKey as CNKeyDescriptor
@@ -282,16 +281,7 @@ class ContactsManager: ObservableObject {
                 }
             }
 
-            // Merge notes (append if destination note is empty or different)
-            for source in sourceContacts {
-                if !source.note.isEmpty && source.note != mergedContact.note {
-                    if mergedContact.note.isEmpty {
-                        mergedContact.note = source.note
-                    } else {
-                        mergedContact.note += "\n\n---\n\n" + source.note
-                    }
-                }
-            }
+            // Notes merge removed (CNContact.note is restricted by entitlement)
 
             // Use organization info from source if destination doesn't have it
             if mergedContact.organizationName.isEmpty {
@@ -963,4 +953,3 @@ class ContactsManager: ObservableObject {
         errorMessage = nil
     }
 }
-
