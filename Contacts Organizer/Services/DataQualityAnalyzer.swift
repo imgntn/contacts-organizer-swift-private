@@ -15,10 +15,16 @@ class DataQualityAnalyzer: @unchecked Sendable {
     // MARK: - Main Analysis Method
 
     nonisolated func analyzeDataQuality(contacts: [ContactSummary]) -> [DataQualityIssue] {
+        let startTime = Date()
         var issues: [DataQualityIssue] = []
 
         for contact in contacts {
             issues.append(contentsOf: checkContact(contact))
+        }
+
+        let duration = Date().timeIntervalSince(startTime)
+        Task { @MainActor in
+            PrivacyMonitorService.shared.recordAnalysis(duration: duration)
         }
 
         return issues.sorted { $0.severity.rawValue < $1.severity.rawValue }

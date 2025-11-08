@@ -15,6 +15,7 @@ class DuplicateDetector: @unchecked Sendable {
     // MARK: - Main Detection Method
 
     nonisolated func findDuplicates(in contacts: [ContactSummary]) -> [DuplicateGroup] {
+        let startTime = Date()
         var duplicateGroups: [DuplicateGroup] = []
         var processedIds: Set<String> = []
 
@@ -122,6 +123,10 @@ class DuplicateDetector: @unchecked Sendable {
         // Skip similar name matching if there are too many contacts (performance optimization)
         // Similar name matching is O(n²) and can be very slow for large datasets
         guard remainingContacts.count < 500 else {
+            let duration = Date().timeIntervalSince(startTime)
+            Task { @MainActor in
+                PrivacyMonitorService.shared.recordDuplicateDetection(duration: duration)
+            }
             return duplicateGroups.sorted { $0.confidence > $1.confidence }
         }
 
@@ -168,6 +173,10 @@ class DuplicateDetector: @unchecked Sendable {
                 }
             }
 
+            let duration = Date().timeIntervalSince(startTime)
+            Task { @MainActor in
+                PrivacyMonitorService.shared.recordDuplicateDetection(duration: duration)
+            }
             return duplicateGroups.sorted { $0.confidence > $1.confidence }
         }
 
@@ -223,6 +232,10 @@ class DuplicateDetector: @unchecked Sendable {
             }
         }
 
+        let duration = Date().timeIntervalSince(startTime)
+        Task { @MainActor in
+            PrivacyMonitorService.shared.recordDuplicateDetection(duration: duration)
+        }
         return duplicateGroups.sorted { $0.confidence > $1.confidence }
     }
 

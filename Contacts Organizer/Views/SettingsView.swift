@@ -12,6 +12,7 @@ import UniformTypeIdentifiers
 struct SettingsView: View {
     @EnvironmentObject var contactsManager: ContactsManager
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var privacyMonitor: PrivacyMonitorService
 
     var body: some View {
         TabView {
@@ -22,15 +23,22 @@ struct SettingsView: View {
                     Label("General", systemImage: "gearshape")
                 }
 
+            PrivacyDashboardView()
+                .environmentObject(privacyMonitor)
+                .tabItem {
+                    Label("Privacy Dashboard", systemImage: "lock.shield.fill")
+                }
+
+            PrivacySettingsView()
+                .environmentObject(contactsManager)
+                .tabItem {
+                    Label("Privacy", systemImage: "hand.raised")
+                }
+
             DeveloperSettingsView()
                 .environmentObject(contactsManager)
                 .tabItem {
                     Label("Developer", systemImage: "hammer.fill")
-                }
-
-            PrivacySettingsView()
-                .tabItem {
-                    Label("Privacy", systemImage: "lock.shield")
                 }
 
             AboutView()
@@ -38,7 +46,7 @@ struct SettingsView: View {
                     Label("About", systemImage: "info.circle")
                 }
         }
-        .frame(width: 500, height: 500)
+        .frame(width: 500, height: 700)
     }
 }
 
@@ -49,6 +57,7 @@ struct GeneralSettingsView: View {
     @EnvironmentObject var contactsManager: ContactsManager
     @AppStorage("autoRefresh") private var autoRefresh = true
     @AppStorage("showCompletedActions") private var showCompletedActions = false
+    @AppStorage("textScalePreference") private var textScalePreference = "large"
     @State private var isCreatingBackup = false
     @State private var backupSuccess = false
     @State private var userBackupURL: URL?
@@ -63,6 +72,25 @@ struct GeneralSettingsView: View {
                 Toggle("Show completed actions", isOn: $showCompletedActions)
             } header: {
                 Text("Preferences")
+            }
+
+            Section {
+                Picker("Text Size", selection: $textScalePreference) {
+                    Text("Normal").tag("normal")
+                    Text("Large").tag("large")
+                    Text("Extra Large").tag("xlarge")
+                }
+                .pickerStyle(.segmented)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Preview")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Text("Contacts look clearer with larger text")
+                        .font(.headline)
+                }
+            } header: {
+                Text("Appearance")
             }
 
             Section {
@@ -502,4 +530,5 @@ struct AboutView: View {
     SettingsView()
         .environmentObject(ContactsManager.shared)
         .environmentObject(AppState())
+        .environmentObject(PrivacyMonitorService.shared)
 }

@@ -9,11 +9,35 @@ import SwiftUI
 
 struct DashboardView: View {
     @EnvironmentObject var contactsManager: ContactsManager
+    @Environment(\.dismiss) private var dismiss
     @State private var selectedTab: DashboardTab = .overview
+    @State private var navigationHistory: [DashboardTab] = []
     @State private var duplicateGroups: [DuplicateGroup] = []
     @State private var dataQualityIssues: [DataQualityIssue] = []
     @State private var isAnalyzing = false
     @AppStorage("autoRefresh") private var autoRefresh = true
+    @AppStorage("sidebarOrder") private var sidebarOrderStorageRaw: String = ""
+
+    private func getSidebarOrder() -> [String] {
+        guard let data = sidebarOrderStorageRaw.data(using: .utf8),
+              let array = try? JSONDecoder().decode([String].self, from: data) else {
+            return []
+        }
+        return array
+    }
+
+    @MainActor
+    private func setSidebarOrder(_ newValue: [String]) {
+        if let data = try? JSONEncoder().encode(newValue),
+           let string = String(data: data, encoding: .utf8) {
+            sidebarOrderStorageRaw = string
+        } else {
+            sidebarOrderStorageRaw = ""
+        }
+    }
+
+    @State private var sidebarItems: [DashboardTab] = DashboardTab.allCases
+    @State private var isReordering: Bool = false
 
     enum DashboardTab: String, CaseIterable {
         case overview = "Overview"
@@ -34,8 +58,34 @@ struct DashboardView: View {
     var body: some View {
         NavigationSplitView {
             // Sidebar
-            List(DashboardTab.allCases, id: \.self, selection: $selectedTab) { tab in
-                Label(tab.rawValue, systemImage: tab.icon)
+            ZStack(alignment: .top) {
+                List(selection: $selectedTab) {
+                    ForEach(sidebarItems, id: \.self) { tab in
+                        Label(tab.rawValue, systemImage: tab.icon)
+                            .tag(tab)
+                    }
+                    .onMove { indices, newOffset in
+                        sidebarItems.move(fromOffsets: indices, toOffset: newOffset)
+                        // Persist new order
+                        setSidebarOrder(sidebarItems.map { $0.rawValue })
+                    }
+                }
+                .moveDisabled(!isReordering)
+
+                if isReordering {
+                    HStack(spacing: 8) {
+                        Image(systemName: "hand.point.up.left.fill")
+                        Text("Drag to reorder sidebar items")
+                            .font(.caption)
+                        Spacer()
+                    }
+                    .padding(8)
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .padding(.horizontal)
+                    .padding(.top, 8)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
             }
             .navigationTitle("Contacts Organizer")
             .frame(minWidth: 200)
@@ -92,6 +142,14 @@ struct DashboardView: View {
             }
         }
         .onAppear {
+            // Restore sidebar order if previously saved
+            if !getSidebarOrder().isEmpty {
+                let mapped = getSidebarOrder().compactMap { DashboardTab(rawValue: $0) }
+                // Ensure we include any new tabs that may have been added in updates
+                let missing = DashboardTab.allCases.filter { !mapped.contains($0) }
+                sidebarItems = mapped + missing
+            }
+
             // Load data in background on first appearance or if auto-refresh is enabled
             if autoRefresh || (contactsManager.contacts.isEmpty && !contactsManager.isLoading) {
                 Task {
@@ -99,7 +157,39 @@ struct DashboardView: View {
                 }
             }
         }
+        .onChange(of: selectedTab) { oldValue, newValue in
+            // Push previous tab into history if it exists and isn't the same as new
+            if oldValue != newValue {
+                navigationHistory.append(oldValue)
+            }
+        }
         .toolbar {
+            ToolbarItem(placement: .navigation) {
+                Button(action: {
+                    if let last = navigationHistory.popLast() {
+                        selectedTab = last
+                    } else {
+                        // If no history, try to dismiss any presented view
+                        dismiss()
+                    }
+                }) {
+                    Label("Back", systemImage: "chevron.left")
+                }
+                .disabled(navigationHistory.isEmpty && selectedTab == .overview)
+                .help("Go back")
+            }
+            ToolbarItem(placement: .automatic) {
+                Button(action: {
+                    isReordering.toggle()
+                    if !isReordering {
+                        setSidebarOrder(sidebarItems.map { $0.rawValue })
+                    }
+                }) {
+                    Label(isReordering ? "Done" : "Reorder", systemImage: isReordering ? "checkmark" : "arrow.up.arrow.down")
+                }
+                .help(isReordering ? "Finish reordering" : "Reorder sidebar items")
+                .animation(.default, value: isReordering)
+            }
             ToolbarItem(placement: .primaryAction) {
                 Button(action: { Task { await loadData() } }) {
                     Label("Refresh", systemImage: "arrow.clockwise")
@@ -128,35 +218,27 @@ struct DashboardView: View {
             isAnalyzing = true
         }
 
-        // Get contacts snapshot
-        let contacts = await MainActor.run {
-            contactsManager.contacts
-        }
+        // Get contacts snapshot on the main actor
+        let contacts = await MainActor.run { contactsManager.contacts }
 
-        // Spawn background task that doesn't block (fire-and-forget)
-        Task { @MainActor in
-            // Capture singletons before entering @Sendable closure (Swift 6 requirement)
-            let duplicateDetector = DuplicateDetector.shared
-            let qualityAnalyzer = DataQualityAnalyzer.shared
+        // Capture singletons on the main actor to respect actor isolation in Swift 6
+        let duplicateDetector = await MainActor.run { DuplicateDetector.shared }
+        let qualityAnalyzer = await MainActor.run { DataQualityAnalyzer.shared }
 
-            // Perform analysis on background thread
-            let result = await Task.detached { @Sendable [duplicateDetector, qualityAnalyzer, contacts] in
-                // Find duplicates (now optimized to O(n) instead of O(n²))
-                let duplicates = duplicateDetector.findDuplicates(in: contacts)
+        // Perform analysis off the main actor
+        let result = await Task.detached { @Sendable in
+            // Use captured instances to avoid touching main-actor isolated singletons here
+            let duplicates = duplicateDetector.findDuplicates(in: contacts)
+            let issues = qualityAnalyzer.analyzeDataQuality(contacts: contacts)
+            return (duplicates, issues)
+        }.value
 
-                // Analyze data quality (O(n))
-                let issues = qualityAnalyzer.analyzeDataQuality(contacts: contacts)
-
-                return (duplicates, issues)
-            }.value
-
-            // Update UI on main thread when done
-            self.duplicateGroups = result.0
-            self.dataQualityIssues = result.1
-            self.isAnalyzing = false
-
-            // Update statistics with issue severity counts for accurate health score
-            self.contactsManager.updateStatisticsWithIssues(result.1)
+        // Update UI and statistics on the main actor
+        await MainActor.run {
+            duplicateGroups = result.0
+            dataQualityIssues = result.1
+            isAnalyzing = false
+            contactsManager.updateStatisticsWithIssues(result.1)
         }
 
         // Return immediately - UI can render while analysis happens in background
@@ -179,11 +261,11 @@ struct OverviewView: View {
                 // Header
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Overview")
-                        .font(.system(size: 36, weight: .bold))
+                        .font(.largeTitle.bold())
 
                     if let stats = contactsManager.statistics {
                         Text("\(stats.totalContacts) contacts")
-                            .font(.title3)
+                            .font(.title2)
                             .foregroundColor(.secondary)
                     }
                 }
@@ -334,6 +416,9 @@ struct StatCard: View {
     let color: Color
     var action: (() -> Void)? = nil
 
+    @State private var isHovered = false
+    @FocusState private var isFocused: Bool
+
     var body: some View {
         Group {
             if let action = action {
@@ -342,6 +427,9 @@ struct StatCard: View {
                 }
                 .buttonStyle(.plain)
                 .help("Tap to view details")
+                .focusable(true)
+                .focused($isFocused)
+                .accessibilityAddTraits(.isButton)
             } else {
                 cardContent
             }
@@ -349,28 +437,53 @@ struct StatCard: View {
     }
 
     private var cardContent: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        let gradient = LinearGradient(colors: [color.opacity(0.25), color.opacity(0.05)], startPoint: .topLeading, endPoint: .bottomTrailing)
+
+        return VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Image(systemName: icon)
-                    .foregroundColor(color)
+                ZStack {
+                    Circle()
+                        .fill(color.opacity(0.15))
+                        .frame(width: 30, height: 30)
+                    Image(systemName: icon)
+                        .foregroundColor(color)
+                        .font(.subheadline)
+                }
                 Spacer()
             }
 
             Text(value)
-                .font(.system(size: 32, weight: .bold))
+                .font(.largeTitle.bold())
 
             Text(title)
-                .font(.caption)
+                .font(.callout)
                 .foregroundColor(.secondary)
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(action != nil ? color.opacity(0.15) : Color.secondary.opacity(0.1))
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(action != nil ? color.opacity(0.3) : Color.clear, lineWidth: 1)
+        .background(
+            ZStack {
+                if action != nil {
+                    gradient
+                } else {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.secondary.opacity(0.06))
+                }
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke((isHovered || isFocused) ? color.opacity(0.6) : (action != nil ? color.opacity(0.25) : Color.clear), lineWidth: (isHovered || isFocused) ? 2 : 1)
+            }
         )
+        .cornerRadius(12)
+        .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 4)
+        .contentShape(RoundedRectangle(cornerRadius: 12))
+        .scaleEffect((isHovered || isFocused) ? 1.02 : 1.0)
+        .animation(.easeOut(duration: 0.15), value: isHovered || isFocused)
+#if os(macOS)
+        .onHover { isHovered = $0 }
+#endif
+#if !os(macOS)
+        .hoverEffect(.lift)
+#endif
     }
 }
 
@@ -380,6 +493,9 @@ struct IssueCard: View {
     let color: Color
     var action: (() -> Void)? = nil
 
+    @State private var isHovered = false
+    @FocusState private var isFocused: Bool
+
     var body: some View {
         Group {
             if let action = action {
@@ -388,6 +504,9 @@ struct IssueCard: View {
                 }
                 .buttonStyle(.plain)
                 .help("Tap to view \(title.lowercased())")
+                .focusable(true)
+                .focused($isFocused)
+                .accessibilityAddTraits(.isButton)
             } else {
                 cardContent
             }
@@ -395,24 +514,42 @@ struct IssueCard: View {
     }
 
     private var cardContent: some View {
-        VStack(spacing: 8) {
+        let gradient = LinearGradient(colors: [color.opacity(0.25), color.opacity(0.08)], startPoint: .topLeading, endPoint: .bottomTrailing)
+
+        return VStack(spacing: 8) {
             Text("\(count)")
-                .font(.system(size: 28, weight: .bold))
-                .foregroundColor(color)
+                .font(.title.bold())
 
             Text(title)
-                .font(.caption)
+                .font(.callout)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(action != nil ? color.opacity(0.15) : color.opacity(0.1))
-        .cornerRadius(8)
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(action != nil ? color.opacity(0.4) : Color.clear, lineWidth: 1)
+        .background(
+            ZStack {
+                if action != nil {
+                    gradient
+                } else {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(color.opacity(0.12))
+                }
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke((isHovered || isFocused) ? color.opacity(0.7) : (action != nil ? color.opacity(0.35) : color.opacity(0.25)), lineWidth: (isHovered || isFocused) ? 2 : 1)
+            }
         )
+        .cornerRadius(10)
+        .shadow(color: Color.black.opacity(0.05), radius: 6, x: 0, y: 3)
+        .contentShape(RoundedRectangle(cornerRadius: 10))
+        .scaleEffect((isHovered || isFocused) ? 1.02 : 1.0)
+        .animation(.easeOut(duration: 0.15), value: isHovered || isFocused)
+#if os(macOS)
+        .onHover { isHovered = $0 }
+#endif
+#if !os(macOS)
+        .hoverEffect(.lift)
+#endif
     }
 }
 
@@ -421,3 +558,4 @@ struct IssueCard: View {
         .environmentObject(ContactsManager.shared)
         .frame(width: 1200, height: 800)
 }
+

@@ -42,10 +42,10 @@ struct CleanupView: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Data Quality")
-                                    .font(.system(size: 36, weight: .bold))
+                                    .font(.system(size: 42, weight: .bold))
 
                                 Text("\(issues.count) issues found")
-                                    .font(.title3)
+                                    .font(.title2)
                                     .foregroundColor(.secondary)
                             }
                             Spacer()
@@ -210,6 +210,9 @@ struct SeverityCard: View {
     let isSelected: Bool
     let action: () -> Void
 
+    @State private var isHovered = false
+    @FocusState private var isFocused: Bool
+
     var body: some View {
         Button(action: action) {
             VStack(spacing: 12) {
@@ -218,22 +221,34 @@ struct SeverityCard: View {
                     .foregroundColor(severityColor)
 
                 Text("\(count)")
-                    .font(.system(size: 28, weight: .bold))
+                    .font(.system(size: 32, weight: .bold))
 
                 Text("\(severity.description) Priority")
-                    .font(.caption)
+                    .font(.callout)
                     .foregroundColor(.secondary)
             }
             .frame(maxWidth: .infinity)
             .padding()
-            .background(isSelected ? severityColor.opacity(0.2) : Color.secondary.opacity(0.1))
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(isSelected ? severityColor : Color.clear, lineWidth: 2)
+            .background(
+                ZStack {
+                    (isSelected ? severityColor.opacity(0.2) : Color.secondary.opacity(0.1))
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke((isHovered || isFocused) ? severityColor.opacity(0.7) : (isSelected ? severityColor : Color.clear), lineWidth: (isHovered || isFocused) ? 2 : (isSelected ? 2 : 0))
+                }
             )
+            .cornerRadius(12)
+            .scaleEffect((isHovered || isFocused) ? 1.02 : 1.0)
+            .animation(.easeOut(duration: 0.15), value: isHovered || isFocused)
         }
         .buttonStyle(.plain)
+        .focusable(true)
+        .focused($isFocused)
+#if os(macOS)
+        .onHover { isHovered = $0 }
+#endif
+#if !os(macOS)
+        .hoverEffect(.lift)
+#endif
     }
 
     private var severityIcon: String {
@@ -266,7 +281,7 @@ struct FilterChip: View {
                 Text("(\(count))")
                     .foregroundColor(.secondary)
             }
-            .font(.subheadline)
+            .font(.headline)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .background(isSelected ? Color.accentColor : Color.secondary.opacity(0.1))
@@ -290,10 +305,11 @@ struct IssueRowView: View {
             // Issue details
             VStack(alignment: .leading, spacing: 4) {
                 Text(issue.contactName)
-                    .font(.subheadline.bold())
+                    .font(.headline)
+                    .bold()
 
                 Text(issue.description)
-                    .font(.caption)
+                    .font(.callout)
                     .foregroundColor(.secondary)
             }
 

@@ -72,6 +72,9 @@ class ContactsManager: ObservableObject {
             errorMessage = nil
         }
 
+        // Track performance
+        let startTime = Date()
+
         // Run CNContactStore work on a utility queue to avoid QoS inversion
         let result = await withCheckedContinuation { (continuation: CheckedContinuation<Result<([ContactSummary], ContactStatistics), Error>, Never>) in
             contactsQueue.async { [weak self] in
@@ -109,12 +112,16 @@ class ContactsManager: ObservableObject {
             }
         }
 
+        let duration = Date().timeIntervalSince(startTime)
+
         await MainActor.run {
             switch result {
             case .success(let (fetchedContacts, stats)):
                 self.contacts = fetchedContacts
                 self.statistics = stats
                 self.isLoading = false
+                // Record performance metrics
+                PrivacyMonitorService.shared.recordContactFetch(duration: duration)
             case .failure(let error):
                 self.errorMessage = "Failed to fetch contacts: \(error.localizedDescription)"
                 self.isLoading = false
@@ -425,6 +432,45 @@ class ContactsManager: ObservableObject {
                 self.groups = fetchedGroups
             case .failure(let error):
                 self.errorMessage = "Failed to fetch groups: \(error.localizedDescription)"
+            }
+        }
+    }
+
+    // MARK: - Fetch Contacts for Group
+
+    func fetchContactsForGroup(_ group: CNGroup) async -> [ContactSummary] {
+        guard authorizationStatus == .authorized else { return [] }
+
+        return await withCheckedContinuation { continuation in
+            contactsQueue.async { [weak self] in
+                guard let self = self else {
+                    continuation.resume(returning: [])
+                    return
+                }
+
+                do {
+                    let keysToFetch: [CNKeyDescriptor] = [
+                        CNContactGivenNameKey as CNKeyDescriptor,
+                        CNContactFamilyNameKey as CNKeyDescriptor,
+                        CNContactMiddleNameKey as CNKeyDescriptor,
+                        CNContactOrganizationNameKey as CNKeyDescriptor,
+                        CNContactPhoneNumbersKey as CNKeyDescriptor,
+                        CNContactEmailAddressesKey as CNKeyDescriptor,
+                        CNContactImageDataAvailableKey as CNKeyDescriptor,
+                        CNContactDatesKey as CNKeyDescriptor,
+                        CNContactBirthdayKey as CNKeyDescriptor,
+                        CNContactFormatter.descriptorForRequiredKeys(for: .fullName)
+                    ]
+
+                    let predicate = CNContact.predicateForContactsInGroup(withIdentifier: group.identifier)
+                    let contacts = try self.store.unifiedContacts(matching: predicate, keysToFetch: keysToFetch)
+                    let summaries = contacts.map { ContactSummary(from: $0) }
+
+                    continuation.resume(returning: summaries)
+                } catch {
+                    print("Failed to fetch contacts for group: \(error)")
+                    continuation.resume(returning: [])
+                }
             }
         }
     }

@@ -26,9 +26,6 @@
 		7D8C3D822EBA01430090A507 /* ImportExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D8C3D802EBA01430090A507 /* ImportExportService.swift */; };
 		7D8C3D832EBA01430090A507 /* TestDataGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D8C3D812EBA01430090A507 /* TestDataGenerator.swift */; };
 		D9555C332EC008F900114EE2 /* PrivacyModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9555C322EC008F900114EE2 /* PrivacyModels.swift */; };
-		D9555C352EC0091200114EE2 /* PrivacyMonitorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9555C342EC0091200114EE2 /* PrivacyMonitorService.swift */; };
-		D9844D4C2EC00E250027876E /* GroupExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9844D4B2EC00E250027876E /* GroupExportService.swift */; };
-		D9844D502EC00E9E0027876E /* PrivacyDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9844D4E2EC00E9E0027876E /* PrivacyDashboardView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -69,8 +66,6 @@
 		7D8C3D812EBA01430090A507 /* TestDataGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestDataGenerator.swift; sourceTree = "<group>"; };
 		D9555C322EC008F900114EE2 /* PrivacyModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyModels.swift; sourceTree = "<group>"; };
 		D9555C342EC0091200114EE2 /* PrivacyMonitorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyMonitorService.swift; sourceTree = "<group>"; };
-		D9844D4B2EC00E250027876E /* GroupExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupExportService.swift; sourceTree = "<group>"; };
-		D9844D4E2EC00E9E0027876E /* PrivacyDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyDashboardView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -128,6 +123,7 @@
 			isa = PBXGroup;
 			children = (
 				7D7093D12EB6D1B60073F556 /* ContactsOrganizerApp.swift */,
+				D9555C2A2EBFFFCE00114EE2 /* PrivacyMonitorService.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -152,13 +148,14 @@
 		7D7093DA2EB6D1B60073F556 /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				D9844D4B2EC00E250027876E /* GroupExportService.swift */,
 				D9555C342EC0091200114EE2 /* PrivacyMonitorService.swift */,
 				7D8C3D802EBA01430090A507 /* ImportExportService.swift */,
 				7D8C3D812EBA01430090A507 /* TestDataGenerator.swift */,
 				7D7093D72EB6D1B60073F556 /* ContactsManager.swift */,
 				7D7093D82EB6D1B60073F556 /* DataQualityAnalyzer.swift */,
 				7D7093D92EB6D1B60073F556 /* DuplicateDetector.swift */,
+				D9555C2C2EBFFFED00114EE2 /* PrivacyMonitorService+DuplicateDetection.swift */,
+				D9555C2E2EC0001F00114EE2 /* PrivacyDashboardView.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -188,6 +185,7 @@
 				7D7093E22EB6D1B60073F556 /* GroupsView.swift */,
 				7D4C9A912EBC5E070023330A /* Info.plist */,
 				7D4C9A932EBC5F880023330A /* Contacts Organizer.entitlements */,
+				D9555C302EC0007900114EE2 /* PrivacyMonitorService+Analysis.swift */,
 			);
 			path = Dashboard;
 			sourceTree = "<group>";
@@ -212,7 +210,7 @@
 		7D7093EA2EB6D1B60073F556 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				D9844D4F2EC00E9E0027876E /* Privacy */,
+				D9555C362EC0091D00114EE2 /* PrivacyDashboardView.swift */,
 				7D7093DF2EB6D1B60073F556 /* Cleanup */,
 				7D7093E32EB6D1B60073F556 /* Dashboard */,
 				7D7093E42EB6D1B60073F556 /* DuplicateDetection */,
@@ -221,14 +219,6 @@
 				7D7093E92EB6D1B60073F556 /* SettingsView.swift */,
 			);
 			path = Views;
-			sourceTree = "<group>";
-		};
-		D9844D4F2EC00E9E0027876E /* Privacy */ = {
-			isa = PBXGroup;
-			children = (
-				D9844D4E2EC00E9E0027876E /* PrivacyDashboardView.swift */,
-			);
-			path = Privacy;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -341,16 +331,16 @@
 				7D7093EC2EB6D1B60073F556 /* DashboardView.swift in Sources */,
 				7D7093ED2EB6D1B60073F556 /* PermissionRequestView.swift in Sources */,
 				7D7093EE2EB6D1B60073F556 /* DuplicatesView.swift in Sources */,
+				D9555C312EC0007900114EE2 /* PrivacyMonitorService+Analysis.swift in Sources */,
 				7D7093EF2EB6D1B60073F556 /* ContactModels.swift in Sources */,
 				D9555C352EC0091200114EE2 /* PrivacyMonitorService.swift in Sources */,
 				7D7093F02EB6D1B60073F556 /* ContactsOrganizerApp.swift in Sources */,
 				7D8C3D822EBA01430090A507 /* ImportExportService.swift in Sources */,
-				D9844D502EC00E9E0027876E /* PrivacyDashboardView.swift in Sources */,
 				7D8C3D832EBA01430090A507 /* TestDataGenerator.swift in Sources */,
+				D9555C2B2EBFFFCE00114EE2 /* PrivacyMonitorService.swift in Sources */,
 				7D7093F12EB6D1B60073F556 /* AppState.swift in Sources */,
 				7D7093F22EB6D1B60073F556 /* DuplicateDetector.swift in Sources */,
 				7D7093F32EB6D1B60073F556 /* CleanupView.swift in Sources */,
-				D9844D4C2EC00E250027876E /* GroupExportService.swift in Sources */,
 				D9555C332EC008F900114EE2 /* PrivacyModels.swift in Sources */,
 				7D7093F42EB6D1B60073F556 /* DataQualityAnalyzer.swift in Sources */,
 				7D7093F52EB6D1B60073F556 /* OnboardingView.swift in Sources */,
@@ -359,6 +349,9 @@
 				7D7093F82EB6D1B60073F556 /* ContentView.swift in Sources */,
 				7D7093F92EB6D1B60073F556 /* SettingsView.swift in Sources */,
 				7D8C3D642EB7159C0090A507 /* FirstBackupSheet.swift in Sources */,
+				D9555C2F2EC0001F00114EE2 /* PrivacyDashboardView.swift in Sources */,
+				D9555C372EC0091D00114EE2 /* PrivacyDashboardView.swift in Sources */,
+				D9555C2D2EBFFFED00114EE2 /* PrivacyMonitorService+DuplicateDetection.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

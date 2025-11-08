@@ -15,7 +15,7 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
-        sut = ContactsManager.shared
+        sut = await MainActor.run { ContactsManager.shared }
 
         // Generate test contacts for operations that need them
         testContacts = TestDataGenerator.shared.generateTestContacts(count: 100)
@@ -37,17 +37,16 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
         var mainThreadCheckTime: CFAbsoluteTime = 0
 
         // Start the smart groups generation (should not block)
-        Task {
-            _ = await sut.generateSmartGroups(
-                definitions: ContactsManager.defaultSmartGroups,
+        Task.detached(priority: nil) { @Sendable in
+            _ = await self.sut.generateSmartGroups(
+                definitions: await MainActor.run { ContactsManager.defaultSmartGroups },
                 using: largeContactSet
             )
         }
 
         // Immediately check if main thread is responsive
-        await MainActor.run {
-            mainThreadCheckTime = CFAbsoluteTimeGetCurrent()
-        }
+        let capturedTime = await MainActor.run { CFAbsoluteTimeGetCurrent() }
+        mainThreadCheckTime = capturedTime
 
         let mainThreadResponseTime = mainThreadCheckTime - startTime
 
@@ -63,25 +62,29 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
         var updateCount = 0
         let expectedUpdates = 10
 
+        actor Counter { var value = 0; func inc() { value += 1 }; func get() -> Int { value } }
+        let counter = Counter()
+
         // Start smart groups generation
-        let generationTask = Task {
-            await sut.generateSmartGroups(
-                definitions: ContactsManager.defaultSmartGroups,
+        let generationTask = Task.detached(priority: nil) { @Sendable in
+            await self.sut.generateSmartGroups(
+                definitions: await MainActor.run { ContactsManager.defaultSmartGroups },
                 using: largeContactSet
             )
         }
 
         // Try to perform multiple main thread updates concurrently
         for _ in 0..<expectedUpdates {
-            await MainActor.run {
-                updateCount += 1
-            }
+            await counter.inc()
+            _ = await counter.get()
             // Small delay between updates
             try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
         }
 
         // Wait for generation to complete
         _ = await generationTask.value
+
+        updateCount = await counter.get()
 
         // We should have completed all updates, proving main thread wasn't blocked
         XCTAssertEqual(updateCount, expectedUpdates, "Main thread should process all updates concurrently with smart groups generation")
@@ -93,18 +96,21 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
         let contacts2 = TestDataGenerator.shared.generateTestContacts(count: 100)
         let contacts3 = TestDataGenerator.shared.generateTestContacts(count: 100)
 
-        let definition1 = SmartGroupDefinition(name: "Test 1", groupingType: .organization)
-        let definition2 = SmartGroupDefinition(name: "Test 2", groupingType: .custom(CustomCriteria(rules: [
-            CustomCriteria.Rule(field: .hasPhone, condition: .exists)
-        ])))
-        let definition3 = SmartGroupDefinition(name: "Test 3", groupingType: .custom(CustomCriteria(rules: [
-            CustomCriteria.Rule(field: .hasEmail, condition: .exists)
-        ])))
+        let (definition1, definition2, definition3) = await MainActor.run { () -> (SmartGroupDefinition, SmartGroupDefinition, SmartGroupDefinition) in
+            let d1 = SmartGroupDefinition(name: "Test 1", groupingType: .organization)
+            let d2 = SmartGroupDefinition(name: "Test 2", groupingType: .custom(CustomCriteria(rules: [
+                CustomCriteria.Rule(field: .hasPhone, condition: .exists)
+            ])))
+            let d3 = SmartGroupDefinition(name: "Test 3", groupingType: .custom(CustomCriteria(rules: [
+                CustomCriteria.Rule(field: .hasEmail, condition: .exists)
+            ])))
+            return (d1, d2, d3)
+        }
 
         // Start all three generations concurrently
-        async let result1 = sut.generateSmartGroups(definitions: [definition1], using: contacts1)
-        async let result2 = sut.generateSmartGroups(definitions: [definition2], using: contacts2)
-        async let result3 = sut.generateSmartGroups(definitions: [definition3], using: contacts3)
+        async let result1 = self.sut.generateSmartGroups(definitions: [definition1], using: contacts1)
+        async let result2 = self.sut.generateSmartGroups(definitions: [definition2], using: contacts2)
+        async let result3 = self.sut.generateSmartGroups(definitions: [definition3], using: contacts3)
 
         // Wait for all to complete
         let (r1, r2, r3) = await (result1, result2, result3)
@@ -124,20 +130,24 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
         let startTime = CFAbsoluteTimeGetCurrent()
 
         // Run three different operations concurrently
-        async let smartGroups1 = sut.generateSmartGroups(
-            definitions: [SmartGroupDefinition(name: "Org", groupingType: .organization)],
+        async let smartGroups1 = self.sut.generateSmartGroups(
+            definitions: [await MainActor.run { SmartGroupDefinition(name: "Org", groupingType: .organization) }],
             using: contacts
         )
-        async let smartGroups2 = sut.generateSmartGroups(
-            definitions: [SmartGroupDefinition(name: "Phone", groupingType: .custom(CustomCriteria(rules: [
-                CustomCriteria.Rule(field: .hasPhone, condition: .exists)
-            ])))],
+        async let smartGroups2 = self.sut.generateSmartGroups(
+            definitions: [await MainActor.run {
+                SmartGroupDefinition(name: "Phone", groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .hasPhone, condition: .exists)
+                ])))
+            }],
             using: contacts
         )
-        async let smartGroups3 = sut.generateSmartGroups(
-            definitions: [SmartGroupDefinition(name: "Email", groupingType: .custom(CustomCriteria(rules: [
-                CustomCriteria.Rule(field: .hasEmail, condition: .exists)
-            ])))],
+        async let smartGroups3 = self.sut.generateSmartGroups(
+            definitions: [await MainActor.run {
+                SmartGroupDefinition(name: "Email", groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .hasEmail, condition: .exists)
+                ])))
+            }],
             using: contacts
         )
 
@@ -160,46 +170,49 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
     /// Tests that concurrent operations don't corrupt results
     func testConcurrentOperationsProduceCorrectResults() async throws {
         // Create contacts with ONLY phone (no email)
-        let contactsWithPhone = (0..<50).map { i in
-            ContactSummary(
-                id: "phone-\(i)",
-                fullName: "Phone Contact \(i)",
-                organization: nil,
-                phoneNumbers: ["+1-555-000-\(String(format: "%04d", i))"],
-                emailAddresses: [], // No email
-                hasProfileImage: false,
-                creationDate: Date(),
-                modificationDate: Date()
-            )
+        let contactsWithPhone: [ContactSummary] = await MainActor.run {
+            (0..<50).map { i in
+                ContactSummary(
+                    id: "phone-\(i)",
+                    fullName: "Phone Contact \(i)",
+                    organization: nil,
+                    phoneNumbers: ["+1-555-000-\(String(format: "%04d", i))"],
+                    emailAddresses: [], // No email
+                    hasProfileImage: false,
+                    creationDate: Date(),
+                    modificationDate: Date()
+                )
+            }
         }
 
         // Create contacts with ONLY email (no phone)
-        let contactsWithEmail = (0..<50).map { i in
-            ContactSummary(
-                id: "email-\(i)",
-                fullName: "Email Contact \(i)",
-                organization: nil,
-                phoneNumbers: [], // No phone
-                emailAddresses: ["email\(i)@test.com"],
-                hasProfileImage: false,
-                creationDate: Date(),
-                modificationDate: Date()
-            )
+        let contactsWithEmail: [ContactSummary] = await MainActor.run {
+            (0..<50).map { i in
+                ContactSummary(
+                    id: "email-\(i)",
+                    fullName: "Email Contact \(i)",
+                    organization: nil,
+                    phoneNumbers: [], // No phone
+                    emailAddresses: ["email\(i)@test.com"],
+                    hasProfileImage: false,
+                    creationDate: Date(),
+                    modificationDate: Date()
+                )
+            }
         }
 
-        let phoneDefinition = SmartGroupDefinition(
+        let phoneDefinition = await MainActor.run { SmartGroupDefinition(
             name: "Has Phone",
             groupingType: .custom(CustomCriteria(rules: [
                 CustomCriteria.Rule(field: .hasPhone, condition: .exists)
             ]))
-        )
-
-        let emailDefinition = SmartGroupDefinition(
+        ) }
+        let emailDefinition = await MainActor.run { SmartGroupDefinition(
             name: "Has Email",
             groupingType: .custom(CustomCriteria(rules: [
                 CustomCriteria.Rule(field: .hasEmail, condition: .exists)
             ]))
-        )
+        ) }
 
         // Run concurrently
         async let phoneResults = sut.generateSmartGroups(definitions: [phoneDefinition], using: contactsWithPhone)
@@ -212,13 +225,15 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
         XCTAssertEqual(email.count, 1, "Should have one email group")
 
         if let phoneGroup = phone.first {
-            XCTAssertEqual(phoneGroup.groupName, "Has Phone")
-            XCTAssertEqual(phoneGroup.contacts.count, 50, "Phone group should have 50 contacts")
+            let (gName, count) = await MainActor.run { (phoneGroup.groupName, phoneGroup.contacts.count) }
+            XCTAssertEqual(gName, "Has Phone")
+            XCTAssertEqual(count, 50, "Phone group should have 50 contacts")
         }
 
         if let emailGroup = email.first {
-            XCTAssertEqual(emailGroup.groupName, "Has Email")
-            XCTAssertEqual(emailGroup.contacts.count, 50, "Email group should have 50 contacts")
+            let (gName, count) = await MainActor.run { (emailGroup.groupName, emailGroup.contacts.count) }
+            XCTAssertEqual(gName, "Has Email")
+            XCTAssertEqual(count, 50, "Email group should have 50 contacts")
         }
     }
 
@@ -231,21 +246,21 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
         measure {
             let expectation = XCTestExpectation(description: "Concurrent generation completes")
 
-            Task {
-                async let r1 = sut.generateSmartGroups(
-                    definitions: [SmartGroupDefinition(name: "Test1", groupingType: .organization)],
+            Task.detached(priority: nil) { @Sendable in
+                async let r1 = self.sut.generateSmartGroups(
+                    definitions: [await MainActor.run { SmartGroupDefinition(name: "Test1", groupingType: .organization) }],
                     using: contacts
                 )
-                async let r2 = sut.generateSmartGroups(
-                    definitions: [SmartGroupDefinition(name: "Test2", groupingType: .custom(CustomCriteria(rules: [
+                async let r2 = self.sut.generateSmartGroups(
+                    definitions: [await MainActor.run { SmartGroupDefinition(name: "Test2", groupingType: .custom(CustomCriteria(rules: [
                         CustomCriteria.Rule(field: .hasPhone, condition: .exists)
-                    ])))],
+                    ]))) }],
                     using: contacts
                 )
-                async let r3 = sut.generateSmartGroups(
-                    definitions: [SmartGroupDefinition(name: "Test3", groupingType: .custom(CustomCriteria(rules: [
+                async let r3 = self.sut.generateSmartGroups(
+                    definitions: [await MainActor.run { SmartGroupDefinition(name: "Test3", groupingType: .custom(CustomCriteria(rules: [
                         CustomCriteria.Rule(field: .hasEmail, condition: .exists)
-                    ])))],
+                    ]))) }],
                     using: contacts
                 )
 
@@ -265,9 +280,9 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
         var latencyMeasurements: [TimeInterval] = []
 
         // Start heavy operation
-        Task {
-            await sut.generateSmartGroups(
-                definitions: ContactsManager.defaultSmartGroups,
+        Task.detached(priority: nil) { @Sendable in
+            await self.sut.generateSmartGroups(
+                definitions: await MainActor.run { ContactsManager.defaultSmartGroups },
                 using: largeContactSet
             )
         }
@@ -276,12 +291,12 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
         for _ in 0..<10 {
             let measureStart = CFAbsoluteTimeGetCurrent()
 
-            await MainActor.run {
+            let latency: TimeInterval = await MainActor.run {
                 let measureEnd = CFAbsoluteTimeGetCurrent()
-                let latency = measureEnd - measureStart
-                latencyMeasurements.append(latency)
-                maxLatency = max(maxLatency, latency)
+                return measureEnd - measureStart
             }
+            latencyMeasurements.append(latency)
+            maxLatency = max(maxLatency, latency)
 
             try? await Task.sleep(nanoseconds: 50_000_000) // 50ms between measurements
         }
@@ -303,13 +318,13 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
         var stateChecks: [Bool] = []
 
         // Start multiple operations
-        Task {
-            async let r1 = sut.generateSmartGroups(
-                definitions: [SmartGroupDefinition(name: "Test1", groupingType: .organization)],
+        Task.detached(priority: nil) { @Sendable in
+            async let r1 = self.sut.generateSmartGroups(
+                definitions: [await MainActor.run { SmartGroupDefinition(name: "Test1", groupingType: .organization) }],
                 using: contacts
             )
-            async let r2 = sut.generateSmartGroups(
-                definitions: [SmartGroupDefinition(name: "Test2", groupingType: .organization)],
+            async let r2 = self.sut.generateSmartGroups(
+                definitions: [await MainActor.run { SmartGroupDefinition(name: "Test2", groupingType: .organization) }],
                 using: contacts
             )
 
@@ -318,13 +333,13 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
 
         // Check state consistency from main thread multiple times
         for _ in 0..<5 {
-            await MainActor.run {
-                // Just verifying we can access state without crashes or race conditions
+            let check: Bool = await MainActor.run {
                 let _ = sut.contacts
                 let _ = sut.statistics
                 let _ = sut.isLoading
-                stateChecks.append(true)
+                return true
             }
+            stateChecks.append(check)
             try? await Task.sleep(nanoseconds: 20_000_000) // 20ms
         }
 
@@ -355,11 +370,12 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
     /// Verifies operations complete successfully when called from background context
     func testOperationsWorkFromBackgroundContext() async throws {
         let contacts = TestDataGenerator.shared.generateTestContacts(count: 50)
+        let def = await MainActor.run { SmartGroupDefinition(name: "Test", groupingType: .organization) }
 
         // Call from a background task
-        let result = await Task.detached(priority: .background) {
+        let result = await Task.detached(priority: .background) { @Sendable in
             await self.sut.generateSmartGroups(
-                definitions: [SmartGroupDefinition(name: "Test", groupingType: .organization)],
+                definitions: [def],
                 using: contacts
             )
         }.value
@@ -371,19 +387,21 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
     /// Tests that operations maintain their priority when called from different contexts
     func testOperationsPriorityIndependence() async throws {
         let contacts = TestDataGenerator.shared.generateTestContacts(count: 50)
+        let defLow = await MainActor.run { SmartGroupDefinition(name: "Test1", groupingType: .organization) }
+        let defHigh = await MainActor.run { SmartGroupDefinition(name: "Test2", groupingType: .organization) }
 
         // Call from low priority task
-        let lowPriorityResult = await Task.detached(priority: .low) {
+        let lowPriorityResult = await Task.detached(priority: .low) { @Sendable in
             await self.sut.generateSmartGroups(
-                definitions: [SmartGroupDefinition(name: "Test1", groupingType: .organization)],
+                definitions: [defLow],
                 using: contacts
             )
         }.value
 
         // Call from high priority task
-        let highPriorityResult = await Task.detached(priority: .high) {
+        let highPriorityResult = await Task.detached(priority: .high) { @Sendable in
             await self.sut.generateSmartGroups(
-                definitions: [SmartGroupDefinition(name: "Test2", groupingType: .organization)],
+                definitions: [defHigh],
                 using: contacts
             )
         }.value
@@ -404,9 +422,10 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
 
         // Create many concurrent tasks
         for i in 0..<operationCount {
-            let task = Task {
-                await sut.generateSmartGroups(
-                    definitions: [SmartGroupDefinition(name: "Test\(i)", groupingType: .organization)],
+            let definition = await MainActor.run { SmartGroupDefinition(name: "Test\(i)", groupingType: .organization) }
+            let task = Task.detached(priority: nil) { @Sendable in
+                await self.sut.generateSmartGroups(
+                    definitions: [definition],
                     using: contacts
                 )
             }
@@ -425,3 +444,4 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
         XCTAssertEqual(completedCount, operationCount, "All \(operationCount) operations should complete successfully")
     }
 }
+

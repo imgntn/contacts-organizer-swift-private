@@ -27,10 +27,10 @@ struct DuplicatesView: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Duplicate Contacts")
-                                    .font(.system(size: 36, weight: .bold))
+                                    .font(.system(size: 42, weight: .bold))
 
                                 Text("\(duplicateGroups.count) groups found")
-                                    .font(.title3)
+                                    .font(.title2)
                                     .foregroundColor(.secondary)
                             }
                             Spacer()
@@ -54,6 +54,8 @@ struct DuplicateGroupCard: View {
     let group: DuplicateGroup
     @State private var isExpanded = false
     @State private var showMergeSheet = false
+    @State private var isHovered = false
+    @FocusState private var isFocused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -114,8 +116,26 @@ struct DuplicateGroupCard: View {
             }
         }
         .padding()
-        .background(Color.secondary.opacity(0.1))
+        .background(
+            ZStack {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.secondary.opacity(0.1))
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke((isHovered || isFocused) ? Color.accentColor.opacity(0.6) : Color.clear, lineWidth: (isHovered || isFocused) ? 2 : 0)
+            }
+        )
         .cornerRadius(12)
+        .contentShape(RoundedRectangle(cornerRadius: 12))
+        .focusable(true)
+        .focused($isFocused)
+        .scaleEffect((isHovered || isFocused) ? 1.01 : 1.0)
+        .animation(.easeOut(duration: 0.15), value: isHovered || isFocused)
+#if os(macOS)
+        .onHover { isHovered = $0 }
+#endif
+#if !os(macOS)
+        .hoverEffect(.lift)
+#endif
         .sheet(isPresented: $showMergeSheet) {
             MergeContactsSheet(group: group)
         }

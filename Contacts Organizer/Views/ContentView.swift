@@ -10,6 +10,15 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var contactsManager: ContactsManager
+    @AppStorage("textScalePreference") private var textScalePreference = "large"
+
+    private var mappedDynamicTypeSize: DynamicTypeSize {
+        switch textScalePreference {
+        case "normal": return .large
+        case "xlarge": return .accessibility2
+        default: return .accessibility1
+        }
+    }
 
     var body: some View {
         Group {
@@ -24,6 +33,7 @@ struct ContentView: View {
                 DashboardView()
             }
         }
+        .dynamicTypeSize(mappedDynamicTypeSize)
         .onChange(of: contactsManager.authorizationStatus) { _, newStatus in
             appState.updateAuthorizationStatus(newStatus)
         }
