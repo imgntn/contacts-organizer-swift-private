@@ -34,7 +34,7 @@ enum TextScale: String, CaseIterable {
 // MARK: - Environment Key
 
 private struct TextScaleKey: EnvironmentKey {
-    static let defaultValue: TextScale = .large
+    static let defaultValue: TextScale = .normal
 }
 
 extension EnvironmentValues {

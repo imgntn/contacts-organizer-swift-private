@@ -58,12 +58,18 @@ struct GeneralSettingsView: View {
     @EnvironmentObject var contactsManager: ContactsManager
     @AppStorage("autoRefresh") private var autoRefresh = true
     @AppStorage("showCompletedActions") private var showCompletedActions = false
-    @AppStorage("textScalePreference") private var textScalePreference = "large"
+    @AppStorage("textScalePreference") private var textScalePreference = "normal"
     @State private var isCreatingBackup = false
     @State private var backupSuccess = false
     @State private var userBackupURL: URL?
     @State private var appBackupURL: URL?
     @State private var showSavePanel = false
+    @State private var isImporting = false
+    @State private var isExporting = false
+    @State private var showImportPicker = false
+    @State private var showExportPicker = false
+    @State private var showSuccessAlert = false
+    @State private var successMessage = ""
 
     var body: some View {
         Form {
@@ -107,30 +113,7 @@ struct GeneralSettingsView: View {
                     .font(.caption)
             }
 
-            // Section 2: Appearance
-            Section {
-                Picker("Text Size", selection: $textScalePreference) {
-                    Text("Normal").tag("normal")
-                    Text("Large").tag("large")
-                    Text("Extra Large").tag("xlarge")
-                }
-                .pickerStyle(.segmented)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Preview")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Text("Contacts look clearer with larger text")
-                        .font(.headline)
-                }
-            } header: {
-                Text("Appearance")
-            } footer: {
-                Text("Customize how the app looks")
-                    .font(.caption)
-            }
-
-            // Section 3: Behavior
+            // Section 2: Behavior
             Section {
                 Toggle("Automatically refresh contacts", isOn: $autoRefresh)
 
@@ -141,112 +124,8 @@ struct GeneralSettingsView: View {
                 Text("Control how the app works")
                     .font(.caption)
             }
-        }
-        .padding(20)
-        .fileExporter(
-            isPresented: $showSavePanel,
-            document: BackupDocument(),
-            contentType: .vCard,
-            defaultFilename: generateBackupFilename()
-        ) { result in
-            handleBackupSave(result)
-        }
-        .alert("Backup Created", isPresented: $backupSuccess) {
-            Button("Show in Finder") {
-                if let url = userBackupURL {
-                    NSWorkspace.shared.selectFile(url.path, inFileViewerRootedAtPath: url.deletingLastPathComponent().path)
-                }
-            }
-            Button("OK", role: .cancel) { }
-        } message: {
-            if let userURL = userBackupURL, let appURL = appBackupURL {
-                Text("TWO backups created:\n\n1. Your backup: \(userURL.lastPathComponent)\n2. Safety backup: \(appURL.path)")
-            } else if let userURL = userBackupURL {
-                Text("Backup saved to:\n\(userURL.lastPathComponent)")
-            }
-        }
-    }
 
-    private func generateBackupFilename() -> String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
-        let timestamp = dateFormatter.string(from: Date())
-        return "Contacts_Backup_\(timestamp).vcf"
-    }
-
-    private func handleBackupSave(_ result: Result<URL, Error>) {
-        isCreatingBackup = true
-
-        Task {
-            do {
-                let saveURL = try result.get()
-                let (userURL, appURL) = await contactsManager.createBackup(saveToURL: saveURL)
-
-                await MainActor.run {
-                    isCreatingBackup = false
-                    if userURL != nil {
-                        userBackupURL = userURL
-                        appBackupURL = appURL
-                        backupSuccess = true
-                    }
-                }
-            } catch {
-                await MainActor.run {
-                    isCreatingBackup = false
-                    contactsManager.errorMessage = "Failed to save backup: \(error.localizedDescription)"
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Developer Settings
-
-struct DeveloperSettingsView: View {
-    @EnvironmentObject var contactsManager: ContactsManager
-    @EnvironmentObject var appState: AppState
-    @State private var isLoadingTest = false
-    @State private var isImporting = false
-    @State private var isExporting = false
-    @State private var showImportPicker = false
-    @State private var showExportPicker = false
-    @State private var testContactCount = 100
-    @State private var showSuccessAlert = false
-    @State private var successMessage = ""
-
-    var body: some View {
-        Form {
-            Section {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Text("Test Contacts:")
-                        Stepper("\(testContactCount)", value: $testContactCount, in: 10...1000, step: 10)
-                            .frame(width: 120)
-                    }
-
-                    Button(action: loadTestData) {
-                        HStack {
-                            if isLoadingTest {
-                                ProgressView()
-                                    .scaleEffect(0.7)
-                                    .frame(width: 16, height: 16)
-                                Text("Loading...")
-                            } else {
-                                Image(systemName: "doc.on.doc.fill")
-                                Text("Load Test Database")
-                            }
-                        }
-                    }
-                    .disabled(isLoadingTest)
-
-                    Text("Generates realistic test contacts with duplicates and incomplete data for testing")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-            } header: {
-                Text("Test Data")
-            }
-
+            // Section 3: Import/Export
             Section {
                 Button(action: { showImportPicker = true }) {
                     HStack {
@@ -283,38 +162,43 @@ struct DeveloperSettingsView: View {
                     .foregroundColor(.secondary)
             } header: {
                 Text("Import/Export")
-            }
-
-            Section {
-                Button("Reset Onboarding") {
-                    UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
-                    appState.hasCompletedOnboarding = false
-                    appState.updateCurrentView()
-                }
-                .foregroundColor(.red)
-
-                Text("Restart the onboarding flow from the beginning")
+            } footer: {
+                Text("Import or export your contacts data")
                     .font(.caption)
-                    .foregroundColor(.secondary)
-            } header: {
-                Text("Debug & Testing")
             }
 
+            // Section 4: Appearance (moved to bottom)
             Section {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("• Load test database to populate with sample contacts")
-                    Text("• Test duplicate detection and data quality features")
-                    Text("• Export current contacts to backup or share")
-                    Text("• Import previously exported contacts")
-                    Text("• Reset onboarding to test the welcome flow")
+                Picker("Text Size", selection: $textScalePreference) {
+                    Text("Normal").tag("normal")
+                    Text("Large").tag("large")
+                    Text("Extra Large").tag("xlarge")
                 }
-                .font(.caption)
-                .foregroundColor(.secondary)
+                .pickerStyle(.segmented)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Preview")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Text("Contacts look clearer with larger text")
+                        .font(.headline)
+                }
             } header: {
-                Text("Usage")
+                Text("Appearance")
+            } footer: {
+                Text("Customize how the app looks")
+                    .font(.caption)
             }
         }
         .padding(20)
+        .fileExporter(
+            isPresented: $showSavePanel,
+            document: BackupDocument(),
+            contentType: .vCard,
+            defaultFilename: generateBackupFilename()
+        ) { result in
+            handleBackupSave(result)
+        }
         .fileImporter(
             isPresented: $showImportPicker,
             allowedContentTypes: [.json],
@@ -330,6 +214,20 @@ struct DeveloperSettingsView: View {
         ) { result in
             handleExport(result)
         }
+        .alert("Backup Created", isPresented: $backupSuccess) {
+            Button("Show in Finder") {
+                if let url = userBackupURL {
+                    NSWorkspace.shared.selectFile(url.path, inFileViewerRootedAtPath: url.deletingLastPathComponent().path)
+                }
+            }
+            Button("OK", role: .cancel) { }
+        } message: {
+            if let userURL = userBackupURL, let appURL = appBackupURL {
+                Text("TWO backups created:\n\n1. Your backup: \(userURL.lastPathComponent)\n2. Safety backup: \(appURL.path)")
+            } else if let userURL = userBackupURL {
+                Text("Backup saved to:\n\(userURL.lastPathComponent)")
+            }
+        }
         .alert("Success", isPresented: $showSuccessAlert) {
             Button("OK", role: .cancel) { }
         } message: {
@@ -337,16 +235,34 @@ struct DeveloperSettingsView: View {
         }
     }
 
-    private func loadTestData() {
-        isLoadingTest = true
+    private func generateBackupFilename() -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
+        let timestamp = dateFormatter.string(from: Date())
+        return "Contacts_Backup_\(timestamp).vcf"
+    }
+
+    private func handleBackupSave(_ result: Result<URL, Error>) {
+        isCreatingBackup = true
 
         Task {
-            await contactsManager.loadTestContacts(count: testContactCount)
+            do {
+                let saveURL = try result.get()
+                let (userURL, appURL) = await contactsManager.createBackup(saveToURL: saveURL)
 
-            await MainActor.run {
-                isLoadingTest = false
-                successMessage = "Loaded \(testContactCount) test contacts successfully!"
-                showSuccessAlert = true
+                await MainActor.run {
+                    isCreatingBackup = false
+                    if userURL != nil {
+                        userBackupURL = userURL
+                        appBackupURL = appURL
+                        backupSuccess = true
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    isCreatingBackup = false
+                    contactsManager.errorMessage = "Failed to save backup: \(error.localizedDescription)"
+                }
             }
         }
     }
@@ -393,6 +309,99 @@ struct DeveloperSettingsView: View {
                     isExporting = false
                     contactsManager.errorMessage = "Export failed: \(error.localizedDescription)"
                 }
+            }
+        }
+    }
+}
+
+// MARK: - Developer Settings
+
+struct DeveloperSettingsView: View {
+    @EnvironmentObject var contactsManager: ContactsManager
+    @EnvironmentObject var appState: AppState
+    @State private var isLoadingTest = false
+    @State private var testContactCount = 100
+    @State private var showSuccessAlert = false
+    @State private var successMessage = ""
+
+    var body: some View {
+        Form {
+            Section {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("Test Contacts:")
+                        Stepper("\(testContactCount)", value: $testContactCount, in: 10...1000, step: 10)
+                            .frame(width: 120)
+                    }
+
+                    Button(action: loadTestData) {
+                        HStack {
+                            if isLoadingTest {
+                                ProgressView()
+                                    .scaleEffect(0.7)
+                                    .frame(width: 16, height: 16)
+                                Text("Loading...")
+                            } else {
+                                Image(systemName: "doc.on.doc.fill")
+                                Text("Load Test Database")
+                            }
+                        }
+                    }
+                    .disabled(isLoadingTest)
+
+                    Text("Generates realistic test contacts with duplicates and incomplete data for testing")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            } header: {
+                Text("Test Data")
+            }
+
+            Section {
+                Button("Reset Onboarding") {
+                    UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
+                    appState.hasCompletedOnboarding = false
+                    appState.updateCurrentView()
+                }
+                .foregroundColor(.red)
+
+                Text("Restart the onboarding flow from the beginning")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            } header: {
+                Text("Debug & Testing")
+            }
+
+            Section {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("• Load test database to populate with sample contacts")
+                    Text("• Test duplicate detection and data quality features")
+                    Text("• Reset onboarding to test the welcome flow")
+                }
+                .font(.caption)
+                .foregroundColor(.secondary)
+            } header: {
+                Text("Usage")
+            }
+        }
+        .padding(20)
+        .alert("Success", isPresented: $showSuccessAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(successMessage)
+        }
+    }
+
+    private func loadTestData() {
+        isLoadingTest = true
+
+        Task {
+            await contactsManager.loadTestContacts(count: testContactCount)
+
+            await MainActor.run {
+                isLoadingTest = false
+                successMessage = "Loaded \(testContactCount) test contacts successfully!"
+                showSuccessAlert = true
             }
         }
     }

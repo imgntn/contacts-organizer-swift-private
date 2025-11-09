@@ -18,7 +18,7 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
         sut = await MainActor.run { ContactsManager.shared }
 
         // Generate test contacts for operations that need them
-        testContacts = TestDataGenerator.shared.generateTestContacts(count: 100)
+        testContacts = await TestDataGenerator.shared.generateTestContacts(count: 100)
     }
 
     override func tearDown() async throws {
@@ -31,7 +31,7 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
     /// Verifies that generateSmartGroups doesn't block the main thread
     func testGenerateSmartGroupsDoesNotBlockMainThread() async throws {
         // Generate a large dataset to ensure operation takes measurable time
-        let largeContactSet = TestDataGenerator.shared.generateTestContacts(count: 1000)
+        let largeContactSet = await TestDataGenerator.shared.generateTestContacts(count: 1000)
 
         let startTime = CFAbsoluteTimeGetCurrent()
         var mainThreadCheckTime: CFAbsoluteTime = 0
@@ -56,7 +56,7 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
 
     /// Verifies main thread can process multiple updates while smart groups are generating
     func testMainThreadResponsivenessDuringSmartGroupGeneration() async throws {
-        let largeContactSet = TestDataGenerator.shared.generateTestContacts(count: 500)
+        let largeContactSet = await TestDataGenerator.shared.generateTestContacts(count: 500)
 
         // Track how many main thread updates we can process
         var updateCount = 0
@@ -92,9 +92,9 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
 
     /// Verifies that multiple smart group generations can run concurrently
     func testConcurrentSmartGroupGenerations() async throws {
-        let contacts1 = TestDataGenerator.shared.generateTestContacts(count: 100)
-        let contacts2 = TestDataGenerator.shared.generateTestContacts(count: 100)
-        let contacts3 = TestDataGenerator.shared.generateTestContacts(count: 100)
+        let contacts1 = await TestDataGenerator.shared.generateTestContacts(count: 100)
+        let contacts2 = await TestDataGenerator.shared.generateTestContacts(count: 100)
+        let contacts3 = await TestDataGenerator.shared.generateTestContacts(count: 100)
 
         let (definition1, definition2, definition3) = await MainActor.run { () -> (SmartGroupDefinition, SmartGroupDefinition, SmartGroupDefinition) in
             let d1 = SmartGroupDefinition(name: "Test 1", groupingType: .organization)
@@ -125,7 +125,7 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
 
     /// Verifies multiple operations can run concurrently without blocking each other
     func testMixedOperationsConcurrency() async throws {
-        let contacts = TestDataGenerator.shared.generateTestContacts(count: 200)
+        let contacts = await TestDataGenerator.shared.generateTestContacts(count: 200)
 
         let startTime = CFAbsoluteTimeGetCurrent()
 
@@ -241,7 +241,7 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
 
     /// Measures performance of concurrent smart group generation
     func testSmartGroupConcurrentPerformance() async throws {
-        let contacts = TestDataGenerator.shared.generateTestContacts(count: 500)
+        let contacts = await TestDataGenerator.shared.generateTestContacts(count: 500)
 
         measure {
             let expectation = XCTestExpectation(description: "Concurrent generation completes")
@@ -274,7 +274,7 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
 
     /// Tests main thread latency during heavy operations
     func testMainThreadLatencyDuringOperations() async throws {
-        let largeContactSet = TestDataGenerator.shared.generateTestContacts(count: 1000)
+        let largeContactSet = await TestDataGenerator.shared.generateTestContacts(count: 1000)
 
         var maxLatency: TimeInterval = 0
         var latencyMeasurements: [TimeInterval] = []
@@ -312,7 +312,7 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
 
     /// Verifies that state updates happen on MainActor during concurrent operations
     func testStateConsistencyDuringConcurrentOperations() async throws {
-        let contacts = TestDataGenerator.shared.generateTestContacts(count: 100)
+        let contacts = await TestDataGenerator.shared.generateTestContacts(count: 100)
 
         // Track state changes
         var stateChecks: [Bool] = []
@@ -349,7 +349,7 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
     /// Tests that error handling in detached tasks properly updates state on MainActor
     func testErrorHandlingInConcurrentOperations() async throws {
         // Test with empty definitions to ensure no crashes
-        let contacts = TestDataGenerator.shared.generateTestContacts(count: 10)
+        let contacts = await TestDataGenerator.shared.generateTestContacts(count: 10)
         let emptyDefinitions: [SmartGroupDefinition] = []
 
         let results = await sut.generateSmartGroups(definitions: emptyDefinitions, using: contacts)
@@ -369,7 +369,7 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
 
     /// Verifies operations complete successfully when called from background context
     func testOperationsWorkFromBackgroundContext() async throws {
-        let contacts = TestDataGenerator.shared.generateTestContacts(count: 50)
+        let contacts = await TestDataGenerator.shared.generateTestContacts(count: 50)
         let def = await MainActor.run { SmartGroupDefinition(name: "Test", groupingType: .organization) }
 
         // Call from a background task
@@ -386,7 +386,7 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
 
     /// Tests that operations maintain their priority when called from different contexts
     func testOperationsPriorityIndependence() async throws {
-        let contacts = TestDataGenerator.shared.generateTestContacts(count: 50)
+        let contacts = await TestDataGenerator.shared.generateTestContacts(count: 50)
         let defLow = await MainActor.run { SmartGroupDefinition(name: "Test1", groupingType: .organization) }
         let defHigh = await MainActor.run { SmartGroupDefinition(name: "Test2", groupingType: .organization) }
 
@@ -415,7 +415,7 @@ final class ContactsManagerConcurrencyTests: XCTestCase {
 
     /// Stress test with many concurrent operations
     func testManySimultaneousOperations() async throws {
-        let contacts = TestDataGenerator.shared.generateTestContacts(count: 100)
+        let contacts = await TestDataGenerator.shared.generateTestContacts(count: 100)
 
         let operationCount = 20
         var tasks: [Task<[SmartGroupResult], Never>] = []

@@ -149,7 +149,7 @@ struct GroupsView: View {
         HStack {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Contact Groups").responsiveFont(36, weight: .bold)
-                Text(headerSubtitle).font(.title3).foregroundColor(.secondary)
+                Text(headerSubtitle).responsiveFont(16).foregroundColor(.secondary)
             }
             Spacer()
             Picker("Group Type", selection: $selectedTab) {
@@ -218,12 +218,12 @@ struct GroupsView: View {
                     Button(action: { showCreateGroupSheet = true }) {
                         HStack {
                             Image(systemName: "plus.circle.fill")
-                                .font(.title2)
+                                .responsiveFont(20)
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("Create New Group")
-                                    .font(.headline)
+                                    .responsiveFont(14, weight: .semibold)
                                 Text("Manually organize your contacts")
-                                    .font(.caption)
+                                    .responsiveFont(11)
                                     .foregroundColor(.secondary)
                             }
                             Spacer()
@@ -408,10 +408,10 @@ struct SmartGroupResultCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Image(systemName: groupIcon).font(.title2).foregroundColor(groupColor)
+                Image(systemName: groupIcon).responsiveFont(20).foregroundColor(groupColor)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(result.groupName).font(.headline)
-                    Text("\(result.contacts.count) contacts").font(.caption).foregroundColor(.secondary)
+                    Text(result.groupName).responsiveFont(14, weight: .semibold)
+                    Text("\(result.contacts.count) contacts").responsiveFont(11).foregroundColor(.secondary)
                 }
                 Spacer()
 
@@ -431,7 +431,7 @@ struct SmartGroupResultCard: View {
 
                 Button(action: onCreateInContacts) {
                     if isCreating {
-                        HStack(spacing: 6) { ProgressView().scaleEffect(0.75); Text("Creating…").font(.caption.bold()) }
+                        HStack(spacing: 6) { ProgressView().scaleEffect(0.75); Text("Creating…").responsiveFont(11, weight: .bold) }
                     } else {
                         Label("Create in Contacts", systemImage: "plus.app")
                     }
@@ -458,10 +458,10 @@ struct SmartGroupResultCard: View {
                         ForEach(result.contacts) { contact in
                             Button(action: { openContact(contact) }) {
                                 HStack(spacing: 8) {
-                                    Image(systemName: "person.circle.fill").font(.caption).foregroundColor(.secondary)
-                                    Text(contact.fullName).font(.caption).foregroundColor(.primary)
+                                    Image(systemName: "person.circle.fill").responsiveFont(11).foregroundColor(.secondary)
+                                    Text(contact.fullName).responsiveFont(11).foregroundColor(.primary)
                                     Spacer()
-                                    Image(systemName: "arrow.up.forward").font(.caption2).foregroundColor(.secondary)
+                                    Image(systemName: "arrow.up.forward").responsiveFont(10).foregroundColor(.secondary)
                                 }
                                 .padding(.vertical, 4)
                                 .contentShape(Rectangle())
@@ -541,10 +541,10 @@ struct ManualGroupCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Image(systemName: "folder.fill").font(.title2).foregroundColor(.blue)
+                Image(systemName: "folder.fill").responsiveFont(20).foregroundColor(.blue)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(group.name).font(.headline)
-                    Text("\(contacts.count) contacts").font(.caption).foregroundColor(.secondary)
+                    Text(group.name).responsiveFont(14, weight: .semibold)
+                    Text("\(contacts.count) contacts").responsiveFont(11).foregroundColor(.secondary)
                 }
                 Spacer()
 
@@ -578,10 +578,10 @@ struct ManualGroupCard: View {
                         ForEach(contacts) { contact in
                             Button(action: { openContact(contact) }) {
                                 HStack(spacing: 8) {
-                                    Image(systemName: "person.circle.fill").font(.caption).foregroundColor(.secondary)
-                                    Text(contact.fullName).font(.caption).foregroundColor(.primary)
+                                    Image(systemName: "person.circle.fill").responsiveFont(11).foregroundColor(.secondary)
+                                    Text(contact.fullName).responsiveFont(11).foregroundColor(.primary)
                                     Spacer()
-                                    Image(systemName: "arrow.up.forward").font(.caption2).foregroundColor(.secondary)
+                                    Image(systemName: "arrow.up.forward").responsiveFont(10).foregroundColor(.secondary)
                                 }
                                 .padding(.vertical, 4)
                                 .contentShape(Rectangle())

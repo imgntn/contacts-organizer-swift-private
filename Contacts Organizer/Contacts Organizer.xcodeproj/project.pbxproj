@@ -75,9 +75,23 @@
 		D9844D512EC01EA40027876E /* TextScaleEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextScaleEnvironment.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		D9844D532EC022210027876E /* Exceptions for "Contacts OrganizerTests" folder in "Contacts OrganizerTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				SmartGroupTests.swift.bak,
+				SmartGroupTests.swift.bak2,
+			);
+			target = 7D8C3D682EB9A60D0090A507 /* Contacts OrganizerTests */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		7D8C3D6A2EB9A60D0090A507 /* Contacts OrganizerTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D9844D532EC022210027876E /* Exceptions for "Contacts OrganizerTests" folder in "Contacts OrganizerTests" target */,
+			);
 			path = "Contacts OrganizerTests";
 			sourceTree = "<group>";
 		};

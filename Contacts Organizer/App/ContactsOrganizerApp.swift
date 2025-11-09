@@ -14,10 +14,10 @@ struct ContactsOrganizerApp: App {
     @StateObject private var appState = AppState()
     @StateObject private var privacyMonitor = PrivacyMonitorService.shared
 
-    @AppStorage("textScalePreference") private var textScalePreference = "large"
+    @AppStorage("textScalePreference") private var textScalePreference = "normal"
 
     private var textScale: TextScale {
-        TextScale(rawValue: textScalePreference) ?? .large
+        TextScale(rawValue: textScalePreference) ?? .normal
     }
 
     var body: some Scene {

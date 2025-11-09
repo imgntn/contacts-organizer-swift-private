@@ -261,11 +261,11 @@ struct OverviewView: View {
                 // Header
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Overview")
-                        .font(.largeTitle.bold())
+                        .responsiveFont(36, weight: .bold)
 
                     if let stats = contactsManager.statistics {
                         Text("\(stats.totalContacts) contacts")
-                            .font(.title2)
+                            .responsiveFont(20)
                             .foregroundColor(.secondary)
                     }
                 }
@@ -280,11 +280,11 @@ struct OverviewView: View {
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Create a Backup First!")
-                                .font(.headline)
+                                .responsiveFont(14, weight: .semibold)
                                 .foregroundColor(.orange)
 
                             Text("Before making any changes, go to Settings → General → Backup All Contacts to protect your data.")
-                                .font(.caption)
+                                .responsiveFont(11)
                                 .foregroundColor(.secondary)
                         }
 
@@ -373,7 +373,7 @@ struct OverviewView: View {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundColor(.orange)
                         Text("Issues Found")
-                            .font(.title2.bold())
+                            .responsiveFont(20, weight: .bold)
                         Spacer()
                     }
 
@@ -453,10 +453,10 @@ struct StatCard: View {
             }
 
             Text(value)
-                .font(.largeTitle.bold())
+                .responsiveFont(32, weight: .bold)
 
             Text(title)
-                .font(.callout)
+                .responsiveFont(13)
                 .foregroundColor(.secondary)
         }
         .padding()
@@ -518,10 +518,10 @@ struct IssueCard: View {
 
         return VStack(spacing: 8) {
             Text("\(count)")
-                .font(.title.bold())
+                .responsiveFont(24, weight: .bold)
 
             Text(title)
-                .font(.callout)
+                .responsiveFont(13)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
         }

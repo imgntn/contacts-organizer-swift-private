@@ -10,7 +10,7 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var contactsManager: ContactsManager
-    @AppStorage("textScalePreference") private var textScalePreference = "large"
+    @AppStorage("textScalePreference") private var textScalePreference = "normal"
 
     private var mappedDynamicTypeSize: DynamicTypeSize {
         switch textScalePreference {

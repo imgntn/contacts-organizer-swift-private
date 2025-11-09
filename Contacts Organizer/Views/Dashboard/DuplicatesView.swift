@@ -30,7 +30,7 @@ struct DuplicatesView: View {
                                     .responsiveFont(42, weight: .bold)
 
                                 Text("\(duplicateGroups.count) groups found")
-                                    .font(.title2)
+                                    .responsiveFont(20)
                                     .foregroundColor(.secondary)
                             }
                             Spacer()
@@ -63,19 +63,19 @@ struct DuplicateGroupCard: View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(group.primaryContact.fullName)
-                        .font(.headline)
+                        .responsiveFont(14, weight: .semibold)
 
                     HStack(spacing: 12) {
                         Label("\(group.contacts.count) contacts", systemImage: "person.2.fill")
-                            .font(.caption)
+                            .responsiveFont(11)
                             .foregroundColor(.secondary)
 
                         Label(matchTypeLabel, systemImage: matchTypeIcon)
-                            .font(.caption)
+                            .responsiveFont(11)
                             .foregroundColor(confidenceColor)
 
                         Text(String(format: "%.0f%% match", group.confidence * 100))
-                            .font(.caption)
+                            .responsiveFont(11)
                             .foregroundColor(confidenceColor)
                     }
                 }
@@ -191,17 +191,17 @@ struct ContactRowView: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "person.circle.fill")
-                .font(.title2)
+                .responsiveFont(20)
                 .foregroundColor(isPrimary ? .blue : .gray)
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text(contact.fullName)
-                        .font(.subheadline.bold())
+                        .responsiveFont(12, weight: .semibold)
 
                     if isPrimary {
                         Text("Primary")
-                            .font(.caption2)
+                            .responsiveFont(10)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(Color.blue.opacity(0.2))
@@ -212,20 +212,20 @@ struct ContactRowView: View {
 
                 if let org = contact.organization {
                     Text(org)
-                        .font(.caption)
+                        .responsiveFont(11)
                         .foregroundColor(.secondary)
                 }
 
                 HStack(spacing: 16) {
                     if !contact.phoneNumbers.isEmpty {
                         Label(contact.phoneNumbers[0], systemImage: "phone.fill")
-                            .font(.caption)
+                            .responsiveFont(11)
                             .foregroundColor(.secondary)
                     }
 
                     if !contact.emailAddresses.isEmpty {
                         Label(contact.emailAddresses[0], systemImage: "envelope.fill")
-                            .font(.caption)
+                            .responsiveFont(11)
                             .foregroundColor(.secondary)
                     }
                 }
@@ -474,10 +474,10 @@ struct EmptyStateView: View {
 
             VStack(spacing: 8) {
                 Text(title)
-                    .font(.title.bold())
+                    .responsiveFont(24, weight: .bold)
 
                 Text(message)
-                    .font(.body)
+                    .responsiveFont(14)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: 400)
