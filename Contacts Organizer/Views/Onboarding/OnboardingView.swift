@@ -117,12 +117,12 @@ struct OnboardingPageView: View {
             Spacer()
 
             Image(systemName: page.icon)
-                .font(.system(size: 80))
+                .responsiveFont(80)
                 .foregroundStyle(page.color.gradient)
 
             VStack(spacing: 16) {
                 Text(page.title)
-                    .font(.system(size: 32, weight: .bold))
+                    .responsiveFont(32, weight: .bold)
                     .multilineTextAlignment(.center)
 
                 Text(page.description)

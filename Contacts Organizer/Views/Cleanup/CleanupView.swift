@@ -42,7 +42,7 @@ struct CleanupView: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Data Quality")
-                                    .font(.system(size: 42, weight: .bold))
+                                    .responsiveFont(42, weight: .bold)
 
                                 Text("\(issues.count) issues found")
                                     .font(.title2)
@@ -53,7 +53,7 @@ struct CleanupView: View {
                             // Health score
                             VStack(spacing: 4) {
                                 Text(String(format: "%.0f%%", summary.healthScore))
-                                    .font(.system(size: 32, weight: .bold))
+                                    .responsiveFont(32, weight: .bold)
                                     .foregroundColor(healthScoreColor)
 
                                 Text("Health Score")
@@ -67,6 +67,7 @@ struct CleanupView: View {
 
                         // Summary cards
                         LazyVGrid(columns: [
+                            GridItem(.flexible()),
                             GridItem(.flexible()),
                             GridItem(.flexible()),
                             GridItem(.flexible())
@@ -93,6 +94,14 @@ struct CleanupView: View {
                                 isSelected: selectedSeverity == .low
                             ) {
                                 toggleSeverityFilter(.low)
+                            }
+
+                            SeverityCard(
+                                severity: .suggestion,
+                                count: summary.suggestionsCount,
+                                isSelected: selectedSeverity == .suggestion
+                            ) {
+                                toggleSeverityFilter(.suggestion)
                             }
                         }
 
@@ -221,7 +230,7 @@ struct SeverityCard: View {
                     .foregroundColor(severityColor)
 
                 Text("\(count)")
-                    .font(.system(size: 32, weight: .bold))
+                    .responsiveFont(32, weight: .bold)
 
                 Text("\(severity.description) Priority")
                     .font(.callout)
@@ -256,6 +265,7 @@ struct SeverityCard: View {
         case .high: return "exclamationmark.triangle.fill"
         case .medium: return "exclamationmark.circle.fill"
         case .low: return "info.circle.fill"
+        case .suggestion: return "lightbulb.fill"
         }
     }
 
@@ -264,6 +274,7 @@ struct SeverityCard: View {
         case .high: return .red
         case .medium: return .orange
         case .low: return .yellow
+        case .suggestion: return .blue
         }
     }
 }
@@ -332,6 +343,7 @@ struct IssueRowView: View {
         case .high: return "exclamationmark.triangle.fill"
         case .medium: return "exclamationmark.circle.fill"
         case .low: return "info.circle.fill"
+        case .suggestion: return "lightbulb.fill"
         }
     }
 
@@ -340,6 +352,7 @@ struct IssueRowView: View {
         case .high: return .red
         case .medium: return .orange
         case .low: return .yellow
+        case .suggestion: return .blue
         }
     }
 
@@ -357,6 +370,7 @@ extension DataQualityIssue.Severity: CustomStringConvertible {
         case .high: return "High"
         case .medium: return "Medium"
         case .low: return "Low"
+        case .suggestion: return "Suggestion"
         }
     }
 }

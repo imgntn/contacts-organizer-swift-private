@@ -21,13 +21,13 @@ struct PermissionRequestView: View {
 
             // Icon
             Image(systemName: "person.crop.circle.badge.questionmark")
-                .font(.system(size: 80))
+                .responsiveFont(80)
                 .foregroundStyle(.blue.gradient)
 
             // Title and description
             VStack(spacing: 16) {
                 Text("Contacts Access Required")
-                    .font(.system(size: 32, weight: .bold))
+                    .responsiveFont(32, weight: .bold)
 
                 Text("Contacts Organizer needs access to your contacts to help you find duplicates, organize groups, and improve data quality.")
                     .font(.title3)

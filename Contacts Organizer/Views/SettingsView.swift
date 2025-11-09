@@ -32,11 +32,12 @@ struct SettingsView: View {
             PrivacySettingsView()
                 .environmentObject(contactsManager)
                 .tabItem {
-                    Label("Privacy", systemImage: "hand.raised")
+                    Label("Permissions", systemImage: "hand.raised")
                 }
 
             DeveloperSettingsView()
                 .environmentObject(contactsManager)
+                .environmentObject(appState)
                 .tabItem {
                     Label("Developer", systemImage: "hammer.fill")
                 }
@@ -66,33 +67,7 @@ struct GeneralSettingsView: View {
 
     var body: some View {
         Form {
-            Section {
-                Toggle("Automatically refresh contacts", isOn: $autoRefresh)
-
-                Toggle("Show completed actions", isOn: $showCompletedActions)
-            } header: {
-                Text("Preferences")
-            }
-
-            Section {
-                Picker("Text Size", selection: $textScalePreference) {
-                    Text("Normal").tag("normal")
-                    Text("Large").tag("large")
-                    Text("Extra Large").tag("xlarge")
-                }
-                .pickerStyle(.segmented)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Preview")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Text("Contacts look clearer with larger text")
-                        .font(.headline)
-                }
-            } header: {
-                Text("Appearance")
-            }
-
+            // Section 1: Backup & Data Protection (highest priority)
             Section {
                 Button(action: { showSavePanel = true }) {
                     HStack {
@@ -126,22 +101,45 @@ struct GeneralSettingsView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             } header: {
-                Text("Safety")
+                Text("Backup & Data Protection")
+            } footer: {
+                Text("Keep your contacts safe with automatic backups")
+                    .font(.caption)
             }
 
+            // Section 2: Appearance
             Section {
-                Button("Reset Onboarding") {
-                    UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
-                    appState.hasCompletedOnboarding = false
-                    appState.updateCurrentView()
+                Picker("Text Size", selection: $textScalePreference) {
+                    Text("Normal").tag("normal")
+                    Text("Large").tag("large")
+                    Text("Extra Large").tag("xlarge")
                 }
-                .foregroundColor(.red)
+                .pickerStyle(.segmented)
 
-                Text("Restart onboarding flow (for testing)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Preview")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Text("Contacts look clearer with larger text")
+                        .font(.headline)
+                }
             } header: {
-                Text("Debug")
+                Text("Appearance")
+            } footer: {
+                Text("Customize how the app looks")
+                    .font(.caption)
+            }
+
+            // Section 3: Behavior
+            Section {
+                Toggle("Automatically refresh contacts", isOn: $autoRefresh)
+
+                Toggle("Show completed actions", isOn: $showCompletedActions)
+            } header: {
+                Text("Behavior")
+            } footer: {
+                Text("Control how the app works")
+                    .font(.caption)
             }
         }
         .padding(20)
@@ -206,6 +204,7 @@ struct GeneralSettingsView: View {
 
 struct DeveloperSettingsView: View {
     @EnvironmentObject var contactsManager: ContactsManager
+    @EnvironmentObject var appState: AppState
     @State private var isLoadingTest = false
     @State private var isImporting = false
     @State private var isExporting = false
@@ -287,11 +286,27 @@ struct DeveloperSettingsView: View {
             }
 
             Section {
+                Button("Reset Onboarding") {
+                    UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
+                    appState.hasCompletedOnboarding = false
+                    appState.updateCurrentView()
+                }
+                .foregroundColor(.red)
+
+                Text("Restart the onboarding flow from the beginning")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            } header: {
+                Text("Debug & Testing")
+            }
+
+            Section {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("• Load test database to populate with sample contacts")
                     Text("• Test duplicate detection and data quality features")
                     Text("• Export current contacts to backup or share")
                     Text("• Import previously exported contacts")
+                    Text("• Reset onboarding to test the welcome flow")
                 }
                 .font(.caption)
                 .foregroundColor(.secondary)

@@ -74,18 +74,18 @@ final class DataQualityAnalyzerTests: XCTestCase {
         XCTAssertEqual(missingEmailIssues.first?.severity, .low, "Missing email should be low severity")
     }
 
-    // MARK: - Incomplete Data Detection
+    // MARK: - Organization Suggestion Detection
 
-    func testIncompleteDataDetection() {
+    func testOrganizationSuggestion() {
         let contacts = [
             ContactSummary(id: "1", fullName: "John Smith", organization: nil, phoneNumbers: ["555-1234"], emailAddresses: ["john@example.com"], hasProfileImage: false, creationDate: nil, modificationDate: nil)
         ]
 
         let issues = analyzer.analyzeDataQuality(contacts: contacts)
 
-        let incompleteIssues = issues.filter { $0.issueType == .incompleteData }
-        XCTAssertEqual(incompleteIssues.count, 1, "Should detect contact with missing organization")
-        XCTAssertEqual(incompleteIssues.first?.severity, .low, "Incomplete data should be low severity")
+        let suggestions = issues.filter { $0.issueType == .suggestion }
+        XCTAssertEqual(suggestions.count, 1, "Should suggest organization for complete contacts")
+        XCTAssertEqual(suggestions.first?.severity, .suggestion, "Organization info should be a suggestion")
     }
 
     // MARK: - Complete Contact (No Issues)
@@ -215,13 +215,27 @@ final class DataQualityAnalyzerTests: XCTestCase {
             DataQualityIssue(contactId: "2", contactName: "Test", issueType: .missingPhone, description: "Test", severity: .medium),     // -3
             DataQualityIssue(contactId: "3", contactName: "Test", issueType: .missingPhone, description: "Test", severity: .medium),     // -3
             DataQualityIssue(contactId: "4", contactName: "Test", issueType: .missingEmail, description: "Test", severity: .low),        // -0.5
-            DataQualityIssue(contactId: "5", contactName: "Test", issueType: .incompleteData, description: "Test", severity: .low)       // -0.5
+            DataQualityIssue(contactId: "5", contactName: "Test", issueType: .missingEmail, description: "Test", severity: .low)         // -0.5
         ]
         // Total: -10 - 3 - 3 - 0.5 - 0.5 = -17 points
 
         let summary = analyzer.generateSummary(issues: mixedIssues)
 
         XCTAssertEqual(summary.healthScore, 83.0, accuracy: 0.1, "Mixed severity issues should be weighted correctly")
+    }
+
+    func testHealthScoreSuggestionsNoImpact() {
+        // Suggestions should not impact health score
+        let suggestions = [
+            DataQualityIssue(contactId: "1", contactName: "Test", issueType: .suggestion, description: "Test", severity: .suggestion),
+            DataQualityIssue(contactId: "2", contactName: "Test", issueType: .suggestion, description: "Test", severity: .suggestion),
+            DataQualityIssue(contactId: "3", contactName: "Test", issueType: .suggestion, description: "Test", severity: .suggestion)
+        ]
+
+        let summary = analyzer.generateSummary(issues: suggestions)
+
+        XCTAssertEqual(summary.healthScore, 100.0, accuracy: 0.1, "Suggestions should not impact health score")
+        XCTAssertEqual(summary.suggestionsCount, 3, "Should count suggestions separately")
     }
 
     // MARK: - Empty Input

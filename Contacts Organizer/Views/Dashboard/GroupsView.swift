@@ -13,7 +13,8 @@ struct GroupsView: View {
     @EnvironmentObject var contactsManager: ContactsManager
     @State private var showCreateGroupSheet = false
     @State private var smartGroupResults: [SmartGroupResult] = []
-    @State private var selectedTab: GroupTab = .manual
+    @State private var selectedTab: GroupTab = .smart
+    @State private var searchText = ""
     @State private var isCreatingGroups = false
     @State private var showResultsAlert = false
     @State private var creationResults: CreationResults?
@@ -38,8 +39,33 @@ struct GroupsView: View {
     }
 
     enum GroupTab: String, CaseIterable {
-        case manual = "Manual Groups"
         case smart = "Smart Groups"
+        case manual = "Manual Groups"
+    }
+
+    private var filteredManualGroups: [CNGroup] {
+        if searchText.isEmpty {
+            return contactsManager.groups
+        }
+        // Note: Manual groups only filter by group name (not contact names)
+        // since contacts are loaded asynchronously per-group
+        return contactsManager.groups.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+    }
+
+    private var filteredSmartGroups: [SmartGroupResult] {
+        if searchText.isEmpty {
+            return smartGroupResults
+        }
+        return smartGroupResults.filter { result in
+            // Match group name
+            if result.groupName.localizedCaseInsensitiveContains(searchText) {
+                return true
+            }
+            // Match any contact name in the group
+            return result.contacts.contains { contact in
+                contact.fullName.localizedCaseInsensitiveContains(searchText)
+            }
+        }
     }
 
     var body: some View {
@@ -47,6 +73,26 @@ struct GroupsView: View {
             VStack(spacing: 0) {
                 headerView
                     .padding(24)
+
+                Divider()
+
+                // Search bar
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.secondary)
+                    TextField("Search groups...", text: $searchText)
+                        .textFieldStyle(.plain)
+                    if !searchText.isEmpty {
+                        Button(action: { searchText = "" }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+                .background(Color.secondary.opacity(0.05))
 
                 Divider()
 
@@ -102,7 +148,7 @@ struct GroupsView: View {
     private var headerView: some View {
         HStack {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Contact Groups").font(.system(size: 36, weight: .bold))
+                Text("Contact Groups").responsiveFont(36, weight: .bold)
                 Text(headerSubtitle).font(.title3).foregroundColor(.secondary)
             }
             Spacer()
@@ -128,24 +174,18 @@ struct GroupsView: View {
 
     @ViewBuilder
     private var manualHeaderActions: some View {
-        HStack(spacing: 12) {
-            if duplicateGroupCount > 0 {
-                Button(action: { showConfirmCleanup = true }) {
-                    HStack {
-                        if isCleaningDuplicates {
-                            ProgressView().scaleEffect(0.7).frame(width: 16, height: 16)
-                        }
-                        Label(isCleaningDuplicates ? "Cleaning..." : "Clean Up \(duplicateGroupCount) Duplicates", systemImage: "trash")
-                            .labelStyle(.titleAndIcon)
+        if duplicateGroupCount > 0 {
+            Button(action: { showConfirmCleanup = true }) {
+                HStack {
+                    if isCleaningDuplicates {
+                        ProgressView().scaleEffect(0.7).frame(width: 16, height: 16)
                     }
+                    Label(isCleaningDuplicates ? "Cleaning..." : "Clean Up \(duplicateGroupCount) Duplicates", systemImage: "trash")
+                        .labelStyle(.titleAndIcon)
                 }
-                .buttonStyle(.bordered)
-                .disabled(isCleaningDuplicates)
             }
-            Button(action: { showCreateGroupSheet = true }) {
-                Label("Create Group", systemImage: "plus")
-            }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.bordered)
+            .disabled(isCleaningDuplicates)
         }
     }
 
@@ -174,8 +214,45 @@ struct GroupsView: View {
         } else {
             ScrollView {
                 LazyVStack(spacing: 16) {
-                    ForEach(contactsManager.groups, id: \.identifier) { group in
-                        ManualGroupCard(group: group)
+                    // Create group button
+                    Button(action: { showCreateGroupSheet = true }) {
+                        HStack {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.title2)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Create New Group")
+                                    .font(.headline)
+                                Text("Manually organize your contacts")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.secondary)
+                        }
+                        .padding()
+                        .background(Color.accentColor.opacity(0.1))
+                        .cornerRadius(8)
+                    }
+                    .buttonStyle(.plain)
+
+                    if filteredManualGroups.isEmpty && !searchText.isEmpty {
+                        // No search results
+                        VStack(spacing: 12) {
+                            Image(systemName: "magnifyingglass")
+                                .responsiveFont(48)
+                                .foregroundColor(.secondary)
+                            Text("No groups found")
+                                .font(.title2.bold())
+                            Text("No groups match \"\(searchText)\"")
+                                .foregroundColor(.secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(48)
+                    } else {
+                        ForEach(filteredManualGroups, id: \.identifier) { group in
+                            ManualGroupCard(group: group)
+                        }
                     }
                 }
                 .padding(24)
@@ -205,9 +282,24 @@ struct GroupsView: View {
         } else {
             ScrollView {
                 LazyVStack(spacing: 16) {
-                    ForEach(smartGroupResults) { result in
-                        SmartGroupResultCard(result: result, isCreating: isCreatingGroups) {
-                            Task { await createSingleSmartGroup(result) }
+                    if filteredSmartGroups.isEmpty && !searchText.isEmpty {
+                        // No search results
+                        VStack(spacing: 12) {
+                            Image(systemName: "magnifyingglass")
+                                .responsiveFont(48)
+                                .foregroundColor(.secondary)
+                            Text("No groups found")
+                                .font(.title2.bold())
+                            Text("No groups match \"\(searchText)\"")
+                                .foregroundColor(.secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(48)
+                    } else {
+                        ForEach(filteredSmartGroups) { result in
+                            SmartGroupResultCard(result: result, isCreating: isCreatingGroups) {
+                                Task { await createSingleSmartGroup(result) }
+                            }
                         }
                     }
                 }

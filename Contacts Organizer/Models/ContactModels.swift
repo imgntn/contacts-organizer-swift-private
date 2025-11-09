@@ -87,18 +87,21 @@ struct DataQualityIssue: Identifiable, Sendable {
         case noContactInfo
         case invalidFormat
         case incompleteData
+        case suggestion
     }
 
     enum Severity: Int, Sendable {
         case high = 0
         case medium = 1
         case low = 2
+        case suggestion = 3
 
         var color: String {
             switch self {
             case .high: return "red"
             case .medium: return "orange"
             case .low: return "yellow"
+            case .suggestion: return "blue"
             }
         }
     }
@@ -113,7 +116,8 @@ extension DataQualityIssue.IssueType: Equatable {
              (.missingEmail, .missingEmail),
              (.noContactInfo, .noContactInfo),
              (.invalidFormat, .invalidFormat),
-             (.incompleteData, .incompleteData):
+             (.incompleteData, .incompleteData),
+             (.suggestion, .suggestion):
             return true
         default:
             return false
@@ -148,6 +152,7 @@ struct ContactStatistics {
     let highPriorityIssues: Int
     let mediumPriorityIssues: Int
     let lowPriorityIssues: Int
+    let suggestions: Int
 
     var dataQualityScore: Double {
         guard totalContacts > 0 else { return 100.0 }
@@ -156,6 +161,7 @@ struct ContactStatistics {
         // - High priority issues: -10 points each (critical problems)
         // - Medium priority issues: -3 points each (significant problems)
         // - Low priority issues: -0.5 points each (minor issues, max 5% impact)
+        // - Suggestions: No penalty (helpful recommendations, not problems)
 
         let highPenalty = Double(highPriorityIssues) * 10.0
         let mediumPenalty = Double(mediumPriorityIssues) * 3.0

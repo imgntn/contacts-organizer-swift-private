@@ -29,6 +29,7 @@
 		D9555C352EC0091200114EE2 /* PrivacyMonitorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9555C342EC0091200114EE2 /* PrivacyMonitorService.swift */; };
 		D9844D4C2EC00E250027876E /* GroupExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9844D4B2EC00E250027876E /* GroupExportService.swift */; };
 		D9844D502EC00E9E0027876E /* PrivacyDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9844D4E2EC00E9E0027876E /* PrivacyDashboardView.swift */; };
+		D9844D522EC01EA40027876E /* TextScaleEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9844D512EC01EA40027876E /* TextScaleEnvironment.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -71,6 +72,7 @@
 		D9555C342EC0091200114EE2 /* PrivacyMonitorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyMonitorService.swift; sourceTree = "<group>"; };
 		D9844D4B2EC00E250027876E /* GroupExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupExportService.swift; sourceTree = "<group>"; };
 		D9844D4E2EC00E9E0027876E /* PrivacyDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyDashboardView.swift; sourceTree = "<group>"; };
+		D9844D512EC01EA40027876E /* TextScaleEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextScaleEnvironment.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -212,6 +214,7 @@
 		7D7093EA2EB6D1B60073F556 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				D9844D512EC01EA40027876E /* TextScaleEnvironment.swift */,
 				D9844D4F2EC00E9E0027876E /* Privacy */,
 				7D7093DF2EB6D1B60073F556 /* Cleanup */,
 				7D7093E32EB6D1B60073F556 /* Dashboard */,
@@ -349,6 +352,7 @@
 				7D8C3D832EBA01430090A507 /* TestDataGenerator.swift in Sources */,
 				7D7093F12EB6D1B60073F556 /* AppState.swift in Sources */,
 				7D7093F22EB6D1B60073F556 /* DuplicateDetector.swift in Sources */,
+				D9844D522EC01EA40027876E /* TextScaleEnvironment.swift in Sources */,
 				7D7093F32EB6D1B60073F556 /* CleanupView.swift in Sources */,
 				D9844D4C2EC00E250027876E /* GroupExportService.swift in Sources */,
 				D9555C332EC008F900114EE2 /* PrivacyModels.swift in Sources */,

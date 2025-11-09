@@ -19,12 +19,12 @@ struct FirstBackupSheet: View {
         VStack(spacing: 24) {
             // Icon
             Image(systemName: "externaldrive.fill.badge.checkmark")
-                .font(.system(size: 60))
+                .responsiveFont(60)
                 .foregroundStyle(.blue.gradient)
 
             // Title
             Text("Create Your First Backup")
-                .font(.system(size: 28, weight: .bold))
+                .responsiveFont(28, weight: .bold)
 
             // Description
             VStack(spacing: 12) {

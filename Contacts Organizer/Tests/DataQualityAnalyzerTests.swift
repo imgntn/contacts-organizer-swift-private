@@ -74,18 +74,18 @@ final class DataQualityAnalyzerTests: XCTestCase {
         XCTAssertEqual(missingEmailIssues.first?.severity, .low, "Missing email should be low severity")
     }
 
-    // MARK: - Incomplete Data Detection
+    // MARK: - Organization Suggestion Detection
 
-    func testIncompleteDataDetection() {
+    func testOrganizationSuggestion() {
         let contacts = [
             ContactSummary(id: "1", fullName: "John Smith", organization: nil, phoneNumbers: ["555-1234"], emailAddresses: ["john@example.com"], hasProfileImage: false, creationDate: nil, modificationDate: nil)
         ]
 
         let issues = analyzer.analyzeDataQuality(contacts: contacts)
 
-        let incompleteIssues = issues.filter { $0.issueType == .incompleteData }
-        XCTAssertEqual(incompleteIssues.count, 1, "Should detect contact with missing organization")
-        XCTAssertEqual(incompleteIssues.first?.severity, .low, "Incomplete data should be low severity")
+        let suggestions = issues.filter { $0.issueType == .suggestion }
+        XCTAssertEqual(suggestions.count, 1, "Should suggest organization for complete contacts")
+        XCTAssertEqual(suggestions.first?.severity, .suggestion, "Organization info should be a suggestion")
     }
 
     // MARK: - Complete Contact (No Issues)
@@ -157,7 +157,7 @@ final class DataQualityAnalyzerTests: XCTestCase {
         XCTAssertEqual(summary.healthScore, 100.0, "Health score should be 100 with no issues")
     }
 
-    func testHealthScoreDecreases WithIssues() {
+    func testHealthScoreDecreasesWithIssues() {
         let issues = [
             DataQualityIssue(contactId: "1", contactName: "Test", issueType: .missingName, description: "Test", severity: .high)
         ]

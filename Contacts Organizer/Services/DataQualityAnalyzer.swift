@@ -91,14 +91,14 @@ class DataQualityAnalyzer: @unchecked Sendable {
         if contact.organization == nil &&
            !contact.phoneNumbers.isEmpty &&
            !contact.emailAddresses.isEmpty {
-            // This is a lower priority issue
+            // This is a suggestion, not an issue
             issues.append(
                 DataQualityIssue(
                     contactId: contact.id,
                     contactName: contact.fullName,
-                    issueType: .incompleteData,
+                    issueType: .suggestion,
                     description: "Contact might benefit from organization info",
-                    severity: .low
+                    severity: .suggestion
                 )
             )
         }
@@ -112,6 +112,7 @@ class DataQualityAnalyzer: @unchecked Sendable {
         let highSeverity = issues.filter { $0.severity == .high }.count
         let mediumSeverity = issues.filter { $0.severity == .medium }.count
         let lowSeverity = issues.filter { $0.severity == .low }.count
+        let suggestions = issues.filter { $0.severity == .suggestion }.count
 
         let issuesByType = Dictionary(grouping: issues) { $0.issueType }
 
@@ -120,6 +121,7 @@ class DataQualityAnalyzer: @unchecked Sendable {
             highSeverityCount: highSeverity,
             mediumSeverityCount: mediumSeverity,
             lowSeverityCount: lowSeverity,
+            suggestionsCount: suggestions,
             missingNameCount: issuesByType[.missingName]?.count ?? 0,
             missingPhoneCount: issuesByType[.missingPhone]?.count ?? 0,
             missingEmailCount: issuesByType[.missingEmail]?.count ?? 0,
@@ -136,6 +138,7 @@ struct DataQualitySummary {
     let highSeverityCount: Int
     let mediumSeverityCount: Int
     let lowSeverityCount: Int
+    let suggestionsCount: Int
     let missingNameCount: Int
     let missingPhoneCount: Int
     let missingEmailCount: Int
@@ -150,6 +153,7 @@ struct DataQualitySummary {
         // - High priority issues: -10 points each (critical problems)
         // - Medium priority issues: -3 points each (significant problems)
         // - Low priority issues: -0.5 points each, CAPPED AT 5% max impact
+        // - Suggestions: No penalty (helpful recommendations, not problems)
 
         let highPenalty = Double(highSeverityCount) * 10.0
         let mediumPenalty = Double(mediumSeverityCount) * 3.0

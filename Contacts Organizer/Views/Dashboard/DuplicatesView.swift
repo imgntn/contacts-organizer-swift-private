@@ -27,7 +27,7 @@ struct DuplicatesView: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Duplicate Contacts")
-                                    .font(.system(size: 42, weight: .bold))
+                                    .responsiveFont(42, weight: .bold)
 
                                 Text("\(duplicateGroups.count) groups found")
                                     .font(.title2)
@@ -469,7 +469,7 @@ struct EmptyStateView: View {
     var body: some View {
         VStack(spacing: 20) {
             Image(systemName: icon)
-                .font(.system(size: 60))
+                .responsiveFont(60)
                 .foregroundStyle(color.gradient)
 
             VStack(spacing: 8) {

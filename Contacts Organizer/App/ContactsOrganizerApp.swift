@@ -16,12 +16,8 @@ struct ContactsOrganizerApp: App {
 
     @AppStorage("textScalePreference") private var textScalePreference = "large"
 
-    private var mappedDynamicTypeSize: DynamicTypeSize {
-        switch textScalePreference {
-        case "normal": return .large
-        case "xlarge": return .accessibility2
-        default: return .accessibility1
-        }
+    private var textScale: TextScale {
+        TextScale(rawValue: textScalePreference) ?? .large
     }
 
     var body: some Scene {
@@ -30,7 +26,7 @@ struct ContactsOrganizerApp: App {
                 .environmentObject(contactsManager)
                 .environmentObject(appState)
                 .environmentObject(privacyMonitor)
-                .dynamicTypeSize(mappedDynamicTypeSize)
+                .environment(\.textScale, textScale)
                 .frame(minWidth: 900, minHeight: 600)
         }
         .windowStyle(.hiddenTitleBar)
@@ -44,7 +40,7 @@ struct ContactsOrganizerApp: App {
                 .environmentObject(contactsManager)
                 .environmentObject(appState)
                 .environmentObject(privacyMonitor)
-                .dynamicTypeSize(mappedDynamicTypeSize)
+                .environment(\.textScale, textScale)
         }
     }
 }

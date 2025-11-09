@@ -143,6 +143,7 @@ class ContactsManager: ObservableObject {
         let highPriority = issues?.filter { $0.severity == .high }.count ?? 0
         let mediumPriority = issues?.filter { $0.severity == .medium }.count ?? 0
         let lowPriority = issues?.filter { $0.severity == .low }.count ?? 0
+        let suggestions = issues?.filter { $0.severity == .suggestion }.count ?? 0
 
         return ContactStatistics(
             totalContacts: totalContacts,
@@ -155,7 +156,8 @@ class ContactsManager: ObservableObject {
             dataQualityIssues: issues?.count ?? 0,
             highPriorityIssues: highPriority,
             mediumPriorityIssues: mediumPriority,
-            lowPriorityIssues: lowPriority
+            lowPriorityIssues: lowPriority,
+            suggestions: suggestions
         )
     }
 
