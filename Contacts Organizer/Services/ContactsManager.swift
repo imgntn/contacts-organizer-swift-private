@@ -94,6 +94,14 @@ class ContactsManager: ObservableObject {
                         CNContactImageDataAvailableKey as CNKeyDescriptor,
                         CNContactDatesKey as CNKeyDescriptor,
                         CNContactBirthdayKey as CNKeyDescriptor,
+                        // Extended contact information
+                        CNContactNicknameKey as CNKeyDescriptor,
+                        CNContactJobTitleKey as CNKeyDescriptor,
+                        CNContactDepartmentNameKey as CNKeyDescriptor,
+                        CNContactPostalAddressesKey as CNKeyDescriptor,
+                        CNContactUrlAddressesKey as CNKeyDescriptor,
+                        CNContactSocialProfilesKey as CNKeyDescriptor,
+                        CNContactInstantMessageAddressesKey as CNKeyDescriptor,
                         CNContactFormatter.descriptorForRequiredKeys(for: .fullName)
                     ]
 
@@ -145,6 +153,28 @@ class ContactsManager: ObservableObject {
         let lowPriority = issues?.filter { $0.severity == .low }.count ?? 0
         let suggestions = issues?.filter { $0.severity == .suggestion }.count ?? 0
 
+        // Extended statistics from new features
+        let contactsWithSocialMedia = contacts.filter { !$0.socialProfiles.isEmpty }.count
+        let contactsWithAddress = contacts.filter { !$0.postalAddresses.isEmpty }.count
+        let contactsWithJobTitle = contacts.filter { $0.jobTitle != nil && !$0.jobTitle!.isEmpty }.count
+        let contactsWithWebsite = contacts.filter { !$0.urlAddresses.isEmpty }.count
+        let contactsWithNickname = contacts.filter { $0.nickname != nil && !$0.nickname!.isEmpty }.count
+        let contactsWithIM = contacts.filter { !$0.instantMessageAddresses.isEmpty }.count
+
+        // Calculate high detail contacts (5+ data points)
+        let highDetailContacts = contacts.filter { contact in
+            var dataPoints = 0
+            if !contact.phoneNumbers.isEmpty { dataPoints += 1 }
+            if !contact.emailAddresses.isEmpty { dataPoints += 1 }
+            if contact.organization != nil { dataPoints += 1 }
+            if contact.jobTitle != nil { dataPoints += 1 }
+            if !contact.postalAddresses.isEmpty { dataPoints += 1 }
+            if !contact.socialProfiles.isEmpty { dataPoints += 1 }
+            if !contact.urlAddresses.isEmpty { dataPoints += 1 }
+            if contact.birthday != nil { dataPoints += 1 }
+            return dataPoints >= 5
+        }.count
+
         return ContactStatistics(
             totalContacts: totalContacts,
             contactsWithPhone: contactsWithPhone,
@@ -157,7 +187,14 @@ class ContactsManager: ObservableObject {
             highPriorityIssues: highPriority,
             mediumPriorityIssues: mediumPriority,
             lowPriorityIssues: lowPriority,
-            suggestions: suggestions
+            suggestions: suggestions,
+            contactsWithSocialMedia: contactsWithSocialMedia,
+            contactsWithAddress: contactsWithAddress,
+            contactsWithJobTitle: contactsWithJobTitle,
+            contactsWithWebsite: contactsWithWebsite,
+            contactsWithNickname: contactsWithNickname,
+            contactsWithInstantMessaging: contactsWithIM,
+            highDetailContacts: highDetailContacts
         )
     }
 
@@ -461,6 +498,14 @@ class ContactsManager: ObservableObject {
                         CNContactImageDataAvailableKey as CNKeyDescriptor,
                         CNContactDatesKey as CNKeyDescriptor,
                         CNContactBirthdayKey as CNKeyDescriptor,
+                        // Extended contact information
+                        CNContactNicknameKey as CNKeyDescriptor,
+                        CNContactJobTitleKey as CNKeyDescriptor,
+                        CNContactDepartmentNameKey as CNKeyDescriptor,
+                        CNContactPostalAddressesKey as CNKeyDescriptor,
+                        CNContactUrlAddressesKey as CNKeyDescriptor,
+                        CNContactSocialProfilesKey as CNKeyDescriptor,
+                        CNContactInstantMessageAddressesKey as CNKeyDescriptor,
                         CNContactFormatter.descriptorForRequiredKeys(for: .fullName)
                     ]
 
@@ -828,6 +873,122 @@ class ContactsManager: ObservableObject {
 
             // Check if birthday falls within this week
             return thisYearBirthday >= weekStart && thisYearBirthday < weekEnd
+
+        // Phase 3: Social Media & Digital Presence
+        case .hasSocialProfile:
+            return rule.condition == .exists ? !contact.socialProfiles.isEmpty : contact.socialProfiles.isEmpty
+
+        case .hasLinkedIn:
+            let hasLinkedIn = contact.socialProfiles.contains { $0.service.lowercased().contains("linkedin") }
+            return rule.condition == .exists ? hasLinkedIn : !hasLinkedIn
+
+        case .hasTwitter:
+            let hasTwitter = contact.socialProfiles.contains {
+                let service = $0.service.lowercased()
+                return service.contains("twitter") || service.contains("x")
+            }
+            return rule.condition == .exists ? hasTwitter : !hasTwitter
+
+        case .multipleSocialProfiles:
+            return contact.socialProfiles.count >= 2
+
+        case .hasWebsite:
+            return rule.condition == .exists ? !contact.urlAddresses.isEmpty : contact.urlAddresses.isEmpty
+
+        case .hasInstantMessaging:
+            return rule.condition == .exists ? !contact.instantMessageAddresses.isEmpty : contact.instantMessageAddresses.isEmpty
+
+        case .digitallyConnected:
+            // Has at least 2 of: social profiles, instant messaging, or website
+            let hasCategories = [
+                !contact.socialProfiles.isEmpty,
+                !contact.instantMessageAddresses.isEmpty,
+                !contact.urlAddresses.isEmpty
+            ].filter { $0 }.count
+            return hasCategories >= 2
+
+        // Phase 3: Geographic & Address
+        case .hasAddress:
+            return rule.condition == .exists ? !contact.postalAddresses.isEmpty : contact.postalAddresses.isEmpty
+
+        case .missingAddress:
+            return contact.postalAddresses.isEmpty
+
+        case .multipleAddresses:
+            return contact.postalAddresses.count >= 2
+
+        case .cityMatches:
+            guard let value = rule.value else { return false }
+            return contact.postalAddresses.contains { $0.localizedCaseInsensitiveContains(value) }
+
+        // Phase 3: Professional Information
+        case .hasJobTitle:
+            let hasTitle = contact.jobTitle != nil && !contact.jobTitle!.isEmpty
+            return rule.condition == .exists ? hasTitle : !hasTitle
+
+        case .hasDepartment:
+            let hasDept = contact.departmentName != nil && !contact.departmentName!.isEmpty
+            return rule.condition == .exists ? hasDept : !hasDept
+
+        case .jobTitleContains:
+            guard let jobTitle = contact.jobTitle, let value = rule.value else { return false }
+            return jobTitle.localizedCaseInsensitiveContains(value)
+
+        case .professionalContact:
+            // Has organization, job title, and email
+            let hasOrg = contact.organization != nil && !contact.organization!.isEmpty
+            let hasTitle = contact.jobTitle != nil && !contact.jobTitle!.isEmpty
+            let hasEmail = !contact.emailAddresses.isEmpty
+            return hasOrg && hasTitle && hasEmail
+
+        case .careerNetwork:
+            // Has job title and LinkedIn
+            let hasTitle = contact.jobTitle != nil && !contact.jobTitle!.isEmpty
+            let hasLinkedIn = contact.socialProfiles.contains { $0.service.lowercased().contains("linkedin") }
+            return hasTitle && hasLinkedIn
+
+        // Phase 3: Nickname & Detail Level
+        case .hasNickname:
+            let hasNick = contact.nickname != nil && !contact.nickname!.isEmpty
+            return rule.condition == .exists ? hasNick : !hasNick
+
+        case .nicknameContains:
+            guard let nickname = contact.nickname, let value = rule.value else { return false }
+            return nickname.localizedCaseInsensitiveContains(value)
+
+        case .highDetailContact:
+            // Count number of non-empty data points
+            var dataPoints = 0
+            if !contact.phoneNumbers.isEmpty { dataPoints += 1 }
+            if !contact.emailAddresses.isEmpty { dataPoints += 1 }
+            if contact.organization != nil { dataPoints += 1 }
+            if contact.jobTitle != nil { dataPoints += 1 }
+            if !contact.postalAddresses.isEmpty { dataPoints += 1 }
+            if !contact.socialProfiles.isEmpty { dataPoints += 1 }
+            if !contact.urlAddresses.isEmpty { dataPoints += 1 }
+            if contact.birthday != nil { dataPoints += 1 }
+            return dataPoints >= 5
+
+        case .basicContact:
+            // Only has 1-2 data points
+            var dataPoints = 0
+            if !contact.phoneNumbers.isEmpty { dataPoints += 1 }
+            if !contact.emailAddresses.isEmpty { dataPoints += 1 }
+            if contact.organization != nil { dataPoints += 1 }
+            return dataPoints <= 2 && dataPoints >= 1
+
+        case .businessContact:
+            // Has organization, job title, and website
+            let hasOrg = contact.organization != nil && !contact.organization!.isEmpty
+            let hasTitle = contact.jobTitle != nil && !contact.jobTitle!.isEmpty
+            let hasWebsite = !contact.urlAddresses.isEmpty
+            return hasOrg && hasTitle && hasWebsite
+
+        case .personalContact:
+            // No organization or job title
+            let hasOrg = contact.organization != nil && !contact.organization!.isEmpty
+            let hasTitle = contact.jobTitle != nil && !contact.jobTitle!.isEmpty
+            return !hasOrg && !hasTitle
         }
     }
 
@@ -921,6 +1082,136 @@ class ContactsManager: ObservableObject {
                 groupingType: .custom(CustomCriteria(rules: [
                     CustomCriteria.Rule(field: .birthdayThisWeek, condition: .exists)
                 ]))
+            ),
+
+            // Phase 3: Social Media & Digital Presence
+            SmartGroupDefinition(
+                name: "Connected on LinkedIn",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .hasLinkedIn, condition: .exists)
+                ]))
+            ),
+            SmartGroupDefinition(
+                name: "Connected on Twitter/X",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .hasTwitter, condition: .exists)
+                ]))
+            ),
+            SmartGroupDefinition(
+                name: "Social Media Savvy",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .multipleSocialProfiles, condition: .exists)
+                ]))
+            ),
+            SmartGroupDefinition(
+                name: "Missing Social Media",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .hasSocialProfile, condition: .notExists)
+                ]))
+            ),
+            SmartGroupDefinition(
+                name: "Has Instant Messaging",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .hasInstantMessaging, condition: .exists)
+                ]))
+            ),
+            SmartGroupDefinition(
+                name: "Digitally Connected",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .digitallyConnected, condition: .exists)
+                ]))
+            ),
+
+            // Phase 3: Geographic & Address
+            SmartGroupDefinition(
+                name: "Has Address",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .hasAddress, condition: .exists)
+                ]))
+            ),
+            SmartGroupDefinition(
+                name: "Missing Address",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .missingAddress, condition: .exists)
+                ]))
+            ),
+            SmartGroupDefinition(
+                name: "Multiple Addresses",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .multipleAddresses, condition: .exists)
+                ]))
+            ),
+
+            // Phase 3: Professional Information
+            SmartGroupDefinition(
+                name: "Has Job Title",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .hasJobTitle, condition: .exists)
+                ]))
+            ),
+            SmartGroupDefinition(
+                name: "Has Department",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .hasDepartment, condition: .exists)
+                ]))
+            ),
+            SmartGroupDefinition(
+                name: "Professional Network",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .professionalContact, condition: .exists)
+                ]))
+            ),
+            SmartGroupDefinition(
+                name: "Career Network",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .careerNetwork, condition: .exists)
+                ]))
+            ),
+
+            // Phase 3: Digital Presence & Websites
+            SmartGroupDefinition(
+                name: "Has Website",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .hasWebsite, condition: .exists)
+                ]))
+            ),
+            SmartGroupDefinition(
+                name: "Business Contacts",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .businessContact, condition: .exists)
+                ]))
+            ),
+
+            // Phase 3: Nickname & Detail Level
+            SmartGroupDefinition(
+                name: "Has Nickname",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .hasNickname, condition: .exists)
+                ]))
+            ),
+            SmartGroupDefinition(
+                name: "Highly Detailed Contacts",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .highDetailContact, condition: .exists)
+                ]))
+            ),
+            SmartGroupDefinition(
+                name: "Basic Contacts Only",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .basicContact, condition: .exists)
+                ]))
+            ),
+            SmartGroupDefinition(
+                name: "Personal Contacts",
+                groupingType: .custom(CustomCriteria(rules: [
+                    CustomCriteria.Rule(field: .personalContact, condition: .exists)
+                ]))
+            ),
+
+            // Phase 3: Geographic grouping (enhanced existing)
+            SmartGroupDefinition(
+                name: "By City",
+                groupingType: .geographic(.byCity)
             )
         ]
     }

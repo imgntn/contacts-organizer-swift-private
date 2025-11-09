@@ -365,6 +365,68 @@ struct OverviewView: View {
                             action: { selectedTab = .healthReport }
                         )
                     }
+
+                    // Extended Details Section
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Extended Details")
+                            .responsiveFont(20, weight: .bold)
+                            .padding(.top, 8)
+
+                        LazyVGrid(columns: [
+                            GridItem(.flexible()),
+                            GridItem(.flexible()),
+                            GridItem(.flexible())
+                        ], spacing: 16) {
+                            StatCard(
+                                title: "With Social Media",
+                                value: "\(stats.contactsWithSocialMedia)",
+                                icon: "person.2.fill",
+                                color: .indigo,
+                                action: { selectedTab = .groups }
+                            )
+                            StatCard(
+                                title: "With Addresses",
+                                value: "\(stats.contactsWithAddress)",
+                                icon: "house.fill",
+                                color: .red,
+                                action: { selectedTab = .groups }
+                            )
+                            StatCard(
+                                title: "With Job Titles",
+                                value: "\(stats.contactsWithJobTitle)",
+                                icon: "briefcase.fill",
+                                color: .purple,
+                                action: { selectedTab = .groups }
+                            )
+                            StatCard(
+                                title: "With Websites",
+                                value: "\(stats.contactsWithWebsite)",
+                                icon: "link.circle.fill",
+                                color: .teal,
+                                action: { selectedTab = .groups }
+                            )
+                            StatCard(
+                                title: "With Nicknames",
+                                value: "\(stats.contactsWithNickname)",
+                                icon: "person.text.rectangle",
+                                color: .orange
+                            )
+                            StatCard(
+                                title: "With Instant Messaging",
+                                value: "\(stats.contactsWithInstantMessaging)",
+                                icon: "bubble.left.and.bubble.right.fill",
+                                color: .green,
+                                action: { selectedTab = .groups }
+                            )
+                            StatCard(
+                                title: "Highly Detailed",
+                                value: "\(stats.highDetailContacts)",
+                                icon: "star.circle.fill",
+                                color: .yellow,
+                                action: { selectedTab = .groups }
+                            )
+                        }
+                    }
                 }
 
                 // Issues Summary

@@ -74,6 +74,7 @@ class ImportExportService {
 extension ContactSummary: Codable {
     enum CodingKeys: String, CodingKey {
         case id, fullName, organization, phoneNumbers, emailAddresses, hasProfileImage, creationDate, modificationDate, birthday
+        case nickname, jobTitle, departmentName, postalAddresses, urlAddresses, socialProfiles, instantMessageAddresses
     }
 
     init(from decoder: Decoder) throws {
@@ -87,6 +88,15 @@ extension ContactSummary: Codable {
         creationDate = try container.decodeIfPresent(Date.self, forKey: .creationDate)
         modificationDate = try container.decodeIfPresent(Date.self, forKey: .modificationDate)
         birthday = try container.decodeIfPresent(Date.self, forKey: .birthday)
+
+        // Extended properties (with backwards compatibility)
+        nickname = try container.decodeIfPresent(String.self, forKey: .nickname)
+        jobTitle = try container.decodeIfPresent(String.self, forKey: .jobTitle)
+        departmentName = try container.decodeIfPresent(String.self, forKey: .departmentName)
+        postalAddresses = try container.decodeIfPresent([String].self, forKey: .postalAddresses) ?? []
+        urlAddresses = try container.decodeIfPresent([String].self, forKey: .urlAddresses) ?? []
+        socialProfiles = try container.decodeIfPresent([SocialProfile].self, forKey: .socialProfiles) ?? []
+        instantMessageAddresses = try container.decodeIfPresent([String].self, forKey: .instantMessageAddresses) ?? []
     }
 
     func encode(to encoder: Encoder) throws {
@@ -100,5 +110,14 @@ extension ContactSummary: Codable {
         try container.encodeIfPresent(creationDate, forKey: .creationDate)
         try container.encodeIfPresent(modificationDate, forKey: .modificationDate)
         try container.encodeIfPresent(birthday, forKey: .birthday)
+
+        // Extended properties
+        try container.encodeIfPresent(nickname, forKey: .nickname)
+        try container.encodeIfPresent(jobTitle, forKey: .jobTitle)
+        try container.encodeIfPresent(departmentName, forKey: .departmentName)
+        try container.encode(postalAddresses, forKey: .postalAddresses)
+        try container.encode(urlAddresses, forKey: .urlAddresses)
+        try container.encode(socialProfiles, forKey: .socialProfiles)
+        try container.encode(instantMessageAddresses, forKey: .instantMessageAddresses)
     }
 }

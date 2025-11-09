@@ -27,6 +27,15 @@ struct GroupsView: View {
     @State private var cleanupResults: CleanupResults?
     @State private var isLoadingSmartGroups = false
 
+    // Smart group tile view mode
+    @AppStorage("smartGroupsViewMode") private var viewMode: ViewMode = .tiles
+    @State private var expandedGroupIds: Set<UUID> = []
+
+    enum ViewMode: String, Codable {
+        case tiles = "Tiles"
+        case list = "List"
+    }
+
     struct CreationResults {
         let successCount: Int
         let failureCount: Int
@@ -194,9 +203,44 @@ struct GroupsView: View {
         if isLoadingSmartGroups {
             ProgressView().scaleEffect(0.9).padding(.trailing, 8)
         } else {
-            Label("Smart groups update automatically", systemImage: "sparkles")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            HStack(spacing: 12) {
+                // View Mode Toggle
+                Picker("View Mode", selection: $viewMode) {
+                    ForEach([ViewMode.tiles, ViewMode.list], id: \.self) { mode in
+                        Text(mode.rawValue).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 120)
+
+                // Expand/Collapse All buttons (only show in tiles mode)
+                if viewMode == .tiles && !smartGroupResults.isEmpty {
+                    Divider()
+                        .frame(height: 20)
+
+                    Button(action: expandAll) {
+                        Label("Expand All", systemImage: "arrow.up.left.and.arrow.down.right")
+                            .labelStyle(.iconOnly)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .help("Expand all groups")
+                    .disabled(expandedGroupIds.count == filteredSmartGroups.count)
+
+                    Button(action: collapseAll) {
+                        Label("Collapse All", systemImage: "arrow.down.right.and.arrow.up.left")
+                            .labelStyle(.iconOnly)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .help("Collapse all groups")
+                    .disabled(expandedGroupIds.isEmpty)
+                }
+
+                Label("Auto-updates", systemImage: "sparkles")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 
@@ -281,29 +325,61 @@ struct GroupsView: View {
                 .padding(24)
         } else {
             ScrollView {
-                LazyVStack(spacing: 16) {
-                    if filteredSmartGroups.isEmpty && !searchText.isEmpty {
-                        // No search results
-                        VStack(spacing: 12) {
-                            Image(systemName: "magnifyingglass")
-                                .responsiveFont(48)
-                                .foregroundColor(.secondary)
-                            Text("No groups found")
-                                .font(.title2.bold())
-                            Text("No groups match \"\(searchText)\"")
-                                .foregroundColor(.secondary)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(48)
-                    } else {
-                        ForEach(filteredSmartGroups) { result in
-                            SmartGroupResultCard(result: result, isCreating: isCreatingGroups) {
-                                Task { await createSingleSmartGroup(result) }
+                if filteredSmartGroups.isEmpty && !searchText.isEmpty {
+                    // No search results
+                    VStack(spacing: 12) {
+                        Image(systemName: "magnifyingglass")
+                            .responsiveFont(48)
+                            .foregroundColor(.secondary)
+                        Text("No groups found")
+                            .font(.title2.bold())
+                        Text("No groups match \"\(searchText)\"")
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(48)
+                } else {
+                    // Conditional rendering based on view mode
+                    if viewMode == .tiles {
+                        // Tile view with expandable cards
+                        LazyVGrid(columns: [
+                            GridItem(.flexible()),
+                            GridItem(.flexible()),
+                            GridItem(.flexible())
+                        ], spacing: 16) {
+                            ForEach(filteredSmartGroups) { result in
+                                ExpandableSmartGroupCard(
+                                    result: result,
+                                    isExpanded: expandedGroupIds.contains(result.id),
+                                    isCreating: isCreatingGroups && groupToCreate?.id == result.id,
+                                    onToggleExpansion: {
+                                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                            if expandedGroupIds.contains(result.id) {
+                                                expandedGroupIds.remove(result.id)
+                                            } else {
+                                                expandedGroupIds.insert(result.id)
+                                            }
+                                        }
+                                    },
+                                    onCreateInContacts: {
+                                        Task { await createSingleSmartGroup(result) }
+                                    }
+                                )
                             }
                         }
+                        .padding(24)
+                    } else {
+                        // List view with full cards
+                        LazyVStack(spacing: 16) {
+                            ForEach(filteredSmartGroups) { result in
+                                SmartGroupResultCard(result: result, isCreating: isCreatingGroups) {
+                                    Task { await createSingleSmartGroup(result) }
+                                }
+                            }
+                        }
+                        .padding(24)
                     }
                 }
-                .padding(24)
             }
         }
     }
@@ -350,6 +426,18 @@ struct GroupsView: View {
         duplicateGroupCount = duplicates.values.reduce(0) { $0 + $1.count - 1 }
     }
 
+    private func expandAll() {
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+            expandedGroupIds = Set(filteredSmartGroups.map { $0.id })
+        }
+    }
+
+    private func collapseAll() {
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+            expandedGroupIds.removeAll()
+        }
+    }
+
     private func smartGroupCreateMessage(for result: SmartGroupResult) -> Text {
         let count = result.contacts.count
         let plural = count == 1 ? "" : "s"
@@ -393,6 +481,433 @@ struct GroupsView: View {
         }
     }
 
+}
+
+// MARK: - Smart Group Tile (Compact View)
+
+struct SmartGroupTile: View {
+    let result: SmartGroupResult
+    let isExpanded: Bool
+    let onTap: () -> Void
+
+    @State private var isHovered = false
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        Button(action: onTap) {
+            VStack(spacing: 8) {
+                // Icon
+                Image(systemName: groupIcon)
+                    .responsiveFont(28)
+                    .foregroundColor(groupColor)
+
+                // Group name
+                Text(result.groupName)
+                    .responsiveFont(13, weight: .semibold)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                // Contact count badge
+                HStack(spacing: 4) {
+                    Image(systemName: isExpanded ? "chevron.up.circle.fill" : "circle.fill")
+                        .responsiveFont(8)
+                    Text("\(result.contacts.count)")
+                        .responsiveFont(11, weight: .medium)
+                }
+                .foregroundColor(.accentColor)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 110)
+            .padding(12)
+            .background(
+                ZStack {
+                    Color.secondary.opacity(isExpanded ? 0.15 : 0.1)
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(
+                            (isHovered || isFocused) ? groupColor.opacity(0.6) :
+                            isExpanded ? groupColor.opacity(0.4) : Color.clear,
+                            lineWidth: (isHovered || isFocused) ? 2 : (isExpanded ? 1.5 : 0)
+                        )
+                }
+            )
+            .cornerRadius(10)
+            .scaleEffect((isHovered || isFocused) ? 1.02 : 1.0)
+            .animation(.easeOut(duration: 0.15), value: isHovered || isFocused)
+        }
+        .buttonStyle(.plain)
+        .focusable(true)
+        .focused($isFocused)
+#if os(macOS)
+        .onHover { isHovered = $0 }
+#endif
+    }
+
+    private var groupIcon: String {
+        // Enhanced icon mapping based on group name
+        let name = result.groupName.lowercased()
+
+        // Social Media
+        if name.contains("linkedin") { return "person.badge.shield.checkmark.fill" }
+        if name.contains("twitter") || name.contains("x") { return "at.circle.fill" }
+        if name.contains("social media savvy") { return "person.2.fill" }
+        if name.contains("social") { return "person.2.fill" }
+
+        // Digital & Web
+        if name.contains("website") { return "link.circle.fill" }
+        if name.contains("instant messaging") { return "bubble.left.and.bubble.right.fill" }
+        if name.contains("digitally connected") { return "network" }
+
+        // Professional
+        if name.contains("job title") || name.contains("career") { return "briefcase.fill" }
+        if name.contains("department") { return "building.2.crop.circle.fill" }
+        if name.contains("professional") { return "person.badge.key.fill" }
+
+        // Geographic
+        if name.contains("address") { return "house.fill" }
+        if name.contains("city") { return "mappin.circle.fill" }
+        if name.contains("multiple addresses") { return "house.and.flag.fill" }
+
+        // Time-based
+        if name.contains("birthday") { return "calendar.circle.fill" }
+        if name.contains("recent") { return "clock.arrow.circlepath" }
+        if name.contains("stale") { return "hourglass" }
+
+        // Detail & Quality
+        if name.contains("highly detailed") { return "star.circle.fill" }
+        if name.contains("basic") { return "person.crop.circle" }
+        if name.contains("nickname") { return "person.text.rectangle" }
+        if name.contains("business contact") { return "building.2.fill" }
+        if name.contains("personal contact") { return "heart.circle.fill" }
+
+        // Organization
+        if name.contains("organization") { return "building.2.fill" }
+
+        // Default by criteria type
+        switch result.criteria {
+        case .organization: return "building.2.fill"
+        case .geographic: return "mappin.circle.fill"
+        case .custom: return "star.fill"
+        }
+    }
+
+    private var groupColor: Color {
+        let name = result.groupName.lowercased()
+
+        // Social Media - Indigo/Teal
+        if name.contains("linkedin") || name.contains("twitter") || name.contains("social") {
+            return .indigo
+        }
+
+        // Professional - Purple
+        if name.contains("job") || name.contains("career") || name.contains("department") || name.contains("professional") {
+            return .purple
+        }
+
+        // Geographic - Red/Mint
+        if name.contains("address") || name.contains("city") {
+            return .red
+        }
+
+        // Digital/Web - Teal
+        if name.contains("website") || name.contains("messaging") || name.contains("digitally") {
+            return .teal
+        }
+
+        // Time-based - Orange
+        if name.contains("birthday") || name.contains("recent") || name.contains("stale") {
+            return .orange
+        }
+
+        // Detail - Yellow
+        if name.contains("detailed") || name.contains("basic") {
+            return .yellow
+        }
+
+        // Nickname - Orange
+        if name.contains("nickname") {
+            return .orange
+        }
+
+        // Business/Personal
+        if name.contains("business") {
+            return .brown
+        }
+        if name.contains("personal") {
+            return .pink
+        }
+
+        // Default by criteria type
+        switch result.criteria {
+        case .organization: return .green
+        case .geographic: return .blue
+        case .custom: return .orange
+        }
+    }
+}
+
+// MARK: - Expandable Smart Group Card
+
+struct ExpandableSmartGroupCard: View {
+    let result: SmartGroupResult
+    let isExpanded: Bool
+    let isCreating: Bool
+    let onToggleExpansion: () -> Void
+    let onCreateInContacts: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Always visible compact header (acts as tile when collapsed)
+            Button(action: { withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { onToggleExpansion() } }) {
+                HStack(spacing: 12) {
+                    Image(systemName: groupIcon)
+                        .responsiveFont(20)
+                        .foregroundColor(groupColor)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(result.groupName)
+                            .responsiveFont(14, weight: .semibold)
+                            .foregroundColor(.primary)
+                        Text("\(result.contacts.count) contacts")
+                            .responsiveFont(11)
+                            .foregroundColor(.secondary)
+                    }
+
+                    Spacer()
+
+                    Image(systemName: isExpanded ? "chevron.up.circle.fill" : "chevron.down.circle.fill")
+                        .responsiveFont(16)
+                        .foregroundColor(groupColor)
+                }
+                .padding()
+                .background(Color.secondary.opacity(isExpanded ? 0.15 : 0.1))
+                .cornerRadius(isExpanded ? 8 : 8, corners: isExpanded ? [.topLeft, .topRight] : .allCorners)
+            }
+            .buttonStyle(.plain)
+
+            // Expanded content (contact list and actions)
+            if isExpanded {
+                VStack(alignment: .leading, spacing: 12) {
+                    // Action buttons
+                    HStack(spacing: 8) {
+                        // Export Menu
+                        Menu {
+                            ForEach(GroupExportService.ExportType.allCases, id: \.self) { exportType in
+                                Button(action: { }) {
+                                    Label(exportType.rawValue, systemImage: exportType.icon)
+                                }
+                            }
+                        } label: {
+                            Label("Export", systemImage: "square.and.arrow.up")
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+
+                        Button(action: onCreateInContacts) {
+                            if isCreating {
+                                HStack(spacing: 6) {
+                                    ProgressView().scaleEffect(0.75)
+                                    Text("Creating…").responsiveFont(11, weight: .bold)
+                                }
+                            } else {
+                                Label("Create in Contacts", systemImage: "plus.app")
+                            }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.small)
+                        .disabled(isCreating)
+
+                        Button(action: { openContactsForGroup() }) {
+                            Label("View All", systemImage: "arrow.up.forward.app")
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    }
+
+                    // Contact list
+                    if !result.contacts.isEmpty {
+                        ScrollView {
+                            LazyVStack(alignment: .leading, spacing: 6) {
+                                ForEach(result.contacts) { contact in
+                                    Button(action: { openContact(contact) }) {
+                                        HStack(spacing: 8) {
+                                            Image(systemName: "person.circle.fill")
+                                                .responsiveFont(11)
+                                                .foregroundColor(.secondary)
+                                            Text(contact.fullName)
+                                                .responsiveFont(11)
+                                                .foregroundColor(.primary)
+                                            Spacer()
+                                            Image(systemName: "arrow.up.forward")
+                                                .responsiveFont(10)
+                                                .foregroundColor(.secondary)
+                                        }
+                                        .padding(.vertical, 4)
+                                        .contentShape(Rectangle())
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                            .padding(.vertical, 8)
+                            .padding(.trailing, 16)
+                        }
+                        .frame(maxHeight: 200)
+                        .padding(.horizontal)
+                        .background(Color.secondary.opacity(0.05))
+                        .cornerRadius(6)
+                    }
+                }
+                .padding()
+                .background(Color.secondary.opacity(0.1))
+                .cornerRadius(8, corners: [.bottomLeft, .bottomRight])
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isExpanded)
+    }
+
+    private var groupIcon: String {
+        let name = result.groupName.lowercased()
+
+        // Enhanced icon mapping (same as SmartGroupTile)
+        if name.contains("linkedin") { return "person.badge.shield.checkmark.fill" }
+        if name.contains("twitter") || name.contains("x") { return "at.circle.fill" }
+        if name.contains("social media savvy") { return "person.2.fill" }
+        if name.contains("social") { return "person.2.fill" }
+        if name.contains("website") { return "link.circle.fill" }
+        if name.contains("instant messaging") { return "bubble.left.and.bubble.right.fill" }
+        if name.contains("digitally connected") { return "network" }
+        if name.contains("job title") || name.contains("career") { return "briefcase.fill" }
+        if name.contains("department") { return "building.2.crop.circle.fill" }
+        if name.contains("professional") { return "person.badge.key.fill" }
+        if name.contains("address") { return "house.fill" }
+        if name.contains("city") { return "mappin.circle.fill" }
+        if name.contains("multiple addresses") { return "house.and.flag.fill" }
+        if name.contains("birthday") { return "calendar.circle.fill" }
+        if name.contains("recent") { return "clock.arrow.circlepath" }
+        if name.contains("stale") { return "hourglass" }
+        if name.contains("highly detailed") { return "star.circle.fill" }
+        if name.contains("basic") { return "person.crop.circle" }
+        if name.contains("nickname") { return "person.text.rectangle" }
+        if name.contains("business contact") { return "building.2.fill" }
+        if name.contains("personal contact") { return "heart.circle.fill" }
+        if name.contains("organization") { return "building.2.fill" }
+
+        switch result.criteria {
+        case .organization: return "building.2.fill"
+        case .geographic: return "mappin.circle.fill"
+        case .custom: return "star.fill"
+        }
+    }
+
+    private var groupColor: Color {
+        let name = result.groupName.lowercased()
+
+        if name.contains("linkedin") || name.contains("twitter") || name.contains("social") { return .indigo }
+        if name.contains("job") || name.contains("career") || name.contains("department") || name.contains("professional") { return .purple }
+        if name.contains("address") || name.contains("city") { return .red }
+        if name.contains("website") || name.contains("messaging") || name.contains("digitally") { return .teal }
+        if name.contains("birthday") || name.contains("recent") || name.contains("stale") { return .orange }
+        if name.contains("detailed") || name.contains("basic") { return .yellow }
+        if name.contains("nickname") { return .orange }
+        if name.contains("business") { return .brown }
+        if name.contains("personal") { return .pink }
+
+        switch result.criteria {
+        case .organization: return .green
+        case .geographic: return .blue
+        case .custom: return .orange
+        }
+    }
+
+    private func openContactsForGroup() {
+        for contact in result.contacts {
+            if let url = URL(string: "addressbook://\(contact.id)") {
+                NSWorkspace.shared.open(url)
+            }
+        }
+    }
+
+    private func openContact(_ contact: ContactSummary) {
+        guard let url = URL(string: "addressbook://\(contact.id)") else { return }
+        NSWorkspace.shared.open(url)
+    }
+}
+
+// Helper extension for selective corner radius
+extension View {
+    func cornerRadius(_ radius: CGFloat, corners: RectCorner) -> some View {
+        clipShape(RoundedCorner(radius: radius, corners: corners))
+    }
+}
+
+struct RectCorner: OptionSet {
+    let rawValue: Int
+
+    static let topLeft = RectCorner(rawValue: 1 << 0)
+    static let topRight = RectCorner(rawValue: 1 << 1)
+    static let bottomLeft = RectCorner(rawValue: 1 << 2)
+    static let bottomRight = RectCorner(rawValue: 1 << 3)
+    static let allCorners: RectCorner = [.topLeft, .topRight, .bottomLeft, .bottomRight]
+}
+
+struct RoundedCorner: Shape {
+    var radius: CGFloat = .infinity
+    var corners: RectCorner = .allCorners
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+
+        let topLeft = corners.contains(.topLeft) ? radius : 0
+        let topRight = corners.contains(.topRight) ? radius : 0
+        let bottomLeft = corners.contains(.bottomLeft) ? radius : 0
+        let bottomRight = corners.contains(.bottomRight) ? radius : 0
+
+        path.move(to: CGPoint(x: rect.minX + topLeft, y: rect.minY))
+
+        // Top edge and top-right corner
+        path.addLine(to: CGPoint(x: rect.maxX - topRight, y: rect.minY))
+        if topRight > 0 {
+            path.addArc(center: CGPoint(x: rect.maxX - topRight, y: rect.minY + topRight),
+                       radius: topRight,
+                       startAngle: .degrees(-90),
+                       endAngle: .degrees(0),
+                       clockwise: false)
+        }
+
+        // Right edge and bottom-right corner
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - bottomRight))
+        if bottomRight > 0 {
+            path.addArc(center: CGPoint(x: rect.maxX - bottomRight, y: rect.maxY - bottomRight),
+                       radius: bottomRight,
+                       startAngle: .degrees(0),
+                       endAngle: .degrees(90),
+                       clockwise: false)
+        }
+
+        // Bottom edge and bottom-left corner
+        path.addLine(to: CGPoint(x: rect.minX + bottomLeft, y: rect.maxY))
+        if bottomLeft > 0 {
+            path.addArc(center: CGPoint(x: rect.minX + bottomLeft, y: rect.maxY - bottomLeft),
+                       radius: bottomLeft,
+                       startAngle: .degrees(90),
+                       endAngle: .degrees(180),
+                       clockwise: false)
+        }
+
+        // Left edge and top-left corner
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + topLeft))
+        if topLeft > 0 {
+            path.addArc(center: CGPoint(x: rect.minX + topLeft, y: rect.minY + topLeft),
+                       radius: topLeft,
+                       startAngle: .degrees(180),
+                       endAngle: .degrees(270),
+                       clockwise: false)
+        }
+
+        path.closeSubpath()
+        return path
+    }
 }
 
 // MARK: - Smart Group Result Card
