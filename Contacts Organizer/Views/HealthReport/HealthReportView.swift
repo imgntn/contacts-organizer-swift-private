@@ -1,5 +1,5 @@
 //
-//  CleanupView.swift
+//  HealthReportView.swift
 //  Contacts Organizer
 //
 //  View for managing data quality issues
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct CleanupView: View {
+struct HealthReportView: View {
     let issues: [DataQualityIssue]
     @State private var selectedSeverity: DataQualityIssue.Severity?
     @State private var selectedIssueType: DataQualityIssue.IssueType?
@@ -32,7 +32,7 @@ struct CleanupView: View {
                 EmptyStateView(
                     icon: "checkmark.seal.fill",
                     title: "Excellent Data Quality",
-                    message: "All your contacts have complete information. No cleanup needed!",
+                    message: "All your contacts have complete information. No health issues found!",
                     color: .green
                 )
             } else {
@@ -376,5 +376,5 @@ extension DataQualityIssue.Severity: CustomStringConvertible {
 }
 
 #Preview {
-    CleanupView(issues: [])
+    HealthReportView(issues: [])
 }

@@ -30,6 +30,25 @@ struct ContactSummary: Identifiable, Hashable, Sendable {
         self.creationDate = contact.dates.first?.value as? Date
         self.modificationDate = contact.dates.last?.value as? Date
         self.birthday = contact.birthday?.date
+
+        // DEBUG: Log contact data extraction for validation debugging
+        if !phoneNumbers.isEmpty || !emailAddresses.isEmpty {
+            print("📞 DEBUG ContactSummary - Contact: \(fullName) (\(id))")
+            print("   📱 Raw CNContact phones count: \(contact.phoneNumbers.count)")
+            print("   📧 Raw CNContact emails count: \(contact.emailAddresses.count)")
+            print("   📱 Extracted phoneNumbers: \(phoneNumbers)")
+            print("   📧 Extracted emailAddresses: \(emailAddresses)")
+
+            // Check for empty strings
+            let emptyPhones = phoneNumbers.filter { $0.trimmingCharacters(in: .whitespaces).isEmpty }
+            let emptyEmails = emailAddresses.filter { $0.trimmingCharacters(in: .whitespaces).isEmpty }
+            if !emptyPhones.isEmpty {
+                print("   ⚠️  Found \(emptyPhones.count) empty phone number(s)")
+            }
+            if !emptyEmails.isEmpty {
+                print("   ⚠️  Found \(emptyEmails.count) empty email address(es)")
+            }
+        }
     }
 
     // Initializer for testing

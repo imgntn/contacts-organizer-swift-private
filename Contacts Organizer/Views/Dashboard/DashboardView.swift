@@ -42,14 +42,14 @@ struct DashboardView: View {
     enum DashboardTab: String, CaseIterable {
         case overview = "Overview"
         case duplicates = "Duplicates"
-        case cleanup = "Cleanup"
+        case healthReport = "Health Report"
         case groups = "Groups"
 
         var icon: String {
             switch self {
             case .overview: return "chart.bar.fill"
             case .duplicates: return "arrow.triangle.merge"
-            case .cleanup: return "wrench.and.screwdriver.fill"
+            case .healthReport: return "wrench.and.screwdriver.fill"
             case .groups: return "folder.fill"
             }
         }
@@ -103,8 +103,8 @@ struct DashboardView: View {
                 case .duplicates:
                     DuplicatesView(duplicateGroups: duplicateGroups)
 
-                case .cleanup:
-                    CleanupView(issues: dataQualityIssues)
+                case .healthReport:
+                    HealthReportView(issues: dataQualityIssues)
 
                 case .groups:
                     GroupsView()
@@ -362,7 +362,7 @@ struct OverviewView: View {
                             value: String(format: "%.0f%%", stats.dataQualityScore),
                             icon: "chart.bar.fill",
                             color: .cyan,
-                            action: { selectedTab = .cleanup }
+                            action: { selectedTab = .healthReport }
                         )
                     }
                 }
@@ -388,13 +388,13 @@ struct OverviewView: View {
                             count: dataQualityIssues.filter { $0.severity == .high }.count,
                             title: "High Priority Issues",
                             color: .orange,
-                            action: { selectedTab = .cleanup }
+                            action: { selectedTab = .healthReport }
                         )
                         IssueCard(
                             count: dataQualityIssues.count,
                             title: "Total Issues",
                             color: .yellow,
-                            action: { selectedTab = .cleanup }
+                            action: { selectedTab = .healthReport }
                         )
                     }
                 }

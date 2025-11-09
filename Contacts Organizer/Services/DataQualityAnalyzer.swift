@@ -50,6 +50,14 @@ class DataQualityAnalyzer: @unchecked Sendable {
 
         // Check for no contact information
         if contact.phoneNumbers.isEmpty && contact.emailAddresses.isEmpty {
+            // DEBUG: Log when flagging contact as having no contact info
+            print("🚨 DEBUG DataQualityAnalyzer - Flagging contact with NO contact info:")
+            print("   Contact: \(contact.fullName) (\(contact.id))")
+            print("   phoneNumbers.isEmpty: \(contact.phoneNumbers.isEmpty)")
+            print("   emailAddresses.isEmpty: \(contact.emailAddresses.isEmpty)")
+            print("   phoneNumbers array: \(contact.phoneNumbers)")
+            print("   emailAddresses array: \(contact.emailAddresses)")
+
             issues.append(
                 DataQualityIssue(
                     contactId: contact.id,
