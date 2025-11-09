@@ -41,9 +41,9 @@ struct DashboardView: View {
 
     enum DashboardTab: String, CaseIterable {
         case overview = "Overview"
+        case groups = "Groups"
         case duplicates = "Duplicates"
         case healthReport = "Health Report"
-        case groups = "Groups"
 
         var icon: String {
             switch self {
@@ -329,19 +329,22 @@ struct OverviewView: View {
                             title: "Contacts with Phone",
                             value: "\(stats.contactsWithPhone)",
                             icon: "phone.fill",
-                            color: .blue
+                            color: .blue,
+                            action: { selectedTab = .groups }
                         )
                         StatCard(
                             title: "Contacts with Email",
                             value: "\(stats.contactsWithEmail)",
                             icon: "envelope.fill",
-                            color: .green
+                            color: .green,
+                            action: { selectedTab = .groups }
                         )
                         StatCard(
                             title: "Complete Contacts",
                             value: "\(stats.contactsWithBoth)",
                             icon: "checkmark.circle.fill",
-                            color: .purple
+                            color: .purple,
+                            action: { selectedTab = .groups }
                         )
                         StatCard(
                             title: "With Organization",
@@ -409,7 +412,8 @@ struct OverviewView: View {
                                 title: "With Nicknames",
                                 value: "\(stats.contactsWithNickname)",
                                 icon: "person.text.rectangle",
-                                color: .orange
+                                color: .orange,
+                                action: { selectedTab = .groups }
                             )
                             StatCard(
                                 title: "With Instant Messaging",

@@ -10,7 +10,7 @@ import Contacts
 
 // MARK: - Social Profile
 struct SocialProfile: Identifiable, Hashable, Sendable, Codable {
-    let id = UUID()
+    var id = UUID()
     let service: String  // "Twitter", "LinkedIn", "Facebook", etc.
     let username: String
     let url: String?
@@ -77,7 +77,7 @@ struct ContactSummary: Identifiable, Hashable, Sendable {
         // Extract instant messaging addresses
         self.instantMessageAddresses = contact.instantMessageAddresses.compactMap { labeledValue in
             let imAddress = labeledValue.value
-            return imAddress.username.isEmpty ? nil : "\(imAddress.service ?? "IM"): \(imAddress.username)"
+            return imAddress.username.isEmpty ? nil : "\(imAddress.service): \(imAddress.username)"
         }
 
         // DEBUG: Log contact data extraction for validation debugging
