@@ -27,12 +27,16 @@ struct GroupsView: View {
     @State private var showCleanupResults = false
     @State private var cleanupResults: CleanupResults?
     @State private var isLoadingSmartGroups = false
-
     @State private var selectedGroupForModal: SmartGroupResult?
+    @AppStorage("smartGroupSavedFilters") private var savedFiltersRaw: String = "[]"
+    @State private var savedFilters: [String] = []
 
     init(initialTab: GroupTab = .smart, targetSmartGroupName: Binding<String?>) {
         self._targetSmartGroupName = targetSmartGroupName
         self.groupTab = initialTab
+        let rawValue = UserDefaults.standard.string(forKey: "smartGroupSavedFilters") ?? "[]"
+        let decoded = GroupsView.decodeSavedFilters(from: rawValue)
+        self._savedFilters = State(initialValue: decoded)
     }
 
     struct CreationResults {
@@ -49,6 +53,14 @@ struct GroupsView: View {
     enum GroupTab: String {
         case smart = "Smart Groups"
         case manual = "Manual Groups"
+    }
+
+    private static func decodeSavedFilters(from raw: String) -> [String] {
+        guard let data = raw.data(using: .utf8),
+              let decoded = try? JSONDecoder().decode([String].self, from: data) else {
+            return []
+        }
+        return decoded
     }
 
     private enum SmartGroupCategory: String, CaseIterable, Identifiable {
@@ -176,6 +188,10 @@ struct GroupsView: View {
                 .padding(.vertical, 12)
                 .background(Color.secondary.opacity(0.05))
 
+                if groupTab == .smart {
+                    savedFiltersBar
+                }
+
                 Divider()
 
                 Group {
@@ -216,6 +232,9 @@ struct GroupsView: View {
                         targetSmartGroupName = nil
                     }
                 }
+            }
+            .onChange(of: savedFiltersRaw, initial: false) { _, newValue in
+                savedFilters = GroupsView.decodeSavedFilters(from: newValue)
             }
         )
     }
@@ -269,6 +288,62 @@ struct GroupsView: View {
     }
 
     @ViewBuilder
+    private var savedFiltersBar: some View {
+        if savedFilters.isEmpty && !canSaveCurrentFilter {
+            EmptyView()
+        } else {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Label("Saved Filters", systemImage: "bookmark")
+                        .responsiveFont(12, weight: .semibold)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    if canSaveCurrentFilter {
+                        Button(action: saveCurrentFilter) {
+                            Label("Save \"\(trimmedSearchText)\"", systemImage: "plus")
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                        .transition(.opacity.combined(with: .scale))
+                    }
+                }
+
+                if !savedFilters.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(savedFilters, id: \.self) { filter in
+                                HStack(spacing: 6) {
+                                    Button(action: { applySavedFilter(filter) }) {
+                                        Text(filter)
+                                            .responsiveFont(12, weight: .medium)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .foregroundColor(.primary)
+
+                                    Button(action: { removeSavedFilter(filter) }) {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .font(.footnote)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                                .padding(.vertical, 6)
+                                .padding(.horizontal, 10)
+                                .background(Color.secondary.opacity(0.15))
+                                .clipShape(Capsule())
+                            }
+                        }
+                        .padding(.vertical, 2)
+                    }
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 10)
+            .background(Color.secondary.opacity(0.05))
+        }
+    }
+
+    @ViewBuilder
     private var manualHeaderActions: some View {
         if duplicateGroupCount > 0 {
             Button(action: { showConfirmCleanup = true }) {
@@ -318,6 +393,38 @@ struct GroupsView: View {
 
     private var smartGroupTileColumns: [GridItem] {
         [GridItem(.adaptive(minimum: 160), spacing: 12)]
+    }
+
+    private var trimmedSearchText: String {
+        searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var canSaveCurrentFilter: Bool {
+        groupTab == .smart &&
+        !trimmedSearchText.isEmpty &&
+        !savedFilters.contains { $0.caseInsensitiveCompare(trimmedSearchText) == .orderedSame }
+    }
+
+    private func persistSavedFilters() {
+        guard let data = try? JSONEncoder().encode(savedFilters),
+              let string = String(data: data, encoding: .utf8) else { return }
+        savedFiltersRaw = string
+    }
+
+    private func saveCurrentFilter() {
+        guard canSaveCurrentFilter else { return }
+        savedFilters.insert(trimmedSearchText, at: 0)
+        if savedFilters.count > 8 { savedFilters.removeLast(savedFilters.count - 8) }
+        persistSavedFilters()
+    }
+
+    private func removeSavedFilter(_ filter: String) {
+        savedFilters.removeAll { $0 == filter }
+        persistSavedFilters()
+    }
+
+    private func applySavedFilter(_ filter: String) {
+        searchText = filter
     }
 
 
@@ -463,6 +570,12 @@ struct GroupsView: View {
         isCreatingGroups = false
         if success {
             creationResults = CreationResults(successCount: 1, failureCount: 0, failedGroups: [])
+            contactsManager.logActivity(
+                kind: .smartGroupCreated,
+                title: "Smart Group Created",
+                detail: result.groupName,
+                icon: "sparkles"
+            )
         } else {
             creationResults = CreationResults(successCount: 0, failureCount: 1, failedGroups: [result.groupName])
         }
@@ -479,6 +592,15 @@ struct GroupsView: View {
         showCleanupResults = true
         let duplicates = await contactsManager.findDuplicateGroups()
         duplicateGroupCount = duplicates.values.reduce(0) { $0 + $1.count - 1 }
+
+        if deleted > 0 {
+            contactsManager.logActivity(
+                kind: .duplicatesCleaned,
+                title: "Cleaned Duplicate Groups",
+                detail: "\(deleted) removed",
+                icon: "arrow.triangle.merge"
+            )
+        }
     }
 
     private func smartGroupCreateMessage(for result: SmartGroupResult) -> Text {
@@ -1052,6 +1174,7 @@ struct ManualGroupCard: View {
     @State private var isLoadingContacts = false
     @State private var exportResult: String?
     @State private var showExportAlert = false
+    @State private var showRenameSheet = false
     @EnvironmentObject var contactsManager: ContactsManager
 
     var body: some View {
@@ -1064,21 +1187,30 @@ struct ManualGroupCard: View {
                 }
                 Spacer()
 
-                // Export Menu
-                if !contacts.isEmpty {
-                    Menu {
+                Menu {
+                    Button {
+                        showRenameSheet = true
+                    } label: {
+                        Label("Rename Group", systemImage: "pencil")
+                    }
+
+                    ShareLink(item: shareSummary) {
+                        Label("Share Summary", systemImage: "square.and.arrow.up")
+                    }
+
+                    if !contacts.isEmpty {
+                        Divider()
                         ForEach(GroupExportService.ExportType.allCases, id: \.self) { exportType in
                             Button(action: { performExport(type: exportType) }) {
                                 Label(exportType.rawValue, systemImage: exportType.icon)
                             }
                         }
-                    } label: {
-                        Label("Export", systemImage: "square.and.arrow.up")
                     }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                    .help("Export group to various formats")
+                } label: {
+                    Label("Actions", systemImage: "ellipsis.circle")
                 }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
             }
             .alert("Export Result", isPresented: $showExportAlert) {
                 Button("OK") { }
@@ -1116,6 +1248,11 @@ struct ManualGroupCard: View {
         .padding()
         .background(Color.secondary.opacity(0.1))
         .cornerRadius(8)
+        .sheet(isPresented: $showRenameSheet) {
+            RenameGroupSheet(currentName: group.name) { newName in
+                await renameGroup(to: newName)
+            }
+        }
         .task {
             await loadContacts()
         }
@@ -1146,6 +1283,29 @@ struct ManualGroupCard: View {
 
         exportResult = result.message
         showExportAlert = true
+    }
+
+    private func renameGroup(to newName: String) async -> Bool {
+        let trimmed = newName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed != group.name else { return false }
+        let success = await contactsManager.renameGroup(group, to: trimmed)
+        if success {
+            await contactsManager.fetchAllGroups()
+        }
+        return success
+    }
+
+    private var shareSummary: String {
+        var lines = ["Group: \(group.name)", ""]
+        if contacts.isEmpty {
+            lines.append("No contacts yet.")
+        } else {
+            lines.append(contentsOf: contacts.prefix(20).map { "• \($0.fullName)" })
+            if contacts.count > 20 {
+                lines.append("…and \(contacts.count - 20) more")
+            }
+        }
+        return lines.joined(separator: "\n")
     }
 }
 
@@ -1320,7 +1480,17 @@ struct CreateGroupSheet: View {
             let success = await contactsManager.createGroup(name: groupName, contactIds: Array(selectedContactIds))
             await MainActor.run {
                 isCreating = false
-                if success { dismiss() } else { errorMessage = contactsManager.errorMessage ?? "Failed to create group" }
+                if success {
+                    contactsManager.logActivity(
+                        kind: .manualGroupCreated,
+                        title: "Manual Group Created",
+                        detail: groupName,
+                        icon: "folder.fill"
+                    )
+                    dismiss()
+                } else {
+                    errorMessage = contactsManager.errorMessage ?? "Failed to create group"
+                }
             }
         }
     }
@@ -1355,4 +1525,72 @@ struct ContactSelectionRow: View {
 #Preview {
     GroupsView(initialTab: .smart, targetSmartGroupName: .constant(nil))
         .environmentObject(ContactsManager.shared)
+}
+
+struct RenameGroupSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let currentName: String
+    let onRename: (String) async -> Bool
+
+    @State private var proposedName: String
+    @State private var isRenaming = false
+    @State private var errorMessage: String?
+
+    init(currentName: String, onRename: @escaping (String) async -> Bool) {
+        self.currentName = currentName
+        self.onRename = onRename
+        _proposedName = State(initialValue: currentName)
+    }
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text("Rename Group")
+                .font(.title2.weight(.bold))
+
+            TextField("Group Name", text: $proposedName)
+                .textFieldStyle(.roundedBorder)
+
+            if let errorMessage {
+                Text(errorMessage)
+                    .font(.footnote)
+                    .foregroundColor(.red)
+            }
+
+            HStack {
+                Button("Cancel") { dismiss() }
+                    .buttonStyle(.bordered)
+
+                Spacer()
+
+                Button(action: submit) {
+                    if isRenaming {
+                        ProgressView().scaleEffect(0.7)
+                    } else {
+                        Label("Save", systemImage: "checkmark")
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(isRenaming || proposedName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+        }
+        .padding(24)
+        .frame(width: 360)
+    }
+
+    private func submit() {
+        errorMessage = nil
+        isRenaming = true
+        let newName = proposedName.trimmingCharacters(in: .whitespacesAndNewlines)
+        Task {
+            let success = await onRename(newName)
+            await MainActor.run {
+                isRenaming = false
+                if success {
+                    dismiss()
+                } else {
+                    errorMessage = "Unable to rename group. Try another name."
+                }
+            }
+        }
+    }
 }

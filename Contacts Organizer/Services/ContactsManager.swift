@@ -21,12 +21,15 @@ class ContactsManager: ObservableObject {
     @Published var errorMessage: String?
     @Published var statistics: ContactStatistics?
     @Published var groups: [CNGroup] = []
+    @Published var recentActivities: [RecentActivity] = []
 
     // Use a dedicated queue for CNContactStore I/O to avoid QoS inversions
     private let contactsQueue = DispatchQueue(label: "com.playablefuture.contactsorganizer.contacts", qos: .utility)
+    private let recentActivityDefaultsKey = "recentActivityLog"
 
     private init() {
         updateAuthorizationStatus()
+        Task { await loadRecentActivities() }
     }
 
     // MARK: - Authorization
@@ -55,6 +58,32 @@ class ContactsManager: ObservableObject {
             }
             return false
         }
+    }
+
+    @MainActor
+    func logActivity(kind: RecentActivity.Kind, title: String, detail: String, icon: String) {
+        let entry = RecentActivity(kind: kind, title: title, detail: detail, icon: icon)
+        recentActivities.insert(entry, at: 0)
+        if recentActivities.count > 12 {
+            recentActivities = Array(recentActivities.prefix(12))
+        }
+        persistRecentActivities()
+    }
+
+    @MainActor
+    private func loadRecentActivities() {
+        guard let data = UserDefaults.standard.data(forKey: recentActivityDefaultsKey),
+              let decoded = try? JSONDecoder().decode([RecentActivity].self, from: data) else {
+            recentActivities = []
+            return
+        }
+        recentActivities = decoded
+    }
+
+    @MainActor
+    private func persistRecentActivities() {
+        guard let data = try? JSONEncoder().encode(recentActivities) else { return }
+        UserDefaults.standard.set(data, forKey: recentActivityDefaultsKey)
     }
 
     // MARK: - Fetch Contacts
@@ -433,6 +462,46 @@ class ContactsManager: ObservableObject {
                 } catch {
                     Task { @MainActor in
                         self.errorMessage = "Failed to create group: \(error.localizedDescription)"
+                    }
+                    continuation.resume(returning: false)
+                }
+            }
+        }
+    }
+
+    func renameGroup(_ group: CNGroup, to newName: String) async -> Bool {
+        guard authorizationStatus == .authorized else { return false }
+
+        return await withCheckedContinuation { continuation in
+            contactsQueue.async { [weak self] in
+                guard let self = self else {
+                    continuation.resume(returning: false)
+                    return
+                }
+
+                do {
+                    let groups = try self.store.groups(matching: nil)
+                    if groups.contains(where: { $0.name == newName }) {
+                        Task { @MainActor in
+                            self.errorMessage = "Group '\(newName)' already exists"
+                        }
+                        continuation.resume(returning: false)
+                        return
+                    }
+
+                    guard let mutableGroup = group.mutableCopy() as? CNMutableGroup else {
+                        continuation.resume(returning: false)
+                        return
+                    }
+
+                    mutableGroup.name = newName
+                    let saveRequest = CNSaveRequest()
+                    saveRequest.update(mutableGroup)
+                    try self.store.execute(saveRequest)
+                    continuation.resume(returning: true)
+                } catch {
+                    Task { @MainActor in
+                        self.errorMessage = "Failed to rename group: \(error.localizedDescription)"
                     }
                     continuation.resume(returning: false)
                 }

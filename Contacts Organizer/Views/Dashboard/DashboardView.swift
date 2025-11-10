@@ -346,6 +346,10 @@ struct OverviewView: View {
                     )
                 }
 
+                if !contactsManager.recentActivities.isEmpty {
+                    recentActivitySection
+                }
+
                 LazyVGrid(columns: overviewColumns, spacing: 16) {
                     featureCard(
                         title: "Smart Groups",
@@ -440,6 +444,68 @@ struct OverviewView: View {
             GridItem(.flexible(), spacing: 16),
             GridItem(.flexible(), spacing: 16)
         ]
+    }
+
+    private static let relativeFormatter: RelativeDateTimeFormatter = {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .short
+        return formatter
+    }()
+
+    private var recentActivitySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Label("Recent Activity", systemImage: "clock.arrow.circlepath")
+                    .responsiveFont(16, weight: .semibold)
+                Spacer()
+            }
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(contactsManager.recentActivities) { activity in
+                        Button(action: { handleActivityTap(activity) }) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: activity.icon)
+                                        .foregroundColor(.accentColor)
+                                    Text(activity.title)
+                                        .responsiveFont(13, weight: .semibold)
+                                }
+                                Text(activity.detail)
+                                    .responsiveFont(12)
+                                Text(relativeTimeDescription(for: activity.timestamp))
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(12)
+                            .frame(minWidth: 180, alignment: .leading)
+                            .background(Color.secondary.opacity(0.08))
+                            .cornerRadius(12)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+        .padding(16)
+        .background(Color.secondary.opacity(0.06))
+        .cornerRadius(14)
+    }
+
+    private func relativeTimeDescription(for date: Date) -> String {
+        OverviewView.relativeFormatter.localizedString(for: date, relativeTo: Date())
+    }
+
+    private func handleActivityTap(_ activity: RecentActivity) {
+        switch activity.kind {
+        case .smartGroupCreated:
+            targetSmartGroupName = activity.detail
+            selectedTab = .smartGroups
+        case .manualGroupCreated:
+            selectedTab = .manualGroups
+        case .duplicatesCleaned:
+            selectedTab = .duplicates
+        }
     }
 
     @ViewBuilder
