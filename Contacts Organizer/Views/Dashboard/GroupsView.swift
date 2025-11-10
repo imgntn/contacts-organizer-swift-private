@@ -11,9 +11,10 @@ import ApplicationServices
 
 struct GroupsView: View {
     @EnvironmentObject var contactsManager: ContactsManager
+    @Binding var targetSmartGroupName: String?
     @State private var showCreateGroupSheet = false
     @State private var smartGroupResults: [SmartGroupResult] = []
-    @State private var selectedTab: GroupTab = .smart
+    private let groupTab: GroupTab
     @State private var searchText = ""
     @State private var isCreatingGroups = false
     @State private var showResultsAlert = false
@@ -27,13 +28,11 @@ struct GroupsView: View {
     @State private var cleanupResults: CleanupResults?
     @State private var isLoadingSmartGroups = false
 
-    // Smart group tile view mode
-    @AppStorage("smartGroupsViewMode") private var viewMode: ViewMode = .tiles
     @State private var selectedGroupForModal: SmartGroupResult?
 
-    enum ViewMode: String, Codable {
-        case tiles = "Tiles"
-        case list = "List"
+    init(initialTab: GroupTab = .smart, targetSmartGroupName: Binding<String?>) {
+        self._targetSmartGroupName = targetSmartGroupName
+        self.groupTab = initialTab
     }
 
     struct CreationResults {
@@ -47,9 +46,83 @@ struct GroupsView: View {
         let errorCount: Int
     }
 
-    enum GroupTab: String, CaseIterable {
+    enum GroupTab: String {
         case smart = "Smart Groups"
         case manual = "Manual Groups"
+    }
+
+    private enum SmartGroupCategory: String, CaseIterable, Identifiable {
+        case fundamentals = "Contact Fundamentals"
+        case stayingInTouch = "Stay in Touch"
+        case digital = "Digital Presence"
+        case work = "Work & Organization"
+        case addresses = "Places & Addresses"
+        case personal = "Personal Touches"
+        case other = "Other Smart Groups"
+
+        var id: String { rawValue }
+
+        var icon: String {
+            switch self {
+            case .fundamentals: return "checkmark.seal"
+            case .stayingInTouch: return "calendar.badge.clock"
+            case .digital: return "network"
+            case .work: return "briefcase.fill"
+            case .addresses: return "mappin.and.ellipse"
+            case .personal: return "person.crop.circle.badge.checkmark"
+            case .other: return "sparkles"
+            }
+        }
+
+        static func category(for name: String) -> SmartGroupCategory {
+            if let mapped = nameToCategory[name] {
+                return mapped
+            }
+            return .other
+        }
+
+        private static let nameToCategory: [String: SmartGroupCategory] = [
+            "By Organization": .work,
+            "Complete Contacts": .fundamentals,
+            "Missing Email": .fundamentals,
+            "Has Photo": .fundamentals,
+            "Missing Critical Info": .fundamentals,
+            "Phone Only (No Email)": .fundamentals,
+            "Email Only (No Phone)": .fundamentals,
+            "Multiple Phone Numbers": .fundamentals,
+            "Multiple Email Addresses": .fundamentals,
+            "Recently Added (Last 30 Days)": .stayingInTouch,
+            "Recently Modified (Last 30 Days)": .stayingInTouch,
+            "Stale Contacts (1+ Year)": .stayingInTouch,
+            "Birthday This Month": .stayingInTouch,
+            "Birthday This Week": .stayingInTouch,
+            "Connected on LinkedIn": .digital,
+            "Connected on Twitter/X": .digital,
+            "Social Media Savvy": .digital,
+            "Missing Social Media": .digital,
+            "Has Instant Messaging": .digital,
+            "Digitally Connected": .digital,
+            "Has Address": .addresses,
+            "Missing Address": .addresses,
+            "Multiple Addresses": .addresses,
+            "Has Job Title": .work,
+            "Has Department": .work,
+            "Professional Network": .work,
+            "Career Network": .work,
+            "Has Website": .digital,
+            "Business Contacts": .work,
+            "Has Nickname": .personal,
+            "Highly Detailed Contacts": .fundamentals,
+            "Basic Contacts Only": .fundamentals,
+            "Personal Contacts": .personal,
+            "By City": .addresses
+        ]
+    }
+
+    private struct SmartGroupSection: Identifiable {
+        let category: SmartGroupCategory
+        let groups: [SmartGroupResult]
+        var id: String { category.rawValue }
     }
 
     private var filteredManualGroups: [CNGroup] {
@@ -106,10 +179,10 @@ struct GroupsView: View {
                 Divider()
 
                 Group {
-                    if selectedTab == .manual {
-                        AnyView(manualGroupsContent)
+                    if groupTab == .manual {
+                        manualGroupsContent
                     } else {
-                        AnyView(smartGroupsContent)
+                        smartGroupsContent
                     }
                 }
             }
@@ -129,6 +202,20 @@ struct GroupsView: View {
             }
             .onChange(of: contactsManager.contacts, initial: false) { _,_  in
                 Task { await generateSmartGroupsAsync() }
+            }
+            .onChange(of: targetSmartGroupName, initial: false) { _, newGroupName in
+                guard groupTab == .smart else { return }
+                guard let groupName = newGroupName else { return }
+
+                // Find matching smart group and open its modal
+                if let matchingGroup = smartGroupResults.first(where: { $0.groupName == groupName }) {
+                    // Open the modal for this group
+                    selectedGroupForModal = matchingGroup
+                    // Clear the target after a brief delay to allow modal to open
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        targetSmartGroupName = nil
+                    }
+                }
             }
         )
     }
@@ -160,48 +247,21 @@ struct GroupsView: View {
     }
 
     private var headerView: some View {
-        HStack(alignment: .top, spacing: 16) {
+        HStack(alignment: .center, spacing: 16) {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Contact Groups").responsiveFont(36, weight: .bold)
+                Text(groupTab == .smart ? "Smart Groups" : "Manual Groups")
+                    .responsiveFont(36, weight: .bold)
                 Text(headerSubtitle).responsiveFont(16).foregroundColor(.secondary)
             }
             Spacer()
 
-            // Right side: Group Type picker + View Mode toggle (stacked vertically)
-            VStack(alignment: .trailing, spacing: 8) {
-                Picker("Group Type", selection: $selectedTab) {
-                    ForEach(GroupTab.allCases, id: \.self) { tab in
-                        Text(tab.rawValue).tag(tab)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .frame(width: 300)
-
-                // View Mode toggle - only show for smart groups
-                if selectedTab == .smart {
-                    HStack(spacing: 8) {
-                        Text("View:")
-                            .responsiveFont(12)
-                            .foregroundColor(.secondary)
-                        Picker("View Mode", selection: $viewMode) {
-                            ForEach([ViewMode.tiles, ViewMode.list], id: \.self) { mode in
-                                Text(mode.rawValue).tag(mode)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .frame(width: 120)
-                    }
-                }
-            }
-
-            // Action buttons on far right
             headerActions
         }
     }
 
     @ViewBuilder
     private var headerActions: some View {
-        if selectedTab == .manual {
+        if groupTab == .manual {
             manualHeaderActions
         } else {
             smartHeaderActions
@@ -237,9 +297,27 @@ struct GroupsView: View {
     }
 
     private var headerSubtitle: String {
-        if selectedTab == .manual { return "\(contactsManager.groups.count) manual groups" }
+        if groupTab == .manual { return "\(contactsManager.groups.count) manual groups" }
         if isLoadingSmartGroups { return "Loading smart groups…" }
         return "\(smartGroupResults.count) smart groups"
+    }
+
+    private var smartGroupSections: [SmartGroupSection] {
+        var grouped: [SmartGroupCategory: [SmartGroupResult]] = [:]
+        for result in filteredSmartGroups {
+            let category = SmartGroupCategory.category(for: result.groupName)
+            grouped[category, default: []].append(result)
+        }
+
+        return SmartGroupCategory.allCases.compactMap { category in
+            guard let groups = grouped[category], !groups.isEmpty else { return nil }
+            let sorted = groups.sorted { $0.groupName < $1.groupName }
+            return SmartGroupSection(category: category, groups: sorted)
+        }
+    }
+
+    private var smartGroupTileColumns: [GridItem] {
+        [GridItem(.adaptive(minimum: 160), spacing: 12)]
     }
 
 
@@ -331,38 +409,31 @@ struct GroupsView: View {
                     .frame(maxWidth: .infinity)
                     .padding(48)
                 } else {
-                    // Conditional rendering based on view mode
-                    if viewMode == .tiles {
-                        // Tile view - click opens modal
-                        LazyVGrid(columns: [
-                            GridItem(.flexible()),
-                            GridItem(.flexible()),
-                            GridItem(.flexible())
-                        ], spacing: 16) {
-                            ForEach(filteredSmartGroups) { result in
-                                SmartGroupTile(
-                                    result: result,
-                                    isExpanded: false,
-                                    onTap: { selectedGroupForModal = result }
-                                )
-                            }
-                        }
-                        .padding(24)
-                    } else {
-                        // List view - click opens modal
-                        LazyVStack(spacing: 16) {
-                            ForEach(filteredSmartGroups) { result in
-                                SmartGroupResultCard(
-                                    result: result,
-                                    isCreating: isCreatingGroups,
-                                    onTap: { selectedGroupForModal = result }
-                                ) {
-                                    Task { await createSingleSmartGroup(result) }
+                    LazyVStack(alignment: .leading, spacing: 24) {
+                        ForEach(smartGroupSections) { section in
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack {
+                                    Label(section.category.rawValue, systemImage: section.category.icon)
+                                        .responsiveFont(14, weight: .semibold)
+                                        .foregroundStyle(.secondary)
+                                    Spacer()
+                                    Text("\(section.groups.count)")
+                                        .responsiveFont(12, weight: .medium)
+                                        .foregroundColor(.secondary)
+                                }
+
+                                LazyVGrid(columns: smartGroupTileColumns, spacing: 12) {
+                                    ForEach(section.groups) { result in
+                                        SmartGroupTile(result: result) {
+                                            selectedGroupForModal = result
+                                        }
+                                    }
                                 }
                             }
+                            .padding(.horizontal, 24)
                         }
-                        .padding(24)
                     }
+                    .padding(.vertical, 12)
                 }
             }
         }
@@ -459,7 +530,6 @@ struct GroupsView: View {
 
 struct SmartGroupTile: View {
     let result: SmartGroupResult
-    let isExpanded: Bool
     let onTap: () -> Void
 
     @State private var isHovered = false
@@ -467,45 +537,43 @@ struct SmartGroupTile: View {
 
     var body: some View {
         Button(action: onTap) {
-            VStack(spacing: 8) {
-                // Icon
-                Image(systemName: groupIcon)
-                    .responsiveFont(28)
-                    .foregroundColor(groupColor)
-
-                // Group name
-                Text(result.groupName)
-                    .responsiveFont(13, weight: .semibold)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                // Contact count badge
-                HStack(spacing: 4) {
-                    Image(systemName: isExpanded ? "chevron.up.circle.fill" : "circle.fill")
-                        .responsiveFont(8)
-                    Text("\(result.contacts.count)")
-                        .responsiveFont(11, weight: .medium)
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .top) {
+                    Image(systemName: groupIcon)
+                        .responsiveFont(20)
+                        .foregroundColor(groupColor)
+                    Spacer()
+                    HStack(spacing: 4) {
+                        Image(systemName: "person.2.fill")
+                            .responsiveFont(10)
+                        Text("\(result.contacts.count)")
+                            .responsiveFont(11, weight: .medium)
+                    }
+                    .foregroundColor(.accentColor)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.accentColor.opacity(0.1))
+                    .clipShape(Capsule())
                 }
-                .foregroundColor(.accentColor)
+
+                Text(result.groupName)
+                    .responsiveFont(12.5, weight: .semibold)
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 110)
+            .frame(minHeight: 90)
             .padding(12)
             .background(
-                ZStack {
-                    Color.secondary.opacity(isExpanded ? 0.15 : 0.1)
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(
-                            (isHovered || isFocused) ? groupColor.opacity(0.6) :
-                            isExpanded ? groupColor.opacity(0.4) : Color.clear,
-                            lineWidth: (isHovered || isFocused) ? 2 : (isExpanded ? 1.5 : 0)
-                        )
-                }
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.secondary.opacity(0.08))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke((isHovered || isFocused) ? groupColor.opacity(0.45) : Color.clear, lineWidth: 1.5)
+                    )
             )
-            .cornerRadius(10)
-            .scaleEffect((isHovered || isFocused) ? 1.02 : 1.0)
-            .animation(.easeOut(duration: 0.15), value: isHovered || isFocused)
+            .scaleEffect((isHovered || isFocused) ? 1.01 : 1.0)
+            .animation(.easeOut(duration: 0.12), value: isHovered || isFocused)
         }
         .buttonStyle(.plain)
         .focusable(true)
@@ -1285,6 +1353,6 @@ struct ContactSelectionRow: View {
 }
 
 #Preview {
-    GroupsView().environmentObject(ContactsManager.shared)
+    GroupsView(initialTab: .smart, targetSmartGroupName: .constant(nil))
+        .environmentObject(ContactsManager.shared)
 }
-

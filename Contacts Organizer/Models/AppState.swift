@@ -12,6 +12,7 @@ import Combine
 class AppState: ObservableObject {
     @Published var currentView: AppView
     @Published var hasCompletedOnboarding: Bool = false
+    @Published var hasSeenBackupReminder: Bool = false
     @Published var authorizationStatus: CNAuthorizationStatus = .notDetermined
 
     enum AppView {
@@ -23,10 +24,12 @@ class AppState: ObservableObject {
     init() {
         // Read values from UserDefaults and system
         let hasCompletedOnboardingValue = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+        let hasSeenBackupReminderValue = UserDefaults.standard.bool(forKey: "hasSeenBackupReminder")
         let authStatusValue = CNContactStore.authorizationStatus(for: .contacts)
 
         // Initialize all stored properties
         self.hasCompletedOnboarding = hasCompletedOnboardingValue
+        self.hasSeenBackupReminder = hasSeenBackupReminderValue
         self.authorizationStatus = authStatusValue
 
         // Determine initial view
@@ -61,6 +64,12 @@ class AppState: ObservableObject {
         hasCompletedOnboarding = true
         UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
         updateCurrentView()
+    }
+
+    func markBackupReminderSeen() {
+        guard !hasSeenBackupReminder else { return }
+        hasSeenBackupReminder = true
+        UserDefaults.standard.set(true, forKey: "hasSeenBackupReminder")
     }
 
     func updateAuthorizationStatus(_ status: CNAuthorizationStatus) {

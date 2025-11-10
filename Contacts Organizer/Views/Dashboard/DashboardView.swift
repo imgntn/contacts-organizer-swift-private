@@ -10,11 +10,12 @@ import SwiftUI
 struct DashboardView: View {
     @EnvironmentObject var contactsManager: ContactsManager
     @Environment(\.dismiss) private var dismiss
-    @State private var selectedTab: DashboardTab = .overview
+    @State private var selectedTab: DashboardTab? = .overview
     @State private var navigationHistory: [DashboardTab] = []
     @State private var duplicateGroups: [DuplicateGroup] = []
     @State private var dataQualityIssues: [DataQualityIssue] = []
     @State private var isAnalyzing = false
+    @State private var targetSmartGroupName: String?
     @AppStorage("autoRefresh") private var autoRefresh = true
     @AppStorage("sidebarOrder") private var sidebarOrderStorageRaw: String = ""
 
@@ -39,9 +40,10 @@ struct DashboardView: View {
     @State private var sidebarItems: [DashboardTab] = DashboardTab.allCases
     @State private var isReordering: Bool = false
 
-    enum DashboardTab: String, CaseIterable {
+    enum DashboardTab: String, CaseIterable, Hashable {
         case overview = "Overview"
-        case groups = "Groups"
+        case smartGroups = "Smart Groups"
+        case manualGroups = "Manual Groups"
         case duplicates = "Duplicates"
         case healthReport = "Health Report"
 
@@ -50,7 +52,8 @@ struct DashboardView: View {
             case .overview: return "chart.bar.fill"
             case .duplicates: return "arrow.triangle.merge"
             case .healthReport: return "wrench.and.screwdriver.fill"
-            case .groups: return "folder.fill"
+            case .smartGroups: return "sparkles"
+            case .manualGroups: return "folder.fill"
             }
         }
     }
@@ -58,11 +61,44 @@ struct DashboardView: View {
     var body: some View {
         NavigationSplitView {
             // Sidebar
-            ZStack(alignment: .top) {
+            VStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Button(action: toggleReordering) {
+                            Label(isReordering ? "Finish Reordering" : "Rearrange Sidebar", systemImage: "arrow.up.arrow.down.circle")
+                                .labelStyle(.titleAndIcon)
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                        .help(isReordering ? "Finish reordering" : "Reorder sidebar items")
+                        Spacer()
+                    }
+
+                    if isReordering {
+                        HStack(spacing: 8) {
+                            Image(systemName: "hand.point.up.left.fill")
+                            Text("Drag to reorder sidebar items")
+                                .font(.caption)
+                            Spacer()
+                        }
+                        .padding(10)
+                        .background(.ultraThinMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+                .background(Color.secondary.opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+                .padding(.horizontal, 12)
+                .padding(.top, 12)
+
                 List(selection: $selectedTab) {
                     ForEach(sidebarItems, id: \.self) { tab in
                         Label(tab.rawValue, systemImage: tab.icon)
                             .tag(tab)
+                            .padding(.vertical, 4)
                     }
                     .onMove { indices, newOffset in
                         sidebarItems.move(fromOffsets: indices, toOffset: newOffset)
@@ -70,34 +106,22 @@ struct DashboardView: View {
                         setSidebarOrder(sidebarItems.map { $0.rawValue })
                     }
                 }
+                .padding(.horizontal, 6)
+                .padding(.bottom, 8)
                 .moveDisabled(!isReordering)
-
-                if isReordering {
-                    HStack(spacing: 8) {
-                        Image(systemName: "hand.point.up.left.fill")
-                        Text("Drag to reorder sidebar items")
-                            .font(.caption)
-                        Spacer()
-                    }
-                    .padding(8)
-                    .background(.ultraThinMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .padding(.horizontal)
-                    .padding(.top, 8)
-                    .transition(.move(edge: .top).combined(with: .opacity))
-                }
             }
             .navigationTitle("Contacts Organizer")
             .frame(minWidth: 200)
         } detail: {
             // Main content
             Group {
-                switch selectedTab {
+                switch selectedTab ?? .overview {
                 case .overview:
                     OverviewView(
                         duplicateGroups: duplicateGroups,
                         dataQualityIssues: dataQualityIssues,
-                        selectedTab: $selectedTab
+                        selectedTab: $selectedTab,
+                        targetSmartGroupName: $targetSmartGroupName
                     )
 
                 case .duplicates:
@@ -106,8 +130,11 @@ struct DashboardView: View {
                 case .healthReport:
                     HealthReportView(issues: dataQualityIssues)
 
-                case .groups:
-                    GroupsView()
+                case .smartGroups:
+                    GroupsView(initialTab: .smart, targetSmartGroupName: $targetSmartGroupName)
+
+                case .manualGroups:
+                    GroupsView(initialTab: .manual, targetSmartGroupName: $targetSmartGroupName)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -144,7 +171,16 @@ struct DashboardView: View {
         .onAppear {
             // Restore sidebar order if previously saved
             if !getSidebarOrder().isEmpty {
-                let mapped = getSidebarOrder().compactMap { DashboardTab(rawValue: $0) }
+                var mapped: [DashboardTab] = []
+                for str in getSidebarOrder() {
+                    if str == "Groups" {
+                        // Migrate old single Groups item into two new entries in-place
+                        mapped.append(.smartGroups)
+                        mapped.append(.manualGroups)
+                    } else if let tab = DashboardTab(rawValue: str) {
+                        mapped.append(tab)
+                    }
+                }
                 // Ensure we include any new tabs that may have been added in updates
                 let missing = DashboardTab.allCases.filter { !mapped.contains($0) }
                 sidebarItems = mapped + missing
@@ -159,7 +195,7 @@ struct DashboardView: View {
         }
         .onChange(of: selectedTab) { oldValue, newValue in
             // Push previous tab into history if it exists and isn't the same as new
-            if oldValue != newValue {
+            if let oldValue, let newValue, oldValue != newValue {
                 navigationHistory.append(oldValue)
             }
         }
@@ -175,20 +211,8 @@ struct DashboardView: View {
                 }) {
                     Label("Back", systemImage: "chevron.left")
                 }
-                .disabled(navigationHistory.isEmpty && selectedTab == .overview)
+                .disabled(navigationHistory.isEmpty && (selectedTab ?? .overview) == .overview)
                 .help("Go back")
-            }
-            ToolbarItem(placement: .automatic) {
-                Button(action: {
-                    isReordering.toggle()
-                    if !isReordering {
-                        setSidebarOrder(sidebarItems.map { $0.rawValue })
-                    }
-                }) {
-                    Label(isReordering ? "Done" : "Reorder", systemImage: isReordering ? "checkmark" : "arrow.up.arrow.down")
-                }
-                .help(isReordering ? "Finish reordering" : "Reorder sidebar items")
-                .animation(.default, value: isReordering)
             }
             ToolbarItem(placement: .primaryAction) {
                 Button(action: { Task { await loadData() } }) {
@@ -243,17 +267,28 @@ struct DashboardView: View {
 
         // Return immediately - UI can render while analysis happens in background
     }
+
+    private func toggleReordering() {
+        withAnimation(.default) {
+            isReordering.toggle()
+        }
+        if !isReordering {
+            setSidebarOrder(sidebarItems.map { $0.rawValue })
+        }
+    }
 }
 
 // MARK: - Overview View
 
 struct OverviewView: View {
     @EnvironmentObject var contactsManager: ContactsManager
+    @EnvironmentObject var appState: AppState
     @Environment(\.openSettings) private var openSettings
     let duplicateGroups: [DuplicateGroup]
     let dataQualityIssues: [DataQualityIssue]
-    @Binding var selectedTab: DashboardView.DashboardTab
-    @State private var showBackupReminder = true
+    @Binding var selectedTab: DashboardView.DashboardTab?
+    @Binding var targetSmartGroupName: String?
+    private var shouldShowBackupReminder: Bool { !appState.hasSeenBackupReminder }
 
     var body: some View {
         ScrollView {
@@ -271,357 +306,220 @@ struct OverviewView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                // Safety reminder
-                if showBackupReminder && (duplicateGroups.count > 0 || dataQualityIssues.count > 0) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "exclamationmark.shield.fill")
-                            .font(.title2)
-                            .foregroundColor(.orange)
-
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Create a Backup First!")
-                                .responsiveFont(14, weight: .semibold)
+                // Safety reminder (required)
+                if shouldShowBackupReminder {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Label("Create a Backup First!", systemImage: "exclamationmark.shield.fill")
+                                .responsiveFont(16, weight: .semibold)
                                 .foregroundColor(.orange)
-
-                            Text("Before making any changes, go to Settings → General → Backup All Contacts to protect your data.")
-                                .responsiveFont(11)
-                                .foregroundColor(.secondary)
+                            Spacer()
+                            Text("Required")
+                                .font(.caption.weight(.bold))
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                                .background(Color.orange.opacity(0.15))
+                                .clipShape(Capsule())
                         }
 
-                        Spacer()
+                        Text("Before making any changes, go to Settings → General → Backup All Contacts to protect your data.")
+                            .responsiveFont(12)
+                            .foregroundColor(.secondary)
 
                         Button(action: {
-                            // Open Settings window using official API
                             openSettings()
                         }) {
-                            HStack(spacing: 4) {
-                                Text("Open Settings")
-                                Text("(⌘,)")
-                                    .font(.caption2)
-                                    .foregroundColor(.white.opacity(0.7))
-                            }
+                            Label("Open Settings to Back Up", systemImage: "gearshape.fill")
                         }
                         .buttonStyle(.borderedProminent)
                         .controlSize(.small)
                         .help("Open Settings or press ⌘,")
-
-                        Button(action: {
-                            showBackupReminder = false
-                        }) {
-                            Image(systemName: "xmark")
-                        }
-                        .buttonStyle(.plain)
-                        .foregroundColor(.secondary)
                     }
                     .padding()
-                    .background(Color.orange.opacity(0.1))
-                    .cornerRadius(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.orange.opacity(0.08))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                            )
+                    )
                 }
 
-                // Statistics Grid
-                if let stats = contactsManager.statistics {
-                    LazyVGrid(columns: [
-                        GridItem(.flexible()),
-                        GridItem(.flexible()),
-                        GridItem(.flexible())
-                    ], spacing: 16) {
-                        StatCard(
-                            title: "Contacts with Phone",
-                            value: "\(stats.contactsWithPhone)",
-                            icon: "phone.fill",
-                            color: .blue,
-                            action: { selectedTab = .groups }
+                LazyVGrid(columns: overviewColumns, spacing: 16) {
+                    featureCard(
+                        title: "Smart Groups",
+                        icon: "sparkles",
+                        color: .purple,
+                        description: "Auto-generated collections surface contacts missing info or matching useful recipes.",
+                        status: "\(ContactsManager.defaultSmartGroups.count)+ recipes available",
+                        highlights: [
+                            ("sparkles", "Dive into curated segments instantly"),
+                            ("plus.app", "Create a group in Contacts with one tap")
+                        ],
+                        primaryButtonTitle: "Browse Smart Groups",
+                        primaryButtonIcon: "sparkles",
+                        primaryAction: {
+                            selectedTab = .smartGroups
+                        },
+                        secondary: (
+                            title: "Review Missing Info",
+                            icon: "exclamationmark.circle",
+                            action: {
+                                targetSmartGroupName = "Missing Email"
+                                selectedTab = .smartGroups
+                            }
                         )
-                        StatCard(
-                            title: "Contacts with Email",
-                            value: "\(stats.contactsWithEmail)",
-                            icon: "envelope.fill",
-                            color: .green,
-                            action: { selectedTab = .groups }
-                        )
-                        StatCard(
-                            title: "Complete Contacts",
-                            value: "\(stats.contactsWithBoth)",
-                            icon: "checkmark.circle.fill",
-                            color: .purple,
-                            action: { selectedTab = .groups }
-                        )
-                        StatCard(
-                            title: "With Organization",
-                            value: "\(stats.contactsWithOrganization)",
-                            icon: "building.2.fill",
-                            color: .orange,
-                            action: { selectedTab = .groups }
-                        )
-                        StatCard(
-                            title: "With Photos",
-                            value: "\(stats.contactsWithPhoto)",
-                            icon: "photo.fill",
-                            color: .pink,
-                            action: { selectedTab = .groups }
-                        )
-                        StatCard(
-                            title: "Data Quality",
-                            value: String(format: "%.0f%%", stats.dataQualityScore),
-                            icon: "chart.bar.fill",
-                            color: .cyan,
-                            action: { selectedTab = .healthReport }
-                        )
-                    }
+                    )
 
-                    // Extended Details Section
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Extended Details")
-                            .responsiveFont(20, weight: .bold)
-                            .padding(.top, 8)
+                    featureCard(
+                        title: "Manual Groups",
+                        icon: "folder.fill.badge.plus",
+                        color: .blue,
+                        description: "Build your own folders for projects, events, or VIP lists with full control.",
+                        status: "\(contactsManager.groups.count) groups in Contacts",
+                        highlights: [
+                            ("plus.circle", "Spin up a fresh manual group"),
+                            ("trash", "Clean up duplicate folders safely")
+                        ],
+                        primaryButtonTitle: "Open Manual Groups",
+                        primaryButtonIcon: "folder.fill",
+                        primaryAction: {
+                            selectedTab = .manualGroups
+                        },
+                        secondary: (
+                            title: "Create New Group",
+                            icon: "plus.circle",
+                            action: {
+                                selectedTab = .manualGroups
+                            }
+                        )
+                    )
 
-                        LazyVGrid(columns: [
-                            GridItem(.flexible()),
-                            GridItem(.flexible()),
-                            GridItem(.flexible())
-                        ], spacing: 16) {
-                            StatCard(
-                                title: "With Social Media",
-                                value: "\(stats.contactsWithSocialMedia)",
-                                icon: "person.2.fill",
-                                color: .indigo,
-                                action: { selectedTab = .groups }
-                            )
-                            StatCard(
-                                title: "With Addresses",
-                                value: "\(stats.contactsWithAddress)",
-                                icon: "house.fill",
-                                color: .red,
-                                action: { selectedTab = .groups }
-                            )
-                            StatCard(
-                                title: "With Job Titles",
-                                value: "\(stats.contactsWithJobTitle)",
-                                icon: "briefcase.fill",
-                                color: .purple,
-                                action: { selectedTab = .groups }
-                            )
-                            StatCard(
-                                title: "With Websites",
-                                value: "\(stats.contactsWithWebsite)",
-                                icon: "link.circle.fill",
-                                color: .teal,
-                                action: { selectedTab = .groups }
-                            )
-                            StatCard(
-                                title: "With Nicknames",
-                                value: "\(stats.contactsWithNickname)",
-                                icon: "person.text.rectangle",
-                                color: .orange,
-                                action: { selectedTab = .groups }
-                            )
-                            StatCard(
-                                title: "With Instant Messaging",
-                                value: "\(stats.contactsWithInstantMessaging)",
-                                icon: "bubble.left.and.bubble.right.fill",
-                                color: .green,
-                                action: { selectedTab = .groups }
-                            )
-                            StatCard(
-                                title: "Highly Detailed",
-                                value: "\(stats.highDetailContacts)",
-                                icon: "star.circle.fill",
-                                color: .yellow,
-                                action: { selectedTab = .groups }
-                            )
+                    featureCard(
+                        title: "Duplicates",
+                        icon: "arrow.triangle.merge",
+                        color: .green,
+                        description: "Review contacts that look identical so you can merge, link, or ignore them.",
+                        status: "\(duplicateGroups.count) groups detected",
+                        highlights: [
+                            ("eye", "Compare conflicting values side-by-side"),
+                            ("arrow.down", "Apply quick merges with confidence")
+                        ],
+                        primaryButtonTitle: "Review Duplicates",
+                        primaryButtonIcon: "arrow.triangle.merge",
+                        primaryAction: {
+                            selectedTab = .duplicates
                         }
-                    }
-                }
+                    )
 
-                // Issues Summary
-                VStack(spacing: 16) {
-                    HStack {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(.orange)
-                        Text("Issues Found")
-                            .responsiveFont(20, weight: .bold)
-                        Spacer()
-                    }
-
-                    HStack(spacing: 16) {
-                        IssueCard(
-                            count: duplicateGroups.count,
-                            title: "Duplicate Groups",
-                            color: .red,
-                            action: { selectedTab = .duplicates }
-                        )
-                        IssueCard(
-                            count: dataQualityIssues.filter { $0.severity == .high }.count,
-                            title: "High Priority Issues",
-                            color: .orange,
-                            action: { selectedTab = .healthReport }
-                        )
-                        IssueCard(
-                            count: dataQualityIssues.count,
-                            title: "Total Issues",
-                            color: .yellow,
-                            action: { selectedTab = .healthReport }
-                        )
-                    }
+                    featureCard(
+                        title: "Health Report",
+                        icon: "heart.text.square",
+                        color: .pink,
+                        description: "Spot missing phone numbers, emails, birthdays, and other gaps in your address book.",
+                        status: "\(dataQualityIssues.count) issues flagged",
+                        highlights: [
+                            ("stethoscope", "Prioritize high-severity fixes first"),
+                            ("bolt", "Jump straight into auto-fix suggestions")
+                        ],
+                        primaryButtonTitle: "Open Health Report",
+                        primaryButtonIcon: "heart.text.square",
+                        primaryAction: {
+                            selectedTab = .healthReport
+                        }
+                    )
                 }
-                .padding()
-                .background(Color.secondary.opacity(0.1))
-                .cornerRadius(12)
             }
             .padding(24)
         }
     }
-}
 
-// MARK: - Supporting Views
-
-struct StatCard: View {
-    let title: String
-    let value: String
-    let icon: String
-    let color: Color
-    var action: (() -> Void)? = nil
-
-    @State private var isHovered = false
-    @FocusState private var isFocused: Bool
-
-    var body: some View {
-        Group {
-            if let action = action {
-                Button(action: action) {
-                    cardContent
-                }
-                .buttonStyle(.plain)
-                .help("Tap to view details")
-                .focusable(true)
-                .focused($isFocused)
-                .accessibilityAddTraits(.isButton)
-            } else {
-                cardContent
-            }
-        }
+    private var overviewColumns: [GridItem] {
+        [
+            GridItem(.flexible(), spacing: 16),
+            GridItem(.flexible(), spacing: 16)
+        ]
     }
 
-    private var cardContent: some View {
-        let gradient = LinearGradient(colors: [color.opacity(0.25), color.opacity(0.05)], startPoint: .topLeading, endPoint: .bottomTrailing)
-
-        return VStack(alignment: .leading, spacing: 12) {
-            HStack {
+    @ViewBuilder
+    private func featureCard(
+        title: String,
+        icon: String,
+        color: Color,
+        description: String,
+        status: String? = nil,
+        highlights: [(String, String)] = [],
+        primaryButtonTitle: String,
+        primaryButtonIcon: String,
+        primaryAction: @escaping () -> Void,
+        secondary: (title: String, icon: String, action: () -> Void)? = nil
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 12) {
                 ZStack {
                     Circle()
                         .fill(color.opacity(0.15))
-                        .frame(width: 30, height: 30)
+                        .frame(width: 36, height: 36)
                     Image(systemName: icon)
                         .foregroundColor(color)
-                        .font(.subheadline)
                 }
+                Text(title)
+                    .responsiveFont(20, weight: .semibold)
                 Spacer()
             }
 
-            Text(value)
-                .responsiveFont(32, weight: .bold)
-
-            Text(title)
-                .responsiveFont(13)
+            Text(description)
                 .foregroundColor(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if let status {
+                Label(status, systemImage: "info.circle")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            if !highlights.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(Array(highlights.enumerated()), id: \.offset) { highlight in
+                        Label(highlight.element.1, systemImage: highlight.element.0)
+                    }
+                }
+            }
+
+            HStack {
+                Button(action: primaryAction) {
+                    Label(primaryButtonTitle, systemImage: primaryButtonIcon)
+                }
+                .buttonStyle(.borderedProminent)
+
+                if let secondary {
+                    Button(action: secondary.action) {
+                        Label(secondary.title, systemImage: secondary.icon)
+                    }
+                    .buttonStyle(.bordered)
+                }
+
+                Spacer()
+            }
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            ZStack {
-                if action != nil {
-                    gradient
-                } else {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.secondary.opacity(0.06))
-                }
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke((isHovered || isFocused) ? color.opacity(0.6) : (action != nil ? color.opacity(0.25) : Color.clear), lineWidth: (isHovered || isFocused) ? 2 : 1)
-            }
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.secondary.opacity(0.08))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(color.opacity(0.2), lineWidth: 1)
+                )
         )
-        .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 4)
-        .contentShape(RoundedRectangle(cornerRadius: 12))
-        .scaleEffect((isHovered || isFocused) ? 1.02 : 1.0)
-        .animation(.easeOut(duration: 0.15), value: isHovered || isFocused)
-#if os(macOS)
-        .onHover { isHovered = $0 }
-#endif
-#if !os(macOS)
-        .hoverEffect(.lift)
-#endif
     }
 }
 
-struct IssueCard: View {
-    let count: Int
-    let title: String
-    let color: Color
-    var action: (() -> Void)? = nil
-
-    @State private var isHovered = false
-    @FocusState private var isFocused: Bool
-
-    var body: some View {
-        Group {
-            if let action = action {
-                Button(action: action) {
-                    cardContent
-                }
-                .buttonStyle(.plain)
-                .help("Tap to view \(title.lowercased())")
-                .focusable(true)
-                .focused($isFocused)
-                .accessibilityAddTraits(.isButton)
-            } else {
-                cardContent
-            }
-        }
-    }
-
-    private var cardContent: some View {
-        let gradient = LinearGradient(colors: [color.opacity(0.25), color.opacity(0.08)], startPoint: .topLeading, endPoint: .bottomTrailing)
-
-        return VStack(spacing: 8) {
-            Text("\(count)")
-                .responsiveFont(24, weight: .bold)
-
-            Text(title)
-                .responsiveFont(13)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(
-            ZStack {
-                if action != nil {
-                    gradient
-                } else {
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(color.opacity(0.12))
-                }
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke((isHovered || isFocused) ? color.opacity(0.7) : (action != nil ? color.opacity(0.35) : color.opacity(0.25)), lineWidth: (isHovered || isFocused) ? 2 : 1)
-            }
-        )
-        .cornerRadius(10)
-        .shadow(color: Color.black.opacity(0.05), radius: 6, x: 0, y: 3)
-        .contentShape(RoundedRectangle(cornerRadius: 10))
-        .scaleEffect((isHovered || isFocused) ? 1.02 : 1.0)
-        .animation(.easeOut(duration: 0.15), value: isHovered || isFocused)
-#if os(macOS)
-        .onHover { isHovered = $0 }
-#endif
-#if !os(macOS)
-        .hoverEffect(.lift)
-#endif
-    }
-}
 
 #Preview {
     DashboardView()
+        .environmentObject(AppState())
         .environmentObject(ContactsManager.shared)
         .frame(width: 1200, height: 800)
 }
-

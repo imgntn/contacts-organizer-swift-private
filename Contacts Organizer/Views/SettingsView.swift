@@ -360,7 +360,9 @@ struct DeveloperSettingsView: View {
             Section {
                 Button("Reset Onboarding") {
                     UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
+                    UserDefaults.standard.set(false, forKey: "hasSeenBackupReminder")
                     appState.hasCompletedOnboarding = false
+                    appState.hasSeenBackupReminder = false
                     appState.updateCurrentView()
                 }
                 .foregroundColor(.red)
