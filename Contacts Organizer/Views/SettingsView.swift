@@ -12,7 +12,6 @@ import UniformTypeIdentifiers
 struct SettingsView: View {
     @EnvironmentObject var contactsManager: ContactsManager
     @EnvironmentObject var appState: AppState
-    @EnvironmentObject var privacyMonitor: PrivacyMonitorService
 
     var body: some View {
         TabView {
@@ -21,12 +20,6 @@ struct SettingsView: View {
                 .environmentObject(contactsManager)
                 .tabItem {
                     Label("General", systemImage: "gearshape")
-                }
-
-            PrivacyDashboardView()
-                .environmentObject(privacyMonitor)
-                .tabItem {
-                    Label("Privacy Dashboard", systemImage: "lock.shield.fill")
                 }
 
             PrivacySettingsView()
@@ -72,125 +65,152 @@ struct GeneralSettingsView: View {
     @State private var successMessage = ""
 
     var body: some View {
-        Form {
-            // Section 1: Backup & Data Protection (highest priority)
-            Section {
-                Button(action: { showSavePanel = true }) {
-                    HStack {
-                        if isCreatingBackup {
-                            ProgressView()
-                                .scaleEffect(0.7)
-                                .frame(width: 16, height: 16)
-                            Text("Creating backup...")
+        ScrollView {
+            VStack(spacing: 24) {
+                GeneralSettingsHeader(
+                    contactCount: contactsManager.contacts.count,
+                    isAutoRefreshOn: autoRefresh,
+                    lastBackupName: userBackupURL?.lastPathComponent
+                )
+
+                SettingsCard(
+                    icon: "externaldrive.fill.badge.checkmark",
+                    title: "Resilient Backups",
+                    subtitle: "Create a primary and safety copy in one click",
+                    accentColor: .blue
+                ) {
+                    VStack(spacing: 16) {
+                        Button(action: { showSavePanel = true }) {
+                            HStack(spacing: 12) {
+                                if isCreatingBackup {
+                                    ProgressView()
+                                        .scaleEffect(0.7)
+                                        .frame(width: 16, height: 16)
+                                        .tint(.white)
+                                    Text("Creating backup...")
+                                } else {
+                                    Image(systemName: "shield.checkerboard")
+                                        .imageScale(.medium)
+                                    Text("Backup All Contacts")
+                                }
+                            }
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.blue)
+                        .disabled(isCreatingBackup)
+
+                        if let url = userBackupURL {
+                            InfoCallout(
+                                icon: "clock.arrow.circlepath",
+                                title: "Last backup",
+                                detail: url.lastPathComponent,
+                                footer: appBackupURL?.path
+                            )
                         } else {
-                            Image(systemName: "externaldrive.fill.badge.checkmark")
-                            Text("Backup All Contacts")
+                            InfoCallout(
+                                icon: "info.circle",
+                                title: "Dual copies",
+                                detail: "One goes wherever you choose, the other lives inside the app",
+                                footer: nil
+                            )
                         }
                     }
                 }
-                .disabled(isCreatingBackup)
 
-                if let url = userBackupURL {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Last backup: \(url.lastPathComponent)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        if let safetyURL = appBackupURL {
-                            Text("Safety copy: \(safetyURL.path)")
-                                .font(.caption2)
+                SettingsCard(
+                    icon: "bolt.fill",
+                    title: "Automation",
+                    subtitle: "Decide how proactive the app should be",
+                    accentColor: .orange
+                ) {
+                    VStack(spacing: 12) {
+                        Toggle(isOn: $autoRefresh) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Auto-refresh contacts")
+                                Text("Stay up to date without manual syncs")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+
+                        Divider()
+
+                        Toggle(isOn: $showCompletedActions) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Show completed actions")
+                                Text("Keep a visual trail of what you’ve finished")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                }
+
+                SettingsCard(
+                    icon: "arrow.triangle.2.circlepath",
+                    title: "Import & Export",
+                    subtitle: "Bring data in or share a clean snapshot",
+                    accentColor: .purple
+                ) {
+                    VStack(spacing: 16) {
+                        HStack(spacing: 12) {
+                            GeneralSettingsActionButton(
+                                title: isImporting ? "Importing..." : "Import Contacts",
+                                icon: "square.and.arrow.down",
+                                isBusy: isImporting,
+                                action: { showImportPicker = true }
+                            )
+                            .disabled(isImporting)
+
+                            GeneralSettingsActionButton(
+                                title: isExporting ? "Exporting..." : "Export Contacts",
+                                icon: "square.and.arrow.up",
+                                isBusy: isExporting,
+                                action: { showExportPicker = true }
+                            )
+                            .disabled(isExporting || contactsManager.contacts.isEmpty)
+                        }
+
+                        InfoCallout(
+                            icon: "doc.badge.ellipsis",
+                            title: "JSON compatible",
+                            detail: "Use exports as clean data snapshots or for migrations",
+                            footer: "Current contacts: \(contactsManager.contacts.count)"
+                        )
+                    }
+                }
+
+                SettingsCard(
+                    icon: "textformat.size",
+                    title: "Appearance",
+                    subtitle: "Match the interface to your reading comfort",
+                    accentColor: .teal
+                ) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        Picker("Text Size", selection: $textScalePreference) {
+                            Text("Normal").tag("normal")
+                            Text("Large").tag("large")
+                            Text("Extra Large").tag("xlarge")
+                        }
+                        .pickerStyle(.segmented)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Preview")
+                                .font(.caption)
                                 .foregroundColor(.secondary)
+                            Text("Contacts look clearer with larger text")
+                                .font(textScalePreference == "xlarge" ? .title3 : textScalePreference == "large" ? .headline : .subheadline)
                         }
                     }
                 }
-
-                Text("Creates TWO backups: one in your chosen location and a safety copy in the app's folder")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            } header: {
-                Text("Backup & Data Protection")
-            } footer: {
-                Text("Keep your contacts safe with automatic backups")
-                    .font(.caption)
             }
-
-            // Section 2: Behavior
-            Section {
-                Toggle("Automatically refresh contacts", isOn: $autoRefresh)
-
-                Toggle("Show completed actions", isOn: $showCompletedActions)
-            } header: {
-                Text("Behavior")
-            } footer: {
-                Text("Control how the app works")
-                    .font(.caption)
-            }
-
-            // Section 3: Import/Export
-            Section {
-                Button(action: { showImportPicker = true }) {
-                    HStack {
-                        if isImporting {
-                            ProgressView()
-                                .scaleEffect(0.7)
-                                .frame(width: 16, height: 16)
-                            Text("Importing...")
-                        } else {
-                            Image(systemName: "square.and.arrow.down")
-                            Text("Import Contacts")
-                        }
-                    }
-                }
-                .disabled(isImporting)
-
-                Button(action: { showExportPicker = true }) {
-                    HStack {
-                        if isExporting {
-                            ProgressView()
-                                .scaleEffect(0.7)
-                                .frame(width: 16, height: 16)
-                            Text("Exporting...")
-                        } else {
-                            Image(systemName: "square.and.arrow.up")
-                            Text("Export Contacts")
-                        }
-                    }
-                }
-                .disabled(isExporting || contactsManager.contacts.isEmpty)
-
-                Text("Import/export contacts as JSON. Current contacts: \(contactsManager.contacts.count)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            } header: {
-                Text("Import/Export")
-            } footer: {
-                Text("Import or export your contacts data")
-                    .font(.caption)
-            }
-
-            // Section 4: Appearance (moved to bottom)
-            Section {
-                Picker("Text Size", selection: $textScalePreference) {
-                    Text("Normal").tag("normal")
-                    Text("Large").tag("large")
-                    Text("Extra Large").tag("xlarge")
-                }
-                .pickerStyle(.segmented)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Preview")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Text("Contacts look clearer with larger text")
-                        .font(.headline)
-                }
-            } header: {
-                Text("Appearance")
-            } footer: {
-                Text("Customize how the app looks")
-                    .font(.caption)
-            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 30)
+            .frame(maxWidth: .infinity)
         }
-        .padding(20)
+        .background(Color(nsColor: .windowBackgroundColor))
         .fileExporter(
             isPresented: $showSavePanel,
             document: BackupDocument(),
@@ -314,6 +334,155 @@ struct GeneralSettingsView: View {
     }
 }
 
+// MARK: - General Settings Helpers
+
+private struct GeneralSettingsHeader: View {
+    let contactCount: Int
+    let isAutoRefreshOn: Bool
+    let lastBackupName: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Stay in control")
+                .font(.largeTitle.bold())
+
+            Text("Backups, automation, and personalization in one tidy hub.")
+                .foregroundColor(.secondary)
+
+            HStack(spacing: 12) {
+                StatPill(title: "Contacts synced", value: "\(contactCount)")
+                StatPill(title: "Auto-refresh", value: isAutoRefreshOn ? "On" : "Off")
+                StatPill(title: "Last backup", value: lastBackupName ?? "Not yet")
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct SettingsCard<Content: View>: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    let accentColor: Color
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(accentColor.opacity(0.15))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: icon)
+                        .foregroundColor(accentColor)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.headline)
+                    Text(subtitle)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            Divider()
+
+            content
+        }
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color(nsColor: .controlBackgroundColor))
+                .shadow(color: Color.black.opacity(0.05), radius: 12, y: 6)
+        )
+    }
+}
+
+private struct StatPill: View {
+    let title: String
+    let value: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(value)
+                .font(.headline)
+            Text(title)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .padding(.vertical, 10)
+        .padding(.horizontal, 14)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.9))
+        )
+    }
+}
+
+private struct InfoCallout: View {
+    let icon: String
+    let title: String
+    let detail: String
+    let footer: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: icon)
+                    .foregroundColor(.secondary)
+                    .imageScale(.medium)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.subheadline)
+                        .bold()
+                    Text(detail)
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                }
+            }
+            if let footer {
+                Text(footer)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                    .padding(.leading, 26)
+            }
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color.accentColor.opacity(0.08))
+        )
+    }
+}
+
+private struct GeneralSettingsActionButton: View {
+    let title: String
+    let icon: String
+    let isBusy: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                if isBusy {
+                    ProgressView()
+                        .scaleEffect(0.7)
+                        .frame(width: 16, height: 16)
+                } else {
+                    Image(systemName: icon)
+                        .imageScale(.medium)
+                }
+                Text(title)
+                    .font(.subheadline)
+                    .lineLimit(1)
+            }
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.bordered)
+    }
+}
+
 // MARK: - Developer Settings
 
 struct DeveloperSettingsView: View {
@@ -325,68 +494,90 @@ struct DeveloperSettingsView: View {
     @State private var successMessage = ""
 
     var body: some View {
-        Form {
-            Section {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Text("Test Contacts:")
-                        Stepper("\(testContactCount)", value: $testContactCount, in: 10...1000, step: 10)
-                            .frame(width: 120)
-                    }
+        ScrollView {
+            VStack(spacing: 24) {
+                DeveloperSettingsHeader(
+                    sampleSize: testContactCount,
+                    isLoading: isLoadingTest
+                )
 
-                    Button(action: loadTestData) {
+                SettingsCard(
+                    icon: "wrench.and.screwdriver",
+                    title: "Test Data Lab",
+                    subtitle: "Populate your workspace with realistic contacts",
+                    accentColor: .indigo
+                ) {
+                    VStack(spacing: 16) {
                         HStack {
-                            if isLoadingTest {
-                                ProgressView()
-                                    .scaleEffect(0.7)
-                                    .frame(width: 16, height: 16)
-                                Text("Loading...")
-                            } else {
-                                Image(systemName: "doc.on.doc.fill")
-                                Text("Load Test Database")
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Sample size")
+                                    .font(.subheadline.bold())
+                                Text("Choose how many demo contacts to generate")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
                             }
+                            Spacer()
+                            Stepper("\(testContactCount)", value: $testContactCount, in: 10...1000, step: 10)
+                                .frame(width: 140)
                         }
+
+                        GeneralSettingsActionButton(
+                            title: isLoadingTest ? "Loading..." : "Load Test Database",
+                            icon: "doc.on.doc.fill",
+                            isBusy: isLoadingTest,
+                            action: loadTestData
+                        )
+                        .disabled(isLoadingTest)
+
+                        InfoCallout(
+                            icon: "sparkles",
+                            title: "What you get",
+                            detail: "Contacts with duplicates, missing fields, and other real-world quirks.",
+                            footer: nil
+                        )
                     }
-                    .disabled(isLoadingTest)
-
-                    Text("Generates realistic test contacts with duplicates and incomplete data for testing")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
                 }
-            } header: {
-                Text("Test Data")
-            }
 
-            Section {
-                Button("Reset Onboarding") {
-                    UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
-                    UserDefaults.standard.set(false, forKey: "hasSeenBackupReminder")
-                    appState.hasCompletedOnboarding = false
-                    appState.hasSeenBackupReminder = false
-                    appState.updateCurrentView()
+                SettingsCard(
+                    icon: "ladybug.fill",
+                    title: "Debug Utilities",
+                    subtitle: "Reset onboarding flows and prompts",
+                    accentColor: .red
+                ) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Onboarding state")
+                            .font(.subheadline.bold())
+                        Text("Use this after UI or copy changes to replay the welcome experience.")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+
+                        Button(action: resetOnboarding) {
+                            Label("Reset Onboarding", systemImage: "arrow.counterclockwise.circle")
+                                .font(.subheadline)
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.red)
+                    }
                 }
-                .foregroundColor(.red)
 
-                Text("Restart the onboarding flow from the beginning")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            } header: {
-                Text("Debug & Testing")
-            }
-
-            Section {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("• Load test database to populate with sample contacts")
-                    Text("• Test duplicate detection and data quality features")
-                    Text("• Reset onboarding to test the welcome flow")
+                SettingsCard(
+                    icon: "checklist",
+                    title: "Testing Playbook",
+                    subtitle: "Quick reminders before every release",
+                    accentColor: .gray
+                ) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        DeveloperChecklistRow(text: "Load demo contacts and verify duplicate detection.")
+                        DeveloperChecklistRow(text: "Confirm data quality warnings across all smart groups.")
+                        DeveloperChecklistRow(text: "Run onboarding reset to validate the welcome flow.")
+                    }
                 }
-                .font(.caption)
-                .foregroundColor(.secondary)
-            } header: {
-                Text("Usage")
             }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 30)
         }
-        .padding(20)
+        .background(Color(nsColor: .windowBackgroundColor))
         .alert("Success", isPresented: $showSuccessAlert) {
             Button("OK", role: .cancel) { }
         } message: {
@@ -405,6 +596,51 @@ struct DeveloperSettingsView: View {
                 successMessage = "Loaded \(testContactCount) test contacts successfully!"
                 showSuccessAlert = true
             }
+        }
+    }
+
+    private func resetOnboarding() {
+        UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
+        UserDefaults.standard.set(false, forKey: "hasSeenBackupReminder")
+        appState.hasCompletedOnboarding = false
+        appState.hasSeenBackupReminder = false
+        appState.updateCurrentView()
+    }
+}
+
+private struct DeveloperSettingsHeader: View {
+    let sampleSize: Int
+    let isLoading: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Build with confidence")
+                .font(.largeTitle.bold())
+            Text("Spin up data sets, reset flows, and follow the testing playbook before each release.")
+                .foregroundColor(.secondary)
+
+            HStack(spacing: 12) {
+                StatPill(title: "Sample size", value: "\(sampleSize)")
+                StatPill(title: "Generator", value: isLoading ? "Working…" : "Idle")
+                StatPill(title: "Playbook", value: "3 checks")
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct DeveloperChecklistRow: View {
+    let text: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "checkmark.circle")
+                .foregroundColor(.accentColor)
+                .imageScale(.small)
+                .padding(.top, 2)
+            Text(text)
+                .font(.footnote)
+                .foregroundColor(.secondary)
         }
     }
 }
@@ -454,39 +690,105 @@ struct ContactsDocument: FileDocument {
 struct PrivacySettingsView: View {
     @EnvironmentObject var contactsManager: ContactsManager
 
-    var body: some View {
-        Form {
-            Section {
-                HStack {
-                    Text("Contacts Access")
-                    Spacer()
-                    StatusBadge(isGranted: contactsManager.authorizationStatus == .authorized)
-                }
+    private var isAuthorized: Bool {
+        contactsManager.authorizationStatus == .authorized
+    }
 
-                if contactsManager.authorizationStatus != .authorized {
-                    Button("Request Access") {
-                        Task {
-                            await contactsManager.requestAccess()
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                PrivacySettingsHeader(isAuthorized: isAuthorized)
+
+                SettingsCard(
+                    icon: "hand.raised.fill",
+                    title: "Contacts Permission",
+                    subtitle: "Control who can read your address book",
+                    accentColor: .pink
+                ) {
+                    VStack(spacing: 16) {
+                        HStack {
+                            Text(isAuthorized ? "Access granted" : "Action required")
+                                .font(.headline)
+                            Spacer()
+                            StatusBadge(isGranted: isAuthorized)
+                        }
+
+                        if !isAuthorized {
+                            Button(action: requestAccess) {
+                                Label("Request Access", systemImage: "checkmark.shield")
+                                    .font(.subheadline)
+                                    .frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(.pink)
+                        } else {
+                            InfoCallout(
+                                icon: "lock.shield",
+                                title: "Ready to analyze",
+                                detail: "All contact tools are enabled.",
+                                footer: nil
+                            )
                         }
                     }
                 }
-            } header: {
-                Text("Permissions")
-            }
 
-            Section {
-                Text("All data processing happens locally on your Mac. Your contact information never leaves your device.")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                SettingsCard(
+                    icon: "key.fill",
+                    title: "What access enables",
+                    subtitle: "Grant contacts permission to unlock these tools",
+                    accentColor: .green
+                ) {
+                    VStack(spacing: 12) {
+                        PermissionBenefitRow(
+                            icon: "wand.and.stars",
+                            title: "Data cleanup",
+                            detail: "Detect duplicates, incomplete entries, and inconsistent formatting."
+                        )
+                        PermissionBenefitRow(
+                            icon: "square.and.arrow.up.on.square",
+                            title: "Safe exports",
+                            detail: "Generate JSON or vCard backups curated from your real contacts."
+                        )
+                        PermissionBenefitRow(
+                            icon: "rectangle.stack.badge.plus",
+                            title: "Bulk editing",
+                            detail: "Merge, tag, or group contacts directly from the dashboard."
+                        )
+                    }
+                }
 
-                Text("We do not collect, store, or transmit any of your personal information.")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            } header: {
-                Text("Privacy Policy")
+                SettingsCard(
+                    icon: "questionmark.circle",
+                    title: "Permission troubleshooting",
+                    subtitle: "Tips if macOS keeps the toggle off",
+                    accentColor: .cyan
+                ) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        PermissionHelpRow(
+                            title: "Enable manually",
+                            detail: "System Settings → Privacy & Security → Contacts → turn on “Contacts Organizer”."
+                        )
+                        PermissionHelpRow(
+                            title: "Already denied?",
+                            detail: "Toggle the switch off/on or remove the app from the list, then relaunch."
+                        )
+                        PermissionHelpRow(
+                            title: "Still stuck?",
+                            detail: "Restart your Mac. Some sandbox resets require a log-out or reboot."
+                        )
+                    }
+                }
             }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 30)
         }
-        .padding(20)
+        .background(Color(nsColor: .windowBackgroundColor))
+    }
+
+    private func requestAccess() {
+        Task {
+            await contactsManager.requestAccess()
+        }
     }
 }
 
@@ -495,12 +797,123 @@ struct StatusBadge: View {
 
     var body: some View {
         Text(isGranted ? "Granted" : "Denied")
-            .font(.caption)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(isGranted ? Color.green.opacity(0.2) : Color.red.opacity(0.2))
+            .font(.caption.weight(.semibold))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(isGranted ? Color.green.opacity(0.18) : Color.red.opacity(0.18))
             .foregroundColor(isGranted ? .green : .red)
-            .cornerRadius(6)
+            .cornerRadius(8)
+    }
+}
+
+private struct PrivacySettingsHeader: View {
+    let isAuthorized: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Permission center")
+                .font(.largeTitle.bold())
+            Text("Grant contacts access and keep track of the current authorization state.")
+                .foregroundColor(.secondary)
+
+            HStack(spacing: 12) {
+                PermissionStatusPill(
+                    title: "Contacts permission",
+                    value: isAuthorized ? "Granted" : "Needs access",
+                    icon: isAuthorized ? "checkmark.seal.fill" : "exclamationmark.triangle.fill",
+                    iconColor: isAuthorized ? .green : .orange
+                )
+                PermissionStatusPill(
+                    title: "Automation status",
+                    value: isAuthorized ? "Enabled" : "Paused",
+                    icon: "bolt.fill",
+                    iconColor: isAuthorized ? .green : .gray
+                )
+                PermissionStatusPill(
+                    title: "Next step",
+                    value: isAuthorized ? "Good to go!" : "Request access",
+                    icon: isAuthorized ? "hand.thumbsup.fill" : "hand.point.up.left.fill",
+                    iconColor: isAuthorized ? .blue : .orange
+                )
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct PermissionBenefitRow: View {
+    let icon: String
+    let title: String
+    let detail: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color.green.opacity(0.15))
+                Image(systemName: icon)
+                    .foregroundColor(.green)
+                    .imageScale(.medium)
+            }
+            .frame(width: 32, height: 32)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.subheadline.bold())
+                Text(detail)
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+}
+
+private struct PermissionHelpRow: View {
+    let title: String
+    let detail: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.subheadline.bold())
+            Text(detail)
+                .font(.footnote)
+                .foregroundColor(.secondary)
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+private struct PermissionStatusPill: View {
+    let title: String
+    let value: String
+    let icon: String
+    let iconColor: Color
+
+    var body: some View {
+        HStack(spacing: 10) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(iconColor.opacity(0.15))
+                Image(systemName: icon)
+                    .foregroundColor(iconColor)
+                    .imageScale(.small)
+            }
+            .frame(width: 32, height: 32)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(value)
+                    .font(.headline)
+                Text(title)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(.vertical, 10)
+        .padding(.horizontal, 14)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.9))
+        )
     }
 }
 
