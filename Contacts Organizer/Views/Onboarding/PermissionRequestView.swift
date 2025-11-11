@@ -7,13 +7,15 @@
 
 import SwiftUI
 import Contacts
+import AppKit
 
 struct PermissionRequestView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var contactsManager: ContactsManager
     @State private var isRequesting = false
-    @State private var showDeniedAlert = false
+    @State private var showPermissionAlert = false
     @State private var showFirstBackupSheet = false
+    @State private var alertMode: PermissionAlertMode = .info
 
     var body: some View {
         VStack(spacing: 40) {
@@ -76,8 +78,8 @@ struct PermissionRequestView: View {
                 .disabled(isRequesting)
 
                 Button("Maybe Later") {
-                    // Show alert about limited functionality
-                    showDeniedAlert = true
+                    alertMode = .info
+                    showPermissionAlert = true
                 }
                 .buttonStyle(.plain)
                 .foregroundColor(.secondary)
@@ -95,19 +97,43 @@ struct PermissionRequestView: View {
                     appState.updateAuthorizationStatus(.authorized)
                 }
         }
-        .alert("Access Required", isPresented: $showDeniedAlert) {
-            Button("Request Access", role: .none) {
-                requestPermission()
+        .alert(alertTitle, isPresented: $showPermissionAlert) {
+            if alertMode == .settingsRequired {
+                Button("Open System Settings") {
+                    openContactsSettingsPane()
+                }
+                Button("Check Again") {
+                    requestPermission()
+                }
+            } else {
+                Button("Request Access", role: .none) {
+                    requestPermission()
+                }
             }
             Button("Quit", role: .cancel) {
                 NSApplication.shared.terminate(nil)
             }
         } message: {
-            Text("Contacts Organizer requires access to your contacts to function. Without this permission, the app cannot perform any operations.")
+            Text(alertMessage)
         }
     }
 
     private func requestPermission() {
+        let status = contactsManager.authorizationStatus
+
+        if status == .authorized {
+            appState.updateAuthorizationStatus(.authorized)
+            return
+        }
+
+        if status == .denied || status == .restricted {
+            print("⚠️ Contacts access previously denied. Directing user to System Settings.")
+            alertMode = .settingsRequired
+            showPermissionAlert = true
+            openContactsSettingsPane()
+            return
+        }
+
         print("🔐 Permission request initiated")
         isRequesting = true
 
@@ -133,14 +159,43 @@ struct PermissionRequestView: View {
                     }
                 } else {
                     print("❌ Permission denied, showing alert")
-                    showDeniedAlert = true
+                    let needsSettings = contactsManager.authorizationStatus == .denied || contactsManager.authorizationStatus == .restricted
+                    alertMode = needsSettings ? .settingsRequired : .info
+                    showPermissionAlert = true
+
+                    if needsSettings {
+                        openContactsSettingsPane()
+                    }
                 }
             }
+        }
+    }
+
+    private func openContactsSettingsPane() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Contacts") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    private var alertTitle: String {
+        alertMode == .settingsRequired ? "Enable Contacts Access" : "Access Required"
+    }
+
+    private var alertMessage: String {
+        if alertMode == .settingsRequired {
+            return "Contacts Organizer has been denied access. Please enable Contacts access for this app in System Settings › Privacy & Security › Contacts, then return to continue."
+        } else {
+            return "Contacts Organizer requires access to your contacts to function. Without this permission, the app cannot perform any operations."
         }
     }
 }
 
 // MARK: - Feature Row
+
+private enum PermissionAlertMode {
+    case info
+    case settingsRequired
+}
 
 struct PermissionFeatureRow: View {
     let icon: String
