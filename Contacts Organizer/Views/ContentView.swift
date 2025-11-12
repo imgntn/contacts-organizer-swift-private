@@ -40,8 +40,10 @@ struct ContentView: View {
     }
 }
 
+#if !DISABLE_PREVIEWS
 #Preview {
     ContentView()
         .environmentObject(AppState())
         .environmentObject(ContactsManager.shared)
 }
+#endif

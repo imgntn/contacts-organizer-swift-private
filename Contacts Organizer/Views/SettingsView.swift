@@ -12,35 +12,57 @@ import UniformTypeIdentifiers
 struct SettingsView: View {
     @EnvironmentObject var contactsManager: ContactsManager
     @EnvironmentObject var appState: AppState
+    @AppStorage(SettingsPreferences.selectedTabKey) private var selectedTabRaw: String = SettingsTab.general.rawValue
+    @AppStorage(SettingsPreferences.developerToggleKey) private var showDeveloperSettings: Bool = false
 
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTabRaw) {
             GeneralSettingsView()
                 .environmentObject(appState)
                 .environmentObject(contactsManager)
                 .tabItem {
                     Label("General", systemImage: "gearshape")
                 }
+                .tag(SettingsTab.general.rawValue)
 
             PrivacySettingsView()
                 .environmentObject(contactsManager)
                 .tabItem {
                     Label("Permissions", systemImage: "hand.raised")
                 }
+                .tag(SettingsTab.permissions.rawValue)
 
-            DeveloperSettingsView()
-                .environmentObject(contactsManager)
-                .environmentObject(appState)
-                .tabItem {
-                    Label("Developer", systemImage: "hammer.fill")
-                }
+            if showDeveloperSettings {
+                DeveloperSettingsView()
+                    .environmentObject(contactsManager)
+                    .environmentObject(appState)
+                    .tabItem {
+                        Label("Developer", systemImage: "hammer.fill")
+                    }
+                    .tag(SettingsTab.developer.rawValue)
+            }
 
             AboutView()
                 .tabItem {
                     Label("About", systemImage: "info.circle")
                 }
+                .tag(SettingsTab.about.rawValue)
         }
         .frame(width: 500, height: 700)
+        .onAppear(perform: ensureValidSelection)
+        .onChange(of: showDeveloperSettings) {
+            ensureValidSelection()
+        }
+    }
+
+    private var selectedTab: SettingsTab {
+        SettingsTab(rawValue: selectedTabRaw) ?? .general
+    }
+
+    private func ensureValidSelection() {
+        if !showDeveloperSettings && selectedTab == .developer {
+            selectedTabRaw = SettingsTab.general.rawValue
+        }
     }
 }
 
@@ -52,6 +74,7 @@ struct GeneralSettingsView: View {
     @AppStorage("autoRefresh") private var autoRefresh = true
     @AppStorage("showCompletedActions") private var showCompletedActions = false
     @AppStorage("textScalePreference") private var textScalePreference = "normal"
+    @AppStorage(SettingsPreferences.developerToggleKey) private var showDeveloperSettings: Bool = false
     @State private var isCreatingBackup = false
     @State private var backupSuccess = false
     @State private var userBackupURL: URL?
@@ -203,6 +226,23 @@ struct GeneralSettingsView: View {
                             Text("Contacts look clearer with larger text")
                                 .font(textScalePreference == "xlarge" ? .title3 : textScalePreference == "large" ? .headline : .subheadline)
                         }
+                    }
+                }
+
+                SettingsCard(
+                    icon: "terminal.fill",
+                    title: "Advanced",
+                    subtitle: "Expose developer-focused tooling when needed",
+                    accentColor: .gray
+                ) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Toggle("Show developer options", isOn: Binding(
+                            get: { showDeveloperSettings },
+                            set: { showDeveloperSettings = $0 }
+                        ))
+                        Text("Enable this when you need access to the Developer tab for QA or support.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
                 }
             }
@@ -388,6 +428,7 @@ private struct SettingsCard<Content: View>: View {
             Divider()
 
             content
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(20)
         .background(
@@ -618,14 +659,93 @@ private struct DeveloperSettingsHeader: View {
                 .font(.largeTitle.bold())
             Text("Spin up data sets, reset flows, and follow the testing playbook before each release.")
                 .foregroundColor(.secondary)
-
-            HStack(spacing: 12) {
-                StatPill(title: "Sample size", value: "\(sampleSize)")
-                StatPill(title: "Generator", value: isLoading ? "Working…" : "Idle")
-                StatPill(title: "Playbook", value: "3 checks")
-            }
+            DeveloperStatusPanel(sampleSize: sampleSize, isLoading: isLoading)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct DeveloperStatusPanel: View {
+    let sampleSize: Int
+    let isLoading: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("READINESS SNAPSHOT")
+                .font(.caption.weight(.semibold))
+                .foregroundColor(.secondary)
+
+            VStack(spacing: 12) {
+                DeveloperStatusRow(
+                    icon: "tray.full.fill",
+                    iconColor: .indigo,
+                    title: "\(sampleSize) contacts queued",
+                    detail: "The generator will create this many demo contacts."
+                )
+
+                DeveloperStatusRow(
+                    icon: isLoading ? "clock.fill" : "bolt.fill",
+                    iconColor: isLoading ? .orange : .green,
+                    title: isLoading ? "Generator is busy" : "Generator is idle",
+                    detail: isLoading ? "Hang tight while we assemble the dataset." : "Ready for your next batch."
+                )
+
+                DeveloperStatusRow(
+                    icon: "checklist.checked",
+                    iconColor: .blue,
+                    title: "3-item release playbook",
+                    detail: "Test data lab, debug utilities, and onboarding reset."
+                )
+            }
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color(nsColor: .controlBackgroundColor),
+                            Color(nsColor: .controlBackgroundColor).opacity(0.6)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(Color.secondary.opacity(0.1), lineWidth: 1)
+                )
+        )
+    }
+}
+
+private struct DeveloperStatusRow: View {
+    let icon: String
+    let iconColor: Color
+    let title: String
+    let detail: String
+
+    var body: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(iconColor.opacity(0.15))
+                    .frame(width: 44, height: 44)
+                Image(systemName: icon)
+                    .foregroundColor(iconColor)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.headline)
+                Text(detail)
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+        }
     }
 }
 
@@ -738,7 +858,7 @@ struct PrivacySettingsView: View {
                     subtitle: "Grant contacts permission to unlock these tools",
                     accentColor: .green
                 ) {
-                    VStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 12) {
                         PermissionBenefitRow(
                             icon: "wand.and.stars",
                             title: "Data cleanup",
@@ -848,7 +968,7 @@ private struct PermissionBenefitRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            ZStack {
+            ZStack(alignment: .center) {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(Color.green.opacity(0.15))
                 Image(systemName: icon)
@@ -863,7 +983,9 @@ private struct PermissionBenefitRow: View {
                     .font(.footnote)
                     .foregroundColor(.secondary)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -965,9 +1087,11 @@ struct AboutView: View {
     }
 }
 
+#if !DISABLE_PREVIEWS
 #Preview {
     SettingsView()
         .environmentObject(ContactsManager.shared)
         .environmentObject(AppState())
         .environmentObject(PrivacyMonitorService.shared)
 }
+#endif

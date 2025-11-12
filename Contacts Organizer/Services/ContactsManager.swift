@@ -11,6 +11,16 @@ import SwiftUI
 import Combine
 
 class ContactsManager: ObservableObject {
+    enum RefreshReason: String {
+        case contactStoreChange
+        case mutation
+    }
+
+    struct RefreshTrigger: Identifiable, Equatable {
+        let id = UUID()
+        let reason: RefreshReason
+        let timestamp = Date()
+    }
     static let shared = ContactsManager()
 
     nonisolated(unsafe) private let store = CNContactStore()
@@ -22,14 +32,67 @@ class ContactsManager: ObservableObject {
     @Published var statistics: ContactStatistics?
     @Published var groups: [CNGroup] = []
     @Published var recentActivities: [RecentActivity] = []
+    @Published private(set) var refreshTrigger = RefreshTrigger(reason: .mutation)
 
     // Use a dedicated queue for CNContactStore I/O to avoid QoS inversions
     private let contactsQueue = DispatchQueue(label: "com.playablefuture.contactsorganizer.contacts", qos: .utility)
     private let recentActivityDefaultsKey = "recentActivityLog"
+    private var contactStoreObserver: NSObjectProtocol?
+    private var refreshDebounceWorkItem: DispatchWorkItem?
+    private let editableContactKeys: [CNKeyDescriptor] = [
+        CNContactGivenNameKey as CNKeyDescriptor,
+        CNContactFamilyNameKey as CNKeyDescriptor,
+        CNContactMiddleNameKey as CNKeyDescriptor,
+        CNContactNicknameKey as CNKeyDescriptor,
+        CNContactOrganizationNameKey as CNKeyDescriptor,
+        CNContactDepartmentNameKey as CNKeyDescriptor,
+        CNContactJobTitleKey as CNKeyDescriptor,
+        CNContactPhoneNumbersKey as CNKeyDescriptor,
+        CNContactEmailAddressesKey as CNKeyDescriptor,
+        CNContactImageDataKey as CNKeyDescriptor
+    ]
 
     private init() {
         updateAuthorizationStatus()
-        Task { await loadRecentActivities() }
+        Task { @MainActor in
+            loadRecentActivities()
+        }
+        startContactStoreObservation()
+    }
+
+    deinit {
+        if let contactStoreObserver {
+            NotificationCenter.default.removeObserver(contactStoreObserver)
+        }
+    }
+
+    private func startContactStoreObservation() {
+        contactStoreObserver = NotificationCenter.default.addObserver(
+            forName: .CNContactStoreDidChange,
+            object: nil,
+            queue: nil
+        ) { [weak self] _ in
+            self?.handleContactStoreChange()
+        }
+    }
+
+    private func handleContactStoreChange() {
+        refreshDebounceWorkItem?.cancel()
+        let workItem = DispatchWorkItem { [weak self] in
+            self?.publishRefresh(reason: .contactStoreChange)
+        }
+        refreshDebounceWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: workItem)
+    }
+
+    private func publishRefresh(reason: RefreshReason) {
+        Task { @MainActor in
+            self.refreshTrigger = RefreshTrigger(reason: reason)
+        }
+    }
+
+    func signalDataMutation() {
+        publishRefresh(reason: .mutation)
     }
 
     // MARK: - Authorization
@@ -229,11 +292,10 @@ class ContactsManager: ObservableObject {
 
     // MARK: - Contact Operations
 
-    func mergeContacts(sourceIds: [String], destinationId: String) async -> Bool {
+    func mergeContacts(using configuration: MergeConfiguration) async -> Bool {
         guard authorizationStatus == .authorized else { return false }
 
         do {
-            // Fetch all contacts with all needed keys (exclude CNContactNoteKey to avoid entitlement issues)
             let keysToFetch: [CNKeyDescriptor] = [
                 CNContactGivenNameKey as CNKeyDescriptor,
                 CNContactFamilyNameKey as CNKeyDescriptor,
@@ -252,9 +314,8 @@ class ContactsManager: ObservableObject {
                 CNContactInstantMessageAddressesKey as CNKeyDescriptor
             ]
 
-            // Fetch destination contact (the one we'll keep)
             guard let destinationContact = try? store.unifiedContact(
-                withIdentifier: destinationId,
+                withIdentifier: configuration.primaryContactId,
                 keysToFetch: keysToFetch
             ) else {
                 await MainActor.run {
@@ -263,7 +324,7 @@ class ContactsManager: ObservableObject {
                 return false
             }
 
-            // Fetch source contacts (the ones we'll merge in and delete)
+            let sourceIds = configuration.sourceContactIds
             var sourceContacts: [CNContact] = []
             for sourceId in sourceIds {
                 if let contact = try? store.unifiedContact(
@@ -274,103 +335,30 @@ class ContactsManager: ObservableObject {
                 }
             }
 
-            // Create mutable copy of destination
+            let allContacts = [destinationContact] + sourceContacts
             let mergedContact = destinationContact.mutableCopy() as! CNMutableContact
 
-            // Merge phone numbers (avoid duplicates)
-            var existingPhones = Set(mergedContact.phoneNumbers.map { $0.value.stringValue })
-            for source in sourceContacts {
-                for phone in source.phoneNumbers {
-                    let phoneString = phone.value.stringValue
-                    if !existingPhones.contains(phoneString) {
-                        mergedContact.phoneNumbers.append(phone)
-                        existingPhones.insert(phoneString)
-                    }
-                }
-            }
+            applyPreferredName(configuration, to: mergedContact, from: allContacts)
+            applyPreferredOrganization(configuration, to: mergedContact, from: allContacts)
+            applyPreferredPhoto(configuration, to: mergedContact, from: allContacts)
 
-            // Merge email addresses (avoid duplicates)
-            var existingEmails = Set(mergedContact.emailAddresses.map { $0.value as String })
-            for source in sourceContacts {
-                for email in source.emailAddresses {
-                    let emailString = email.value as String
-                    if !existingEmails.contains(emailString) {
-                        mergedContact.emailAddresses.append(email)
-                        existingEmails.insert(emailString)
-                    }
-                }
-            }
+            mergedContact.phoneNumbers = mergePhoneNumbers(
+                destinationContact: destinationContact,
+                sources: sourceContacts,
+                allowedValues: configuration.includedPhoneNumbers
+            )
 
-            // Merge addresses (avoid duplicates)
-            for source in sourceContacts {
-                for address in source.postalAddresses {
-                    // Check if this address already exists
-                    let isDuplicate = mergedContact.postalAddresses.contains { existing in
-                        let existingAddr = existing.value
-                        let sourceAddr = address.value
-                        return existingAddr.street == sourceAddr.street &&
-                               existingAddr.city == sourceAddr.city &&
-                               existingAddr.postalCode == sourceAddr.postalCode
-                    }
-                    if !isDuplicate {
-                        mergedContact.postalAddresses.append(address)
-                    }
-                }
-            }
+            mergedContact.emailAddresses = mergeEmailAddresses(
+                destinationContact: destinationContact,
+                sources: sourceContacts,
+                allowedValues: configuration.includedEmailAddresses
+            )
 
-            // Merge URLs (avoid duplicates)
-            var existingUrls = Set(mergedContact.urlAddresses.map { $0.value as String })
-            for source in sourceContacts {
-                for url in source.urlAddresses {
-                    let urlString = url.value as String
-                    if !existingUrls.contains(urlString) {
-                        mergedContact.urlAddresses.append(url)
-                        existingUrls.insert(urlString)
-                    }
-                }
-            }
+            mergePostalAddresses(into: mergedContact, from: sourceContacts)
+            mergeURLAddresses(into: mergedContact, from: sourceContacts)
+            mergeSocialProfiles(into: mergedContact, from: sourceContacts)
+            mergeInstantMessages(into: mergedContact, from: sourceContacts)
 
-            // Merge social profiles (avoid duplicates)
-            for source in sourceContacts {
-                for profile in source.socialProfiles {
-                    let isDuplicate = mergedContact.socialProfiles.contains { existing in
-                        existing.value.service == profile.value.service &&
-                        existing.value.username == profile.value.username
-                    }
-                    if !isDuplicate {
-                        mergedContact.socialProfiles.append(profile)
-                    }
-                }
-            }
-
-            // Merge instant message addresses (avoid duplicates)
-            for source in sourceContacts {
-                for im in source.instantMessageAddresses {
-                    let isDuplicate = mergedContact.instantMessageAddresses.contains { existing in
-                        existing.value.service == im.value.service &&
-                        existing.value.username == im.value.username
-                    }
-                    if !isDuplicate {
-                        mergedContact.instantMessageAddresses.append(im)
-                    }
-                }
-            }
-
-            // Notes merge removed (CNContact.note is restricted by entitlement)
-
-            // Use organization info from source if destination doesn't have it
-            if mergedContact.organizationName.isEmpty {
-                for source in sourceContacts {
-                    if !source.organizationName.isEmpty {
-                        mergedContact.organizationName = source.organizationName
-                        mergedContact.departmentName = source.departmentName
-                        mergedContact.jobTitle = source.jobTitle
-                        break
-                    }
-                }
-            }
-
-            // Use birthday from source if destination doesn't have it
             if mergedContact.birthday == nil {
                 for source in sourceContacts {
                     if let birthday = source.birthday {
@@ -380,35 +368,17 @@ class ContactsManager: ObservableObject {
                 }
             }
 
-            // Use image from source if destination doesn't have one
-            if mergedContact.imageData == nil {
-                for source in sourceContacts {
-                    if let imageData = source.imageData {
-                        mergedContact.imageData = imageData
-                        break
-                    }
-                }
-            }
-
-            // Create save request
             let saveRequest = CNSaveRequest()
-
-            // Update the merged contact
             saveRequest.update(mergedContact)
-
-            // Delete source contacts
             for source in sourceContacts {
                 saveRequest.delete(source.mutableCopy() as! CNMutableContact)
             }
-
-            // Execute the save request
             try store.execute(saveRequest)
 
-            print("✅ Successfully merged \(sourceIds.count) contacts into \(destinationId)")
+            print("✅ Successfully merged \(sourceIds.count) contacts into \(configuration.primaryContactId)")
 
-            // Refresh contacts after merge
             await fetchAllContacts()
-
+            signalDataMutation()
             return true
         } catch {
             await MainActor.run {
@@ -417,6 +387,394 @@ class ContactsManager: ObservableObject {
             print("❌ Merge error: \(error)")
             return false
         }
+    }
+
+    private func applyPreferredName(_ configuration: MergeConfiguration, to contact: CNMutableContact, from contacts: [CNContact]) {
+        let targetId = configuration.preferredNameSourceId ?? configuration.primaryContactId
+        guard let source = contacts.first(where: { $0.identifier == targetId }) else { return }
+        contact.givenName = source.givenName
+        contact.familyName = source.familyName
+        contact.middleName = source.middleName
+        contact.nickname = source.nickname
+        contact.namePrefix = source.namePrefix
+        contact.nameSuffix = source.nameSuffix
+    }
+
+    private func applyPreferredOrganization(_ configuration: MergeConfiguration, to contact: CNMutableContact, from contacts: [CNContact]) {
+        let targetId = configuration.preferredOrganizationSourceId ?? configuration.primaryContactId
+        guard let source = contacts.first(where: { $0.identifier == targetId }) else { return }
+        if !source.organizationName.isEmpty {
+            contact.organizationName = source.organizationName
+            contact.departmentName = source.departmentName
+            contact.jobTitle = source.jobTitle
+        }
+    }
+
+    private func applyPreferredPhoto(_ configuration: MergeConfiguration, to contact: CNMutableContact, from contacts: [CNContact]) {
+        guard let photoSourceId = configuration.preferredPhotoSourceId,
+              let source = contacts.first(where: { $0.identifier == photoSourceId }),
+              source.imageDataAvailable,
+              let imageData = source.imageData else {
+            return
+        }
+        contact.imageData = imageData
+    }
+
+    private func mergePhoneNumbers(
+        destinationContact: CNContact,
+        sources: [CNContact],
+        allowedValues: Set<String>?
+    ) -> [CNLabeledValue<CNPhoneNumber>] {
+        var final: [CNLabeledValue<CNPhoneNumber>] = []
+        var seen = Set<String>()
+        let whitelist = allowedValues
+
+        let allPhones = destinationContact.phoneNumbers + sources.flatMap { $0.phoneNumbers }
+        for phone in allPhones {
+            let value = phone.value.stringValue
+            if let whitelist, !whitelist.contains(value) {
+                continue
+            }
+            if seen.insert(value).inserted {
+                final.append(phone)
+            }
+        }
+
+        return final
+    }
+
+    private func mergeEmailAddresses(
+        destinationContact: CNContact,
+        sources: [CNContact],
+        allowedValues: Set<String>?
+    ) -> [CNLabeledValue<NSString>] {
+        var final: [CNLabeledValue<NSString>] = []
+        var seen = Set<String>()
+        let whitelist = allowedValues
+        let allEmails = destinationContact.emailAddresses + sources.flatMap { $0.emailAddresses }
+
+        for email in allEmails {
+            let value = email.value as String
+            if let whitelist, !whitelist.contains(value) {
+                continue
+            }
+            if seen.insert(value).inserted {
+                final.append(email)
+            }
+        }
+
+        return final
+    }
+
+    private func mergePostalAddresses(into contact: CNMutableContact, from sources: [CNContact]) {
+        for source in sources {
+            for address in source.postalAddresses {
+                let exists = contact.postalAddresses.contains { existing in
+                    let lhs = existing.value
+                    let rhs = address.value
+                    return lhs.street == rhs.street && lhs.city == rhs.city && lhs.postalCode == rhs.postalCode
+                }
+                if !exists {
+                    contact.postalAddresses.append(address)
+                }
+            }
+        }
+    }
+
+    private func mergeURLAddresses(into contact: CNMutableContact, from sources: [CNContact]) {
+        var seen = Set(contact.urlAddresses.map { $0.value as String })
+        for source in sources {
+            for url in source.urlAddresses {
+                let value = url.value as String
+                if seen.insert(value).inserted {
+                    contact.urlAddresses.append(url)
+                }
+            }
+        }
+    }
+
+    private func mergeSocialProfiles(into contact: CNMutableContact, from sources: [CNContact]) {
+        for source in sources {
+            for profile in source.socialProfiles {
+                let duplicate = contact.socialProfiles.contains { existing in
+                    existing.value.service == profile.value.service &&
+                    existing.value.username == profile.value.username
+                }
+                if !duplicate {
+                    contact.socialProfiles.append(profile)
+                }
+            }
+        }
+    }
+
+    private func mergeInstantMessages(into contact: CNMutableContact, from sources: [CNContact]) {
+        for source in sources {
+            for im in source.instantMessageAddresses {
+                let duplicate = contact.instantMessageAddresses.contains { existing in
+                    existing.value.service == im.value.service &&
+                    existing.value.username == im.value.username
+                }
+                if !duplicate {
+                    contact.instantMessageAddresses.append(im)
+                }
+            }
+        }
+    }
+
+    // MARK: - Quick Fix Helpers
+
+    private func performContactMutation(
+        contactId: String,
+        mutation: @escaping (CNMutableContact) throws -> Void
+    ) async -> Bool {
+        guard authorizationStatus == .authorized else { return false }
+
+        return await withCheckedContinuation { continuation in
+            contactsQueue.async { [weak self] in
+                guard let self = self else {
+                    continuation.resume(returning: false)
+                    return
+                }
+
+                do {
+                    let contact = try self.store.unifiedContact(
+                        withIdentifier: contactId,
+                        keysToFetch: self.editableContactKeys
+                    )
+
+                    guard let mutable = contact.mutableCopy() as? CNMutableContact else {
+                        continuation.resume(returning: false)
+                        return
+                    }
+
+                    try mutation(mutable)
+
+                    let saveRequest = CNSaveRequest()
+                    saveRequest.update(mutable)
+                    try self.store.execute(saveRequest)
+                    continuation.resume(returning: true)
+                } catch {
+                    Task { @MainActor in
+                        self.errorMessage = "Failed to update contact: \(error.localizedDescription)"
+                    }
+                    continuation.resume(returning: false)
+                }
+            }
+        }
+    }
+
+    func addPhoneNumber(_ phoneNumber: String, label: String = CNLabelPhoneNumberMobile, to contactId: String) async -> Bool {
+        let success = await performContactMutation(contactId: contactId) { contact in
+            let labeledValue = CNLabeledValue(label: label, value: CNPhoneNumber(stringValue: phoneNumber))
+            contact.phoneNumbers.append(labeledValue)
+        }
+
+        if success {
+            signalDataMutation()
+        }
+        return success
+    }
+
+    func addEmailAddress(_ emailAddress: String, label: String = CNLabelWork, to contactId: String) async -> Bool {
+        let success = await performContactMutation(contactId: contactId) { contact in
+            let labeledValue = CNLabeledValue(label: label, value: emailAddress as NSString)
+            contact.emailAddresses.append(labeledValue)
+        }
+
+        if success {
+            signalDataMutation()
+        }
+        return success
+    }
+
+    func removePhoneNumber(_ phoneNumber: String, from contactId: String) async -> Bool {
+        let success = await performContactMutation(contactId: contactId) { contact in
+            contact.phoneNumbers.removeAll { $0.value.stringValue == phoneNumber }
+        }
+        if success {
+            signalDataMutation()
+        }
+        return success
+    }
+
+    func removeEmailAddress(_ emailAddress: String, from contactId: String) async -> Bool {
+        let success = await performContactMutation(contactId: contactId) { contact in
+            contact.emailAddresses.removeAll { $0.value as String == emailAddress }
+        }
+        if success {
+            signalDataMutation()
+        }
+        return success
+    }
+
+    func updateFullName(_ contactId: String, fullName: String) async -> Bool {
+        let components = parseNameComponents(fullName)
+        let success = await performContactMutation(contactId: contactId) { contact in
+            contact.givenName = components.given
+            contact.familyName = components.family
+        }
+        if success {
+            signalDataMutation()
+        }
+        return success
+    }
+
+    func fetchNameComponents(contactId: String) async -> (given: String, family: String)? {
+        await withCheckedContinuation { continuation in
+            contactsQueue.async { [weak self] in
+                guard let self = self else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                do {
+                    let keys: [CNKeyDescriptor] = [
+                        CNContactGivenNameKey as CNKeyDescriptor,
+                        CNContactFamilyNameKey as CNKeyDescriptor
+                    ]
+                    let contact = try self.store.unifiedContact(withIdentifier: contactId, keysToFetch: keys)
+                    continuation.resume(returning: (contact.givenName, contact.familyName))
+                } catch {
+                    continuation.resume(returning: nil)
+                }
+            }
+        }
+    }
+
+    private func parseNameComponents(_ fullName: String) -> (given: String, family: String) {
+        let trimmed = fullName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return ("", "") }
+        let parts = trimmed.split(separator: " ")
+        if parts.count == 1 {
+            return (String(parts[0]), "")
+        } else {
+            let given = String(parts.first!)
+            let family = parts.dropFirst().joined(separator: " ")
+            return (given, family)
+        }
+    }
+
+    func addContacts(_ contactIds: [String], toGroupNamed groupName: String) async -> Bool {
+        guard authorizationStatus == .authorized else { return false }
+        guard !contactIds.isEmpty else { return true }
+
+        let result = await withCheckedContinuation { continuation in
+            contactsQueue.async { [weak self] in
+                guard let self = self else {
+                    continuation.resume(returning: false)
+                    return
+                }
+
+                do {
+                    let group = try self.ensureGroup(named: groupName)
+                    let predicate = CNContact.predicateForContactsInGroup(withIdentifier: group.identifier)
+                    let existingMembers = try self.store.unifiedContacts(
+                        matching: predicate,
+                        keysToFetch: [CNContactIdentifierKey as CNKeyDescriptor]
+                    )
+                    let memberIds = Set(existingMembers.map { $0.identifier })
+                    let mutableGroup = group.mutableCopy() as! CNMutableGroup
+                    let saveRequest = CNSaveRequest()
+                    var addedMember = false
+
+                    for contactId in contactIds where !memberIds.contains(contactId) {
+                        let contact = try self.store.unifiedContact(
+                            withIdentifier: contactId,
+                            keysToFetch: [CNContactIdentifierKey as CNKeyDescriptor]
+                        )
+                        saveRequest.addMember(contact, to: mutableGroup)
+                        addedMember = true
+                    }
+
+                    if addedMember {
+                        try self.store.execute(saveRequest)
+                    }
+
+                    continuation.resume(returning: true)
+                } catch {
+                    Task { @MainActor in
+                        self.errorMessage = "Failed to update group: \(error.localizedDescription)"
+                    }
+                    continuation.resume(returning: false)
+                }
+            }
+        }
+
+        if result {
+            signalDataMutation()
+        }
+        return result
+    }
+
+    func addContact(_ contactId: String, toGroupNamed groupName: String) async -> Bool {
+        return await addContacts([contactId], toGroupNamed: groupName)
+    }
+
+    func archiveContact(_ contactId: String) async -> Bool {
+        return await addContact(contactId, toGroupNamed: HealthIssueActionCatalog.archiveGroupName)
+    }
+
+    func archiveContacts(_ contactIds: [String]) async -> Bool {
+        return await addContacts(contactIds, toGroupNamed: HealthIssueActionCatalog.archiveGroupName)
+    }
+
+    func removeContact(_ contactId: String, fromGroupNamed groupName: String) async -> Bool {
+        guard authorizationStatus == .authorized else { return false }
+
+        return await withCheckedContinuation { continuation in
+            contactsQueue.async { [weak self] in
+                guard let self = self else {
+                    continuation.resume(returning: false)
+                    return
+                }
+
+                do {
+                    guard let group = try self.group(named: groupName) else {
+                        continuation.resume(returning: false)
+                        return
+                    }
+
+                    let contact = try self.store.unifiedContact(
+                        withIdentifier: contactId,
+                        keysToFetch: [CNContactIdentifierKey as CNKeyDescriptor]
+                    )
+
+                    let mutableGroup = group.mutableCopy() as! CNMutableGroup
+                    let saveRequest = CNSaveRequest()
+                    saveRequest.removeMember(contact, from: mutableGroup)
+                    try self.store.execute(saveRequest)
+                    continuation.resume(returning: true)
+                } catch {
+                    Task { @MainActor in
+                        self.errorMessage = "Failed to remove contact from group: \(error.localizedDescription)"
+                    }
+                    continuation.resume(returning: false)
+                }
+            }
+        }
+    }
+
+    private func ensureGroup(named groupName: String) throws -> CNGroup {
+        let existingGroups = try store.groups(matching: nil)
+        if let group = existingGroups.first(where: { $0.name == groupName }) {
+            return group
+        }
+
+        let newGroup = CNMutableGroup()
+        newGroup.name = groupName
+        let saveRequest = CNSaveRequest()
+        saveRequest.add(newGroup, toContainerWithIdentifier: nil)
+        try store.execute(saveRequest)
+
+        let refreshedGroups = try store.groups(matching: nil)
+        guard let created = refreshedGroups.first(where: { $0.name == groupName }) else {
+            throw NSError(domain: "ContactsManager", code: -2, userInfo: [NSLocalizedDescriptionKey: "Failed to create group \(groupName)"])
+        }
+        return created
+    }
+
+    private func group(named groupName: String) throws -> CNGroup? {
+        let existingGroups = try store.groups(matching: nil)
+        return existingGroups.first(where: { $0.name == groupName })
     }
 
     func createGroup(name: String, contactIds: [String]) async -> Bool {
@@ -667,6 +1025,51 @@ class ContactsManager: ObservableObject {
 
     // MARK: - Backup
 
+    func createSafetySnapshot(tag: String) async -> URL? {
+        guard authorizationStatus == .authorized else { return nil }
+
+        return await withCheckedContinuation { continuation in
+            contactsQueue.async { [weak self] in
+                guard let self = self else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+
+                do {
+                    let keysToFetch: [CNKeyDescriptor] = [
+                        CNContactVCardSerialization.descriptorForRequiredKeys()
+                    ]
+
+                    let request = CNContactFetchRequest(keysToFetch: keysToFetch)
+                    var allContacts: [CNContact] = []
+
+                    try self.store.enumerateContacts(with: request) { contact, _ in
+                        allContacts.append(contact)
+                    }
+
+                    let vCardData = try CNContactVCardSerialization.data(with: allContacts)
+
+                    let appSupportURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+                    let snapshotsFolder = appSupportURL.appendingPathComponent("com.playablefuture.contactsorganizer/Snapshots", isDirectory: true)
+                    try FileManager.default.createDirectory(at: snapshotsFolder, withIntermediateDirectories: true)
+
+                    let dateFormatter = DateFormatter()
+                    dateFormatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
+                    let timestamp = dateFormatter.string(from: Date())
+                    let sanitizedTag = sanitizeFilenameComponent(tag)
+                    let filename = "\(sanitizedTag)_\(timestamp).vcf"
+                    let fileURL = snapshotsFolder.appendingPathComponent(filename)
+
+                    try vCardData.write(to: fileURL)
+                    continuation.resume(returning: fileURL)
+                } catch {
+                    print("❌ Snapshot error: \(error)")
+                    continuation.resume(returning: nil)
+                }
+            }
+        }
+    }
+
     func createBackup(saveToURL: URL? = nil) async -> (userBackup: URL?, appBackup: URL?) {
         guard authorizationStatus == .authorized else {
             await MainActor.run {
@@ -749,6 +1152,14 @@ class ContactsManager: ObservableObject {
             }
             return (nil, nil)
         }
+    }
+
+    private func sanitizeFilenameComponent(_ value: String) -> String {
+        let invalidCharacters = CharacterSet(charactersIn: "/\\?%*|\"<>:")
+        return value
+            .components(separatedBy: invalidCharacters)
+            .joined(separator: "_")
+            .replacingOccurrences(of: " ", with: "_")
     }
 
     // MARK: - Smart Groups
@@ -1359,5 +1770,120 @@ class ContactsManager: ObservableObject {
 
     func resetError() {
         errorMessage = nil
+    }
+}
+
+// MARK: - Undo Manager
+
+@MainActor
+final class ContactsUndoManager: ObservableObject {
+    struct OperationRecord: Identifiable {
+        let id = UUID()
+        let description: String
+        let undoAction: () async -> Bool
+        let redoAction: () async -> Bool
+    }
+
+    @Published private(set) var undoStack: [OperationRecord] = []
+    @Published private(set) var redoStack: [OperationRecord] = []
+    @Published private(set) var isPerforming = false
+
+    var canUndo: Bool { !undoStack.isEmpty && !isPerforming }
+    var canRedo: Bool { !redoStack.isEmpty && !isPerforming }
+    var undoDescription: String? { undoStack.last?.description }
+    var redoDescription: String? { redoStack.last?.description }
+
+    func register(description: String, undo: @escaping () async -> Bool, redo: @escaping () async -> Bool) {
+        let record = OperationRecord(description: description, undoAction: undo, redoAction: redo)
+        undoStack.append(record)
+        redoStack.removeAll()
+    }
+
+    func undo() {
+        guard !isPerforming, let record = undoStack.popLast() else { return }
+        isPerforming = true
+        Task {
+            let success = await record.undoAction()
+            await MainActor.run {
+                if success {
+                    redoStack.append(record)
+                } else {
+                    undoStack.append(record)
+                }
+                isPerforming = false
+            }
+        }
+    }
+
+    func redo() {
+        guard !isPerforming, let record = redoStack.popLast() else { return }
+        isPerforming = true
+        Task {
+            let success = await record.redoAction()
+            await MainActor.run {
+                if success {
+                    undoStack.append(record)
+                } else {
+                    redoStack.append(record)
+                }
+                isPerforming = false
+            }
+        }
+    }
+
+    /// Blocks until the current undo/redo operation completes.
+    func waitForIdle() async {
+        while isPerforming {
+            await Task.yield()
+        }
+    }
+}
+
+enum UndoEffect {
+    case addedPhone(contactId: String, value: String)
+    case addedEmail(contactId: String, value: String)
+    case addedToGroup(contactId: String, groupName: String)
+    case archivedContact(contactId: String)
+    case updatedName(contactId: String, previousGiven: String, previousFamily: String, newValue: String)
+}
+
+extension ContactsUndoManager {
+    func register(effect: UndoEffect, actionTitle: String, contactsManager: ContactActionPerforming) {
+        switch effect {
+        case .addedPhone(let contactId, let value):
+            register(description: "Undo \(actionTitle)") {
+                await contactsManager.removePhoneNumber(value, from: contactId)
+            } redo: {
+                await contactsManager.addPhoneNumber(value, label: CNLabelPhoneNumberMobile, to: contactId)
+            }
+
+        case .addedEmail(let contactId, let value):
+            register(description: "Undo \(actionTitle)") {
+                await contactsManager.removeEmailAddress(value, from: contactId)
+            } redo: {
+                await contactsManager.addEmailAddress(value, label: CNLabelWork, to: contactId)
+            }
+
+        case .addedToGroup(let contactId, let groupName):
+            register(description: "Undo \(actionTitle)") {
+                await contactsManager.removeContact(contactId, fromGroupNamed: groupName)
+            } redo: {
+                await contactsManager.addContact(contactId, toGroupNamed: groupName)
+            }
+
+        case .archivedContact(let contactId):
+            register(description: "Undo \(actionTitle)") {
+                await contactsManager.removeContact(contactId, fromGroupNamed: HealthIssueActionCatalog.archiveGroupName)
+            } redo: {
+                await contactsManager.archiveContact(contactId)
+            }
+
+        case .updatedName(let contactId, let previousGiven, let previousFamily, let newValue):
+            register(description: "Undo \(actionTitle)") {
+                await contactsManager.updateFullName(contactId, fullName: "\(previousGiven) \(previousFamily)".trimmingCharacters(in: .whitespaces))
+            } redo: {
+                await contactsManager.updateFullName(contactId, fullName: newValue)
+            }
+        }
     }
 }

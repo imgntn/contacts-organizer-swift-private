@@ -67,15 +67,15 @@ struct DuplicateGroupCard: View {
 
                     HStack(spacing: 12) {
                         Label("\(group.contacts.count) contacts", systemImage: "person.2.fill")
-                            .responsiveFont(11)
+                            .platformCaptionFont()
                             .foregroundColor(.secondary)
 
                         Label(matchTypeLabel, systemImage: matchTypeIcon)
-                            .responsiveFont(11)
+                            .platformCaptionFont()
                             .foregroundColor(confidenceColor)
 
                         Text(String(format: "%.0f%% match", group.confidence * 100))
-                            .responsiveFont(11)
+                            .platformCaptionFont()
                             .foregroundColor(confidenceColor)
                     }
                 }
@@ -197,11 +197,11 @@ struct ContactRowView: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text(contact.fullName)
-                        .responsiveFont(12, weight: .semibold)
+                        .platformBodyFont(weight: .semibold)
 
                     if isPrimary {
                         Text("Primary")
-                            .responsiveFont(10)
+                            .platformMiniCaptionFont(weight: .semibold)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(Color.blue.opacity(0.2))
@@ -212,20 +212,20 @@ struct ContactRowView: View {
 
                 if let org = contact.organization {
                     Text(org)
-                        .responsiveFont(11)
+                        .platformCaptionFont()
                         .foregroundColor(.secondary)
                 }
 
                 HStack(spacing: 16) {
                     if !contact.phoneNumbers.isEmpty {
                         Label(contact.phoneNumbers[0], systemImage: "phone.fill")
-                            .responsiveFont(11)
+                            .platformCaptionFont()
                             .foregroundColor(.secondary)
                     }
 
                     if !contact.emailAddresses.isEmpty {
                         Label(contact.emailAddresses[0], systemImage: "envelope.fill")
-                            .responsiveFont(11)
+                            .platformCaptionFont()
                             .foregroundColor(.secondary)
                     }
                 }
@@ -245,76 +245,39 @@ struct MergeContactsSheet: View {
     let group: DuplicateGroup
 
     @State private var selectedPrimaryId: String
+    @State private var mergePlan: MergePlan
     @State private var isMerging = false
     @State private var showError = false
     @State private var errorMessage = ""
+    @State private var shouldCreateSnapshot = true
 
     init(group: DuplicateGroup) {
         self.group = group
-        // Default to the primary contact from the group
         _selectedPrimaryId = State(initialValue: group.primaryContact.id)
+        _mergePlan = State(initialValue: MergePlan.initial(for: group))
     }
 
     var body: some View {
         VStack(spacing: 24) {
-            // Header
-            VStack(spacing: 8) {
-                HStack {
-                    Image(systemName: "arrow.triangle.merge")
-                        .font(.title2)
-                        .foregroundColor(.blue)
-
-                    Text("Merge Duplicate Contacts")
-                        .font(.title.bold())
-                }
-
-                Text("Select which contact to keep as the primary. All data will be merged into this contact, and duplicates will be deleted.")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: 500)
-            }
-
+            header
             Divider()
-
-            // Contact selection
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Select Primary Contact")
-                    .font(.headline)
-
-                ScrollView {
-                    VStack(spacing: 12) {
-                        ForEach(group.contacts) { contact in
-                            MergeContactSelectionRow(
-                                contact: contact,
-                                isSelected: selectedPrimaryId == contact.id,
-                                onSelect: { selectedPrimaryId = contact.id }
-                            )
-                        }
-                    }
-                }
-                .frame(height: 300)
-            }
-
-            // Info box
-            HStack(spacing: 12) {
-                Image(systemName: "info.circle.fill")
-                    .foregroundColor(.blue)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("What happens during merge:")
-                        .font(.subheadline.bold())
-
-                    Text("• All phone numbers, emails, and addresses will be combined\n• Organization info and notes will be preserved\n• The other \(group.contacts.count - 1) contact(s) will be deleted\n• This action cannot be undone")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-
-                Spacer()
-            }
-            .padding()
-            .background(Color.blue.opacity(0.1))
-            .cornerRadius(8)
+            primarySelectionSection
+            conflictResolutionSection
+            valueSelectionSection(
+                title: "Phone Numbers",
+                icon: "phone.fill",
+                options: phoneOptions,
+                keyPath: \.selectedPhoneNumbers,
+                emptyStateDescription: "No phone numbers found across this group"
+            )
+            valueSelectionSection(
+                title: "Email Addresses",
+                icon: "envelope.fill",
+                options: emailOptions,
+                keyPath: \.selectedEmailAddresses,
+                emptyStateDescription: "No email addresses available to merge"
+            )
+            snapshotSection
 
             if showError {
                 Text(errorMessage)
@@ -322,47 +285,225 @@ struct MergeContactsSheet: View {
                     .foregroundColor(.red)
             }
 
-            // Buttons
-            HStack(spacing: 12) {
-                Button("Cancel") {
-                    dismiss()
-                }
-                .buttonStyle(.bordered)
-                .keyboardShortcut(.cancelAction)
-
-                Button(action: performMerge) {
-                    HStack {
-                        if isMerging {
-                            ProgressView()
-                                .scaleEffect(0.7)
-                                .frame(width: 16, height: 16)
-                        }
-                        Text(isMerging ? "Merging..." : "Merge Contacts")
-                    }
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(isMerging)
-                .keyboardShortcut(.defaultAction)
-            }
+            actionButtons
         }
         .padding(32)
-        .frame(width: 700, height: 650)
+        .frame(width: 780, height: 760)
+        .onChange(of: selectedPrimaryId) { oldValue, newValue in
+            updatePlanForPrimaryChange(from: oldValue, to: newValue)
+        }
+    }
+
+    private var header: some View {
+        VStack(spacing: 8) {
+            HStack {
+                Image(systemName: "arrow.triangle.merge")
+                    .font(.title2)
+                    .foregroundColor(.blue)
+
+                Text("Merge Duplicate Contacts")
+                    .font(.title.bold())
+            }
+
+            Text("Choose what stays, what gets archived, and how conflicting fields should be resolved before completing the merge.")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 560)
+        }
+    }
+
+    private var primarySelectionSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Select Primary Contact")
+                .font(.headline)
+
+            ScrollView {
+                VStack(spacing: 12) {
+                    ForEach(group.contacts) { contact in
+                        MergeContactSelectionRow(
+                            contact: contact,
+                            isSelected: selectedPrimaryId == contact.id,
+                            onSelect: { selectedPrimaryId = contact.id }
+                        )
+                    }
+                }
+            }
+            .frame(height: 240)
+        }
+    }
+
+    private var conflictResolutionSection: some View {
+        GroupBox("Resolve Conflicts") {
+            VStack(alignment: .leading, spacing: 12) {
+                Picker("Display Name", selection: $mergePlan.preferredNameContactId) {
+                    ForEach(group.contacts, id: \.id) { contact in
+                        Text(contact.fullName)
+                            .tag(contact.id)
+                    }
+                }
+
+                Picker("Company & Title", selection: bindingForOrganization()) {
+                    ForEach(group.contacts, id: \.id) { contact in
+                        Text(contact.organization ?? "Use \(contact.fullName)'s info")
+                            .tag(contact.id)
+                    }
+                }
+
+                let photoCapableContacts = group.contacts.filter { $0.hasProfileImage }
+                if !photoCapableContacts.isEmpty {
+                    Picker("Profile Photo", selection: bindingForPhoto()) {
+                        Text("Keep current photo")
+                            .tag(String?.none)
+                        ForEach(photoCapableContacts, id: \.id) { contact in
+                            Text(contact.fullName)
+                                .tag(String?.some(contact.id))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func valueSelectionSection(
+        title: String,
+        icon: String,
+        options: [MergeValueOption],
+        keyPath: WritableKeyPath<MergePlan, Set<String>>,
+        emptyStateDescription: String
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label(title, systemImage: icon)
+                .font(.headline)
+
+            if options.isEmpty {
+                Text(emptyStateDescription)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(12)
+                    .background(Color.secondary.opacity(0.1))
+                    .cornerRadius(8)
+            } else {
+                ForEach(options) { option in
+                    Toggle(isOn: binding(for: option.value, keyPath: keyPath)) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(option.displayValue)
+                                .font(.body)
+                            Text(option.ownersDescription)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .toggleStyle(.switch)
+                }
+            }
+        }
+    }
+
+    private var snapshotSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Toggle(isOn: $shouldCreateSnapshot) {
+                Label("Create safety snapshot before merging", systemImage: "externaldrive.fill.badge.timemachine")
+            }
+            .toggleStyle(.switch)
+
+            Text("Snapshots are stored inside the app's Library folder so you can roll back a merge if needed.")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+    }
+
+    private var actionButtons: some View {
+        HStack(spacing: 12) {
+            Button("Cancel") {
+                dismiss()
+            }
+            .buttonStyle(.bordered)
+            .keyboardShortcut(.cancelAction)
+
+            Button(action: performMerge) {
+                HStack {
+                    if isMerging {
+                        ProgressView()
+                            .scaleEffect(0.7)
+                            .frame(width: 16, height: 16)
+                    }
+                    Text(isMerging ? "Working..." : "Merge Contacts")
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(isMerging)
+            .keyboardShortcut(.defaultAction)
+        }
+    }
+
+    private var phoneOptions: [MergeValueOption] {
+        MergePlanBuilder.uniqueValues(for: group.contacts, keyPath: \.phoneNumbers)
+    }
+
+    private var emailOptions: [MergeValueOption] {
+        MergePlanBuilder.uniqueValues(for: group.contacts, keyPath: \.emailAddresses)
+    }
+
+    private func binding(for value: String, keyPath: WritableKeyPath<MergePlan, Set<String>>) -> Binding<Bool> {
+        Binding(
+            get: { mergePlan[keyPath: keyPath].contains(value) },
+            set: { include in
+                if include {
+                    mergePlan[keyPath: keyPath].insert(value)
+                } else {
+                    mergePlan[keyPath: keyPath].remove(value)
+                }
+            }
+        )
+    }
+
+    private func bindingForOrganization() -> Binding<String> {
+        Binding(
+            get: { mergePlan.preferredOrganizationContactId ?? selectedPrimaryId },
+            set: { mergePlan.preferredOrganizationContactId = $0 }
+        )
+    }
+
+    private func bindingForPhoto() -> Binding<String?> {
+        Binding(
+            get: { mergePlan.preferredPhotoContactId },
+            set: { mergePlan.preferredPhotoContactId = $0 }
+        )
+    }
+
+    private func updatePlanForPrimaryChange(from oldValue: String?, to newValue: String) {
+        if mergePlan.preferredNameContactId == oldValue {
+            mergePlan.preferredNameContactId = newValue
+        }
+        if mergePlan.preferredOrganizationContactId == oldValue {
+            mergePlan.preferredOrganizationContactId = newValue
+        }
+        if mergePlan.preferredPhotoContactId == oldValue {
+            mergePlan.preferredPhotoContactId = newValue
+        }
     }
 
     private func performMerge() {
         isMerging = true
         showError = false
 
-        // Get source IDs (all contacts except the selected primary)
-        let sourceIds = group.contacts
-            .filter { $0.id != selectedPrimaryId }
-            .map { $0.id }
+        let configuration = MergeConfiguration(
+            primaryContactId: selectedPrimaryId,
+            mergingContactIds: group.contacts.map { $0.id },
+            preferredNameSourceId: mergePlan.preferredNameContactId,
+            preferredOrganizationSourceId: mergePlan.preferredOrganizationContactId,
+            preferredPhotoSourceId: mergePlan.preferredPhotoContactId,
+            includedPhoneNumbers: mergePlan.selectedPhoneNumbers,
+            includedEmailAddresses: mergePlan.selectedEmailAddresses
+        )
 
         Task {
-            let success = await contactsManager.mergeContacts(
-                sourceIds: sourceIds,
-                destinationId: selectedPrimaryId
-            )
+            if shouldCreateSnapshot {
+                _ = await contactsManager.createSafetySnapshot(tag: "merge_\(group.primaryContact.fullName)")
+            }
+
+            let success = await contactsManager.mergeContacts(using: configuration)
 
             await MainActor.run {
                 isMerging = false
@@ -487,6 +628,8 @@ struct EmptyStateView: View {
     }
 }
 
+#if !DISABLE_PREVIEWS
 #Preview {
     DuplicatesView(duplicateGroups: [])
 }
+#endif

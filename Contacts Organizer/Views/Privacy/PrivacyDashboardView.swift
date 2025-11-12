@@ -377,8 +377,10 @@ struct FooterSection: View {
 
 // MARK: - Preview
 
+#if !DISABLE_PREVIEWS
 #Preview {
     PrivacyDashboardView()
         .environmentObject(PrivacyMonitorService.shared)
         .frame(width: 500, height: 700)
 }
+#endif

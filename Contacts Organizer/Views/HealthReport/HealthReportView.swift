@@ -6,15 +6,30 @@
 //
 
 import SwiftUI
+import Contacts
 
 struct HealthReportView: View {
+    @EnvironmentObject var contactsManager: ContactsManager
     let issues: [DataQualityIssue]
+    @State private var workingIssues: [DataQualityIssue]
     @State private var selectedSeverity: DataQualityIssue.Severity?
     @State private var selectedIssueType: DataQualityIssue.IssueType?
     @State private var excludeMissingEmail = false
+    @State private var isSelectionMode = false
+    @State private var selectedIssueIDs: Set<UUID> = []
+    @State private var pendingQuickAction: PendingQuickAction?
+    @State private var quickActionInput: String = ""
+    @State private var statusMessage: StatusMessage?
+    @State private var isPerformingBulkAction = false
+    @EnvironmentObject var undoManager: ContactsUndoManager
+
+    init(issues: [DataQualityIssue]) {
+        self.issues = issues
+        _workingIssues = State(initialValue: issues)
+    }
 
     private var filteredIssues: [DataQualityIssue] {
-        issues.filter { issue in
+        workingIssues.filter { issue in
             let severityMatch = selectedSeverity == nil || issue.severity == selectedSeverity
             let typeMatch = selectedIssueType == nil || issue.issueType == selectedIssueType
             let emailExclude = !excludeMissingEmail || issue.issueType != .missingEmail
@@ -23,12 +38,12 @@ struct HealthReportView: View {
     }
 
     private var summary: DataQualitySummary {
-        DataQualityAnalyzer.shared.generateSummary(issues: issues)
+        DataQualityAnalyzer.shared.generateSummary(issues: workingIssues)
     }
 
     var body: some View {
         Group {
-            if issues.isEmpty {
+            if workingIssues.isEmpty {
                 EmptyStateView(
                     icon: "checkmark.seal.fill",
                     title: "Excellent Data Quality",
@@ -44,7 +59,7 @@ struct HealthReportView: View {
                                 Text("Data Quality")
                                     .responsiveFont(42, weight: .bold)
 
-                                Text("\(issues.count) issues found")
+                                Text("\(workingIssues.count) issues found")
                                     .font(.title2)
                                     .foregroundColor(.secondary)
                             }
@@ -105,12 +120,14 @@ struct HealthReportView: View {
                             }
                         }
 
+                        selectionControls
+
                         // Issue type filters
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 12) {
                                 FilterChip(
                                     title: "All Issues",
-                                    count: issues.count,
+                                    count: workingIssues.count,
                                     isSelected: selectedIssueType == nil
                                 ) {
                                     selectedIssueType = nil
@@ -174,13 +191,47 @@ struct HealthReportView: View {
                         // Issues list
                         LazyVStack(spacing: 12) {
                             ForEach(filteredIssues) { issue in
-                                IssueRowView(issue: issue)
+                                IssueRowView(
+                                    issue: issue,
+                                    actions: HealthIssueActionCatalog.actions(for: issue),
+                                    selectionMode: isSelectionMode,
+                                    isSelected: selectedIssueIDs.contains(issue.id),
+                                    toggleSelection: { toggleSelection(for: issue) },
+                                    onAction: { handleQuickAction($0, for: issue) }
+                                )
                             }
                         }
                     }
                     .padding(24)
                 }
             }
+        }
+        .sheet(item: $pendingQuickAction) { pending in
+            QuickActionInputSheet(
+                action: pending.action,
+                issue: pending.issue,
+                inputText: $quickActionInput,
+                onSubmit: { value in
+                    Task {
+                        await executeQuickAction(pending.action, for: pending.issue, inputValue: value)
+                    }
+                },
+                onCancel: {
+                    pendingQuickAction = nil
+                    quickActionInput = ""
+                }
+            )
+        }
+        .alert(item: $statusMessage) { status in
+            Alert(
+                title: Text(status.isError ? "Action Failed" : "Action Complete"),
+                message: Text(status.message),
+                dismissButton: .default(Text("OK"))
+            )
+        }
+        .onChange(of: issues) { _, newIssues in
+            workingIssues = newIssues
+            selectedIssueIDs.removeAll()
         }
     }
 
@@ -207,6 +258,192 @@ struct HealthReportView: View {
             selectedIssueType = nil
         } else {
             selectedIssueType = type
+        }
+    }
+
+    private var selectionControls: some View {
+        HStack(spacing: 12) {
+            Button(isSelectionMode ? "Done Selecting" : "Select Issues") {
+                withAnimation {
+                    isSelectionMode.toggle()
+                    if !isSelectionMode {
+                        selectedIssueIDs.removeAll()
+                    }
+                }
+            }
+            .buttonStyle(.bordered)
+
+            if isSelectionMode {
+                Menu {
+                    Button("Add to Follow-Up Group") {
+                        performBulkAction(.followUp)
+                    }
+                    Button("Archive Contacts") {
+                        performBulkAction(.archive)
+                    }
+                    Button("Mark Resolved") {
+                        performBulkAction(.markResolved)
+                    }
+                } label: {
+                    Label("Bulk Actions", systemImage: "tray.full.fill")
+                }
+                .disabled(selectedIssueIDs.isEmpty || isPerformingBulkAction)
+
+                if isPerformingBulkAction {
+                    ProgressView()
+                        .scaleEffect(0.7)
+                }
+            }
+
+            Spacer()
+        }
+    }
+
+    private func toggleSelection(for issue: DataQualityIssue) {
+        if selectedIssueIDs.contains(issue.id) {
+            selectedIssueIDs.remove(issue.id)
+        } else {
+            selectedIssueIDs.insert(issue.id)
+        }
+    }
+
+    private func handleQuickAction(_ action: HealthIssueAction, for issue: DataQualityIssue) {
+        if action.requiresInput {
+            quickActionInput = ""
+            pendingQuickAction = PendingQuickAction(issue: issue, action: action)
+        } else {
+            Task {
+                await executeQuickAction(action, for: issue, inputValue: nil)
+            }
+        }
+    }
+
+    private func executeQuickAction(
+        _ action: HealthIssueAction,
+        for issue: DataQualityIssue,
+        inputValue: String?
+    ) async {
+        let trimmedInput = inputValue?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        var success = false
+
+        if action.requiresInput && trimmedInput.isEmpty {
+            statusMessage = StatusMessage(isError: true, message: "Value cannot be empty")
+            return
+        }
+
+        let executor = HealthIssueActionExecutor(performer: contactsManager)
+        let result = await executor.execute(action, for: issue, inputValue: trimmedInput)
+        success = result.success
+
+        await MainActor.run {
+            pendingQuickAction = nil
+            quickActionInput = ""
+            if success {
+                removeIssue(issue)
+                if let effect = result.effect {
+                    undoManager.register(effect: effect, actionTitle: action.title, contactsManager: contactsManager)
+                }
+                statusMessage = StatusMessage(isError: false, message: "Updated \(issue.contactName)")
+            } else {
+                statusMessage = StatusMessage(isError: true, message: "Couldn't update \(issue.contactName)")
+            }
+        }
+    }
+
+    private func performBulkAction(_ action: BulkAction) {
+        let targets = workingIssues.filter { selectedIssueIDs.contains($0.id) }
+        guard !targets.isEmpty else { return }
+
+        isPerformingBulkAction = true
+        Task {
+            let executor = HealthIssueActionExecutor(performer: contactsManager)
+            var successCount = 0
+            var effects: [UndoEffect] = []
+            for issue in targets {
+                let actionDefinition: HealthIssueAction
+                switch action {
+                case .followUp:
+                    actionDefinition = HealthIssueAction(
+                        title: "Add to Follow-Up",
+                        icon: "folder.badge.plus",
+                        type: .addToGroup(name: HealthIssueActionCatalog.generalFollowUpGroupName),
+                        inputPrompt: nil,
+                        inputPlaceholder: nil
+                    )
+                case .archive:
+                    actionDefinition = HealthIssueAction(
+                        title: "Archive",
+                        icon: "archivebox",
+                        type: .archive,
+                        inputPrompt: nil,
+                        inputPlaceholder: nil
+                    )
+                case .markResolved:
+                    actionDefinition = HealthIssueActionCatalog.markReviewedAction
+                }
+
+                let result = await executor.execute(actionDefinition, for: issue, inputValue: nil)
+                if result.success {
+                    successCount += 1
+                    if let effect = result.effect {
+                        effects.append(effect)
+                    }
+                    await MainActor.run { removeIssue(issue) }
+                }
+            }
+
+            await MainActor.run {
+                isPerformingBulkAction = false
+                if successCount > 0 {
+                    effects.forEach { undoManager.register(effect: $0, actionTitle: action.bulkTitle, contactsManager: contactsManager) }
+                    let message: String
+                    switch action {
+                    case .archive:
+                        message = "Archived \(successCount) contacts"
+                    case .markResolved:
+                        message = "Marked \(successCount) issues as reviewed"
+                    case .followUp:
+                        message = "Updated \(successCount) contacts"
+                    }
+                    statusMessage = StatusMessage(
+                        isError: false,
+                        message: message
+                    )
+                } else {
+                    statusMessage = StatusMessage(isError: true, message: "Bulk action failed")
+                }
+            }
+        }
+    }
+
+    private func removeIssue(_ issue: DataQualityIssue) {
+        workingIssues.removeAll { $0.id == issue.id }
+        selectedIssueIDs.remove(issue.id)
+    }
+
+    private struct PendingQuickAction: Identifiable {
+        let issue: DataQualityIssue
+        let action: HealthIssueAction
+        var id: UUID { issue.id }
+    }
+
+    private struct StatusMessage: Identifiable {
+        let id = UUID()
+        let isError: Bool
+        let message: String
+    }
+
+    private enum BulkAction {
+        case followUp
+        case archive
+        case markResolved
+
+        var bulkTitle: String {
+            switch self {
+            case .followUp: return "Add to Follow-Up"
+            case .archive: return "Archive"
+            case .markResolved: return "Mark Reviewed"
+            }
         }
     }
 }
@@ -305,15 +542,26 @@ struct FilterChip: View {
 
 struct IssueRowView: View {
     let issue: DataQualityIssue
+    let actions: [HealthIssueAction]
+    let selectionMode: Bool
+    let isSelected: Bool
+    let toggleSelection: () -> Void
+    let onAction: (HealthIssueAction) -> Void
 
     var body: some View {
         HStack(spacing: 16) {
-            // Severity indicator
+            if selectionMode {
+                Button(action: toggleSelection) {
+                    Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                        .foregroundColor(isSelected ? .accentColor : .secondary)
+                }
+                .buttonStyle(.plain)
+            }
+
             Image(systemName: severityIcon)
                 .foregroundColor(severityColor)
                 .frame(width: 24)
 
-            // Issue details
             VStack(alignment: .leading, spacing: 4) {
                 Text(issue.contactName)
                     .font(.headline)
@@ -326,12 +574,22 @@ struct IssueRowView: View {
 
             Spacer()
 
-            // Action button
-            Button("View Contact") {
-                openContactInContactsApp(contactId: issue.contactId)
+            Menu {
+                ForEach(actions) { action in
+                    Button(action.title) {
+                        onAction(action)
+                    }
+                    .labelStyle(.titleOnly)
+                }
+
+                Divider()
+
+                Button("View in Contacts") {
+                    openContactInContactsApp(contactId: issue.contactId)
+                }
+            } label: {
+                Label("Quick Actions", systemImage: "bolt.fill")
             }
-            .buttonStyle(.bordered)
-            .controlSize(.small)
         }
         .padding()
         .background(Color.secondary.opacity(0.05))
@@ -364,6 +622,109 @@ struct IssueRowView: View {
     }
 }
 
+struct QuickActionInputSheet: View {
+    let action: HealthIssueAction
+    let issue: DataQualityIssue
+    @Binding var inputText: String
+    let onSubmit: (String) -> Void
+    let onCancel: () -> Void
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text(action.title)
+                .font(.title3.bold())
+            Text("for \(issue.contactName)")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+
+            Text(action.inputPrompt ?? "Provide the missing information to update this contact from the dashboard.")
+                .font(.body)
+                .multilineTextAlignment(.center)
+
+            TextField(action.inputPlaceholder ?? "Value", text: $inputText)
+                .textFieldStyle(.roundedBorder)
+                .frame(maxWidth: 360)
+
+            HStack {
+                Button("Cancel") {
+                    onCancel()
+                }
+                .buttonStyle(.bordered)
+
+                Button("Apply") {
+                    onSubmit(inputText)
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+        }
+        .padding(32)
+        .frame(width: 420)
+    }
+}
+
+// MARK: - Quick Action Executor
+
+protocol ContactActionPerforming: AnyObject {
+    func addPhoneNumber(_ phoneNumber: String, label: String, to contactId: String) async -> Bool
+    func addEmailAddress(_ emailAddress: String, label: String, to contactId: String) async -> Bool
+    func addContact(_ contactId: String, toGroupNamed groupName: String) async -> Bool
+    func archiveContact(_ contactId: String) async -> Bool
+    func removePhoneNumber(_ phoneNumber: String, from contactId: String) async -> Bool
+    func removeEmailAddress(_ emailAddress: String, from contactId: String) async -> Bool
+    func removeContact(_ contactId: String, fromGroupNamed groupName: String) async -> Bool
+    func updateFullName(_ contactId: String, fullName: String) async -> Bool
+    func fetchNameComponents(contactId: String) async -> (given: String, family: String)?
+}
+
+extension ContactsManager: ContactActionPerforming {}
+
+struct HealthIssueActionExecutor {
+    let performer: ContactActionPerforming
+
+    func execute(_ action: HealthIssueAction, for issue: DataQualityIssue, inputValue: String?) async -> HealthActionResult {
+        switch action.type {
+        case .addPhone:
+            guard let value = sanitizedInput(inputValue) else { return HealthActionResult(success: false, effect: nil) }
+            let success = await performer.addPhoneNumber(value, label: CNLabelPhoneNumberMobile, to: issue.contactId)
+            return HealthActionResult(success: success, effect: success ? .addedPhone(contactId: issue.contactId, value: value) : nil)
+
+        case .addEmail:
+            guard let value = sanitizedInput(inputValue) else { return HealthActionResult(success: false, effect: nil) }
+            let success = await performer.addEmailAddress(value, label: CNLabelWork, to: issue.contactId)
+            return HealthActionResult(success: success, effect: success ? .addedEmail(contactId: issue.contactId, value: value) : nil)
+
+        case .addToGroup(let name):
+            let success = await performer.addContact(issue.contactId, toGroupNamed: name)
+            return HealthActionResult(success: success, effect: success ? .addedToGroup(contactId: issue.contactId, groupName: name) : nil)
+
+        case .archive:
+            let success = await performer.archiveContact(issue.contactId)
+            return HealthActionResult(success: success, effect: success ? .archivedContact(contactId: issue.contactId) : nil)
+
+        case .updateName:
+            guard let value = sanitizedInput(inputValue), let previous = await performer.fetchNameComponents(contactId: issue.contactId) else {
+                return HealthActionResult(success: false, effect: nil)
+            }
+            let success = await performer.updateFullName(issue.contactId, fullName: value)
+            return HealthActionResult(success: success, effect: success ? .updatedName(contactId: issue.contactId, previousGiven: previous.given, previousFamily: previous.family, newValue: value) : nil)
+
+        }
+    }
+
+    private func sanitizedInput(_ input: String?) -> String? {
+        guard let trimmed = input?.trimmingCharacters(in: .whitespacesAndNewlines), !trimmed.isEmpty else {
+            return nil
+        }
+        return trimmed
+    }
+}
+
+struct HealthActionResult {
+    let success: Bool
+    let effect: UndoEffect?
+}
+
 extension DataQualityIssue.Severity: CustomStringConvertible {
     var description: String {
         switch self {
@@ -375,6 +736,10 @@ extension DataQualityIssue.Severity: CustomStringConvertible {
     }
 }
 
+#if !DISABLE_PREVIEWS
 #Preview {
     HealthReportView(issues: [])
+        .environmentObject(ContactsManager.shared)
+        .environmentObject(ContactsUndoManager())
 }
+#endif

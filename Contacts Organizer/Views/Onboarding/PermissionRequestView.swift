@@ -215,9 +215,11 @@ struct PermissionFeatureRow: View {
     }
 }
 
+#if !DISABLE_PREVIEWS
 #Preview {
     PermissionRequestView()
         .environmentObject(AppState())
         .environmentObject(ContactsManager.shared)
         .frame(width: 900, height: 600)
 }
+#endif

@@ -200,3 +200,157 @@ final class DataQualityAnalyzerTests: XCTestCase {
         }
     }
 }
+
+final class MergePlanTests: XCTestCase {
+
+    func testMergePlanCapturesAllValues() {
+        let contactA = ContactSummary(
+            id: "1",
+            fullName: "Alice Example",
+            organization: "Acme",
+            phoneNumbers: ["111-1111"],
+            emailAddresses: ["alice@example.com"],
+            hasProfileImage: false,
+            creationDate: nil,
+            modificationDate: nil
+        )
+
+        let contactB = ContactSummary(
+            id: "2",
+            fullName: "Alice Example",
+            organization: nil,
+            phoneNumbers: ["222-2222"],
+            emailAddresses: ["alice@work.com"],
+            hasProfileImage: true,
+            creationDate: nil,
+            modificationDate: nil
+        )
+
+        let group = DuplicateGroup(contacts: [contactA, contactB], matchType: .exactName, confidence: 0.95)
+        let plan = MergePlan.initial(for: group)
+
+        XCTAssertTrue(plan.selectedPhoneNumbers.contains("111-1111"))
+        XCTAssertTrue(plan.selectedPhoneNumbers.contains("222-2222"))
+        XCTAssertEqual(plan.preferredNameContactId, group.primaryContact.id)
+        XCTAssertEqual(plan.preferredPhotoContactId, contactB.id)
+    }
+
+    func testUniqueValueBuilderDeduplicatesEntries() {
+        let contactA = ContactSummary(
+            id: "1",
+            fullName: "Bob",
+            organization: nil,
+            phoneNumbers: ["111-1111"],
+            emailAddresses: [],
+            hasProfileImage: false,
+            creationDate: nil,
+            modificationDate: nil
+        )
+        let contactB = ContactSummary(
+            id: "2",
+            fullName: "Bob",
+            organization: nil,
+            phoneNumbers: ["111-1111", "333-3333"],
+            emailAddresses: [],
+            hasProfileImage: false,
+            creationDate: nil,
+            modificationDate: nil
+        )
+
+        let options = MergePlanBuilder.uniqueValues(for: [contactA, contactB], keyPath: \.phoneNumbers)
+        XCTAssertEqual(options.count, 2)
+        XCTAssertEqual(options.first(where: { $0.value == "111-1111" })?.owners.count, 2)
+    }
+}
+
+final class HealthIssueActionCatalogTests: XCTestCase {
+
+    func testMissingPhoneActionsIncludeAddPhone() {
+        let issue = DataQualityIssue(contactId: "1", contactName: "Test", issueType: .missingPhone, description: "", severity: .medium)
+        let actions = HealthIssueActionCatalog.actions(for: issue)
+        XCTAssertTrue(actions.contains { action in
+            if case .addPhone = action.type { return true }
+            return false
+        })
+    }
+
+    func testActionsAlwaysIncludeMarkReviewed() {
+        let issue = DataQualityIssue(contactId: "1", contactName: "Test", issueType: .noContactInfo, description: "", severity: .high)
+        let actions = HealthIssueActionCatalog.actions(for: issue)
+        XCTAssertTrue(actions.contains { action in
+            if case .addToGroup(let name) = action.type {
+                return name == HealthIssueActionCatalog.reviewedGroupName
+            }
+            return false
+        })
+    }
+
+    func testMarkReviewedAddsToReviewedGroup() {
+        let issue = DataQualityIssue(contactId: "10", contactName: "Test", issueType: .suggestion, description: "", severity: .suggestion)
+        let actions = HealthIssueActionCatalog.actions(for: issue)
+        guard let markAction = actions.last else {
+            return XCTFail("Expected mark reviewed action")
+        }
+        if case .addToGroup(let name) = markAction.type {
+            XCTAssertEqual(name, HealthIssueActionCatalog.reviewedGroupName)
+        } else {
+            XCTFail("Mark reviewed should add contact to reviewed group")
+        }
+    }
+
+    func testMissingEmailProvidesAddEmailAndGroup() {
+        let issue = DataQualityIssue(contactId: "1", contactName: "Test", issueType: .missingEmail, description: "", severity: .low)
+        let actions = HealthIssueActionCatalog.actions(for: issue)
+
+        XCTAssertTrue(actions.contains { action in
+            if case .addEmail = action.type { return true }
+            return false
+        }, "Missing email should offer an add email action")
+
+        XCTAssertTrue(actions.contains { action in
+            if case .addToGroup(let name) = action.type {
+                return name == HealthIssueActionCatalog.emailFollowUpGroupName
+            }
+            return false
+        }, "Missing email should add to the email follow-up group")
+    }
+
+    func testNoContactInfoIncludesArchiveOption() {
+        let issue = DataQualityIssue(contactId: "2", contactName: "Test", issueType: .noContactInfo, description: "", severity: .high)
+        let actions = HealthIssueActionCatalog.actions(for: issue)
+
+        XCTAssertTrue(actions.contains { action in
+            if case .archive = action.type { return true }
+            return false
+        }, "No contact info should expose the archive option")
+    }
+
+    func testSuggestionOnlyProvidesGeneralFollowUp() {
+        let issue = DataQualityIssue(contactId: "3", contactName: "Test", issueType: .suggestion, description: "", severity: .suggestion)
+        let actions = HealthIssueActionCatalog.actions(for: issue)
+
+        XCTAssertTrue(actions.contains { action in
+            if case .addToGroup(let name) = action.type {
+                return name == HealthIssueActionCatalog.generalFollowUpGroupName
+            }
+            return false
+        })
+    }
+}
+
+final class MergeConfigurationTests: XCTestCase {
+
+    func testSourceContactIdsExcludePrimary() {
+        let configuration = MergeConfiguration(
+            primaryContactId: "primary",
+            mergingContactIds: ["primary", "a", "b"],
+            preferredNameSourceId: nil,
+            preferredOrganizationSourceId: nil,
+            preferredPhotoSourceId: nil,
+            includedPhoneNumbers: nil,
+            includedEmailAddresses: nil
+        )
+
+        XCTAssertEqual(configuration.sourceContactIds.sorted(), ["a", "b"], "Only non-primary IDs should be returned")
+    }
+}

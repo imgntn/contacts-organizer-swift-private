@@ -13,6 +13,7 @@ struct ContactsOrganizerApp: App {
     @StateObject private var contactsManager = ContactsManager.shared
     @StateObject private var appState = AppState()
     @StateObject private var privacyMonitor = PrivacyMonitorService.shared
+    @StateObject private var undoManager = ContactsUndoManager()
 
     @AppStorage("textScalePreference") private var textScalePreference = "normal"
 
@@ -26,6 +27,7 @@ struct ContactsOrganizerApp: App {
                 .environmentObject(contactsManager)
                 .environmentObject(appState)
                 .environmentObject(privacyMonitor)
+                .environmentObject(undoManager)
                 .environment(\.textScale, textScale)
                 .frame(minWidth: 900, minHeight: 600)
         }
@@ -33,6 +35,17 @@ struct ContactsOrganizerApp: App {
         .windowResizability(.contentSize)
         .commands {
             CommandGroup(replacing: .newItem) { }
+            CommandGroup(replacing: .undoRedo) {
+                Button(undoManager.undoDescription.map { "Undo \($0)" } ?? "Undo") {
+                    undoManager.undo()
+                }
+                .disabled(!undoManager.canUndo)
+
+                Button(undoManager.redoDescription.map { "Redo \($0)" } ?? "Redo") {
+                    undoManager.redo()
+                }
+                .disabled(!undoManager.canRedo)
+            }
         }
 
         Settings {
@@ -40,6 +53,7 @@ struct ContactsOrganizerApp: App {
                 .environmentObject(contactsManager)
                 .environmentObject(appState)
                 .environmentObject(privacyMonitor)
+                .environmentObject(undoManager)
                 .environment(\.textScale, textScale)
         }
     }

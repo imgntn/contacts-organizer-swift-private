@@ -192,7 +192,9 @@ struct BackupFeatureRow: View {
     }
 }
 
+#if !DISABLE_PREVIEWS
 #Preview {
     FirstBackupSheet()
         .environmentObject(ContactsManager.shared)
 }
+#endif

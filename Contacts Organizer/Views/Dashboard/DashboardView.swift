@@ -16,6 +16,7 @@ struct DashboardView: View {
     @State private var dataQualityIssues: [DataQualityIssue] = []
     @State private var isAnalyzing = false
     @State private var targetSmartGroupName: String?
+    @State private var refreshMachine = RefreshStateMachine()
     @AppStorage("autoRefresh") private var autoRefresh = true
     @AppStorage("sidebarOrder") private var sidebarOrderStorageRaw: String = ""
 
@@ -199,6 +200,9 @@ struct DashboardView: View {
                 navigationHistory.append(oldValue)
             }
         }
+        .onChange(of: contactsManager.refreshTrigger) { _, trigger in
+            handleRefreshTrigger(trigger)
+        }
         .toolbar {
             ToolbarItem(placement: .navigation) {
                 Button(action: {
@@ -233,7 +237,18 @@ struct DashboardView: View {
         }
     }
 
-    private func loadData() async {
+    private func handleRefreshTrigger(_ trigger: ContactsManager.RefreshTrigger) {
+        guard autoRefresh else { return }
+        if refreshMachine.handleTrigger(autoRefreshEnabled: autoRefresh, isLoading: contactsManager.isLoading, isAnalyzing: isAnalyzing) {
+            Task {
+                await loadData(triggerReason: trigger.reason)
+            }
+        }
+    }
+
+    private func loadData(triggerReason: ContactsManager.RefreshReason? = nil) async {
+        guard refreshMachine.prepareForLoad(isLoading: contactsManager.isLoading, isAnalyzing: isAnalyzing) else { return }
+
         // Phase 1: Fetch contacts (fast, ~1 second)
         await contactsManager.fetchAllContacts()
 
@@ -266,6 +281,12 @@ struct DashboardView: View {
         }
 
         // Return immediately - UI can render while analysis happens in background
+
+        if refreshMachine.consumePendingRefresh() {
+            Task {
+                await loadData(triggerReason: triggerReason)
+            }
+        }
     }
 
     private func toggleReordering() {
@@ -323,13 +344,11 @@ struct OverviewView: View {
                         }
 
                         Text("Before making any changes, go to Settings → General → Backup All Contacts to protect your data.")
-                            .responsiveFont(12)
+                            .platformBodyFont()
                             .foregroundColor(.secondary)
 
-                        Button(action: {
-                            openSettings()
-                        }) {
-                            Label("Open Settings to Back Up", systemImage: "gearshape.fill")
+                        Button(action: openGeneralSettings) {
+                            Label("Open App Settings", systemImage: "gearshape.fill")
                         }
                         .buttonStyle(.borderedProminent)
                         .controlSize(.small)
@@ -472,7 +491,7 @@ struct OverviewView: View {
                                         .responsiveFont(13, weight: .semibold)
                                 }
                                 Text(activity.detail)
-                                    .responsiveFont(12)
+                                    .platformBodyFont()
                                 Text(relativeTimeDescription(for: activity.timestamp))
                                     .font(.caption2)
                                     .foregroundColor(.secondary)
@@ -506,6 +525,11 @@ struct OverviewView: View {
         case .duplicatesCleaned:
             selectedTab = .duplicates
         }
+    }
+
+    private func openGeneralSettings() {
+        UserDefaults.standard.set("general", forKey: SettingsPreferences.selectedTabKey)
+        openSettings()
     }
 
     @ViewBuilder
@@ -582,10 +606,41 @@ struct OverviewView: View {
     }
 }
 
+struct RefreshStateMachine {
+    private(set) var pendingAutoRefresh = false
 
+    mutating func handleTrigger(autoRefreshEnabled: Bool, isLoading: Bool, isAnalyzing: Bool) -> Bool {
+        guard autoRefreshEnabled else { return false }
+        if isLoading || isAnalyzing {
+            pendingAutoRefresh = true
+            return false
+        }
+        return true
+    }
+
+    mutating func prepareForLoad(isLoading: Bool, isAnalyzing: Bool) -> Bool {
+        if isLoading || isAnalyzing {
+            pendingAutoRefresh = true
+            return false
+        }
+        return true
+    }
+
+    mutating func consumePendingRefresh() -> Bool {
+        if pendingAutoRefresh {
+            pendingAutoRefresh = false
+            return true
+        }
+        return false
+    }
+}
+
+
+#if !DISABLE_PREVIEWS
 #Preview {
     DashboardView()
         .environmentObject(AppState())
         .environmentObject(ContactsManager.shared)
         .frame(width: 1200, height: 800)
 }
+#endif

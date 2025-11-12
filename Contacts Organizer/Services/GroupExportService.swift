@@ -43,7 +43,7 @@ class GroupExportService {
         }
     }
 
-    private func generateCSVString(contacts: [ContactSummary]) -> String {
+    func generateCSVString(contacts: [ContactSummary]) -> String {
         var csv = "Full Name,Organization,Phone Numbers,Email Addresses,Has Photo\n"
 
         for contact in contacts {
@@ -120,7 +120,7 @@ class GroupExportService {
         return true
     }
 
-    private func createVCardFile(contacts: [ContactSummary], groupName: String) -> URL? {
+    func createVCardFile(contacts: [ContactSummary], groupName: String) -> URL? {
         // Create a simple vCard 3.0 format
         var vCardString = ""
 
@@ -158,6 +158,34 @@ class GroupExportService {
             print("Error creating vCard: \(error)")
             return nil
         }
+    }
+
+    func generateVCardString(contacts: [ContactSummary]) -> String {
+        var vCardString = ""
+
+        for contact in contacts {
+            vCardString += "BEGIN:VCARD\n"
+            vCardString += "VERSION:3.0\n"
+            vCardString += "FN:\(contact.fullName)\n"
+
+            if let org = contact.organization {
+                vCardString += "ORG:\(org)\n"
+            }
+
+            for (index, email) in contact.emailAddresses.enumerated() {
+                let type = index == 0 ? "WORK" : "HOME"
+                vCardString += "EMAIL;TYPE=\(type):\(email)\n"
+            }
+
+            for (index, phone) in contact.phoneNumbers.enumerated() {
+                let type = index == 0 ? "WORK" : "HOME"
+                vCardString += "TEL;TYPE=\(type):\(phone)\n"
+            }
+
+            vCardString += "END:VCARD\n"
+        }
+
+        return vCardString
     }
 
     // MARK: - Messages Integration

@@ -200,6 +200,12 @@ struct DataQualityIssue: Identifiable, Sendable {
 }
 
 // MARK: - Equatable Conformance
+extension DataQualityIssue: Equatable {
+    static func == (lhs: DataQualityIssue, rhs: DataQualityIssue) -> Bool {
+        lhs.id == rhs.id
+    }
+}
+
 extension DataQualityIssue.IssueType: Equatable {
     nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
         switch (lhs, rhs) {
@@ -214,6 +220,190 @@ extension DataQualityIssue.IssueType: Equatable {
         default:
             return false
         }
+    }
+}
+
+// MARK: - Merge Planning
+
+struct MergeValueOption: Identifiable, Hashable {
+    let id: String
+    let value: String
+    let owners: [ContactSummary]
+
+    init(value: String, owners: [ContactSummary]) {
+        self.id = value.isEmpty ? "__empty__" : value
+        self.value = value
+        self.owners = owners
+    }
+
+    var displayValue: String {
+        value.isEmpty ? "Missing value" : value
+    }
+
+    var ownersDescription: String {
+        owners.map { $0.fullName }.joined(separator: ", ")
+    }
+}
+
+struct MergePlan: Equatable {
+    var preferredNameContactId: String
+    var preferredOrganizationContactId: String?
+    var preferredPhotoContactId: String?
+    var selectedPhoneNumbers: Set<String>
+    var selectedEmailAddresses: Set<String>
+
+    static func initial(for group: DuplicateGroup) -> MergePlan {
+        MergePlan(
+            preferredNameContactId: group.primaryContact.id,
+            preferredOrganizationContactId: group.primaryContact.id,
+            preferredPhotoContactId: group.contacts.first(where: { $0.hasProfileImage })?.id,
+            selectedPhoneNumbers: Set(group.contacts.flatMap { $0.phoneNumbers }),
+            selectedEmailAddresses: Set(group.contacts.flatMap { $0.emailAddresses })
+        )
+    }
+}
+
+struct MergeConfiguration {
+    let primaryContactId: String
+    let mergingContactIds: [String]
+    var preferredNameSourceId: String?
+    var preferredOrganizationSourceId: String?
+    var preferredPhotoSourceId: String?
+    var includedPhoneNumbers: Set<String>?
+    var includedEmailAddresses: Set<String>?
+
+    var sourceContactIds: [String] {
+        mergingContactIds.filter { $0 != primaryContactId }
+    }
+}
+
+enum MergePlanBuilder {
+    static func uniqueValues(
+        for contacts: [ContactSummary],
+        keyPath: KeyPath<ContactSummary, [String]>
+    ) -> [MergeValueOption] {
+        var mapping: [String: [ContactSummary]] = [:]
+        for contact in contacts {
+            for value in contact[keyPath: keyPath] {
+                mapping[value, default: []].append(contact)
+            }
+        }
+
+        return mapping
+            .map { MergeValueOption(value: $0.key, owners: $0.value) }
+            .sorted { lhs, rhs in
+                if lhs.value.isEmpty { return true }
+                if rhs.value.isEmpty { return false }
+                return lhs.value.localizedCaseInsensitiveCompare(rhs.value) == .orderedAscending
+            }
+    }
+}
+
+// MARK: - Health Issue Actions
+
+struct HealthIssueAction: Identifiable, Equatable {
+    enum ActionType: Equatable {
+        case addPhone
+        case addEmail
+        case addToGroup(name: String)
+        case archive
+        case updateName
+    }
+
+    let id = UUID()
+    let title: String
+    let icon: String
+    let type: ActionType
+    let inputPrompt: String?
+    let inputPlaceholder: String?
+
+    var requiresInput: Bool {
+        switch type {
+        case .addPhone, .addEmail, .updateName:
+            return true
+        default:
+            return false
+        }
+    }
+}
+
+enum HealthIssueActionCatalog {
+    static let phoneFollowUpGroupName = "Needs Phone Follow-Up"
+    static let emailFollowUpGroupName = "Needs Email Follow-Up"
+    static let generalFollowUpGroupName = "Needs Contact Cleanup"
+    static let archiveGroupName = "Archive - Needs Info"
+    static let reviewedGroupName = "Reviewed Health Issues"
+
+    static func actions(for issue: DataQualityIssue) -> [HealthIssueAction] {
+        var actions: [HealthIssueAction] = []
+
+        switch issue.issueType {
+        case .missingName:
+            actions.append(HealthIssueAction(
+                title: "Update Name",
+                icon: "textformat",
+                type: .updateName,
+                inputPrompt: "Enter the full name for this contact.",
+                inputPlaceholder: "Full Name"
+            ))
+            actions.append(addToGroupAction(title: "Add to Follow-Up", groupName: generalFollowUpGroupName))
+
+        case .missingPhone:
+            actions.append(HealthIssueAction(
+                title: "Add Phone Number",
+                icon: "phone.badge.plus",
+                type: .addPhone,
+                inputPrompt: "Enter the phone number you want to store on this contact.",
+                inputPlaceholder: "+1 (555) 555-0100"
+            ))
+            actions.append(addToGroupAction(title: "Move to Needs Phone Group", groupName: phoneFollowUpGroupName))
+
+        case .missingEmail:
+            actions.append(HealthIssueAction(
+                title: "Add Email Address",
+                icon: "envelope.badge.plus",
+                type: .addEmail,
+                inputPrompt: "Enter the email address you want to add.",
+                inputPlaceholder: "person@example.com"
+            ))
+            actions.append(addToGroupAction(title: "Move to Needs Email Group", groupName: emailFollowUpGroupName))
+
+        case .noContactInfo:
+            actions.append(addToGroupAction(title: "Add to Follow-Up Group", groupName: generalFollowUpGroupName))
+            actions.append(HealthIssueAction(
+                title: "Archive Contact",
+                icon: "archivebox",
+                type: .archive,
+                inputPrompt: nil,
+                inputPlaceholder: nil
+            ))
+
+        case .invalidFormat, .incompleteData, .suggestion:
+            actions.append(addToGroupAction(title: "Add to Follow-Up Group", groupName: generalFollowUpGroupName))
+        }
+
+        actions.append(markReviewedAction)
+        return actions
+    }
+
+    private static func addToGroupAction(title: String, groupName: String) -> HealthIssueAction {
+        HealthIssueAction(
+            title: title,
+            icon: "folder.badge.questionmark",
+            type: .addToGroup(name: groupName),
+            inputPrompt: nil,
+            inputPlaceholder: nil
+        )
+    }
+
+    static var markReviewedAction: HealthIssueAction {
+        HealthIssueAction(
+            title: "Mark as Reviewed",
+            icon: "checkmark.circle",
+            type: .addToGroup(name: reviewedGroupName),
+            inputPrompt: nil,
+            inputPlaceholder: nil
+        )
     }
 }
 

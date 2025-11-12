@@ -31,6 +31,7 @@
 		D9844D502EC00E9E0027876E /* PrivacyDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9844D4E2EC00E9E0027876E /* PrivacyDashboardView.swift */; };
 		D9844D522EC01EA40027876E /* TextScaleEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9844D512EC01EA40027876E /* TextScaleEnvironment.swift */; };
 		D99999322EC1FA0400544B56 /* RecentActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = D99999312EC1FA0400544B56 /* RecentActivity.swift */; };
+		D9F1E0A22F79B00100ABCDEF /* SettingsPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F1E0A12F79B00100ABCDEF /* SettingsPreferences.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -75,6 +76,7 @@
 		D9844D4E2EC00E9E0027876E /* PrivacyDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyDashboardView.swift; sourceTree = "<group>"; };
 		D9844D512EC01EA40027876E /* TextScaleEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextScaleEnvironment.swift; sourceTree = "<group>"; };
 		D99999312EC1FA0400544B56 /* RecentActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentActivity.swift; sourceTree = "<group>"; };
+		D9F1E0A12F79B00100ABCDEF /* SettingsPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPreferences.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -157,6 +159,7 @@
 				D9555C322EC008F900114EE2 /* PrivacyModels.swift */,
 				7D7093D32EB6D1B60073F556 /* AppState.swift */,
 				7D7093D42EB6D1B60073F556 /* ContactModels.swift */,
+				D9F1E0A12F79B00100ABCDEF /* SettingsPreferences.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -381,6 +384,7 @@
 				7D7093F82EB6D1B60073F556 /* ContentView.swift in Sources */,
 				7D7093F92EB6D1B60073F556 /* SettingsView.swift in Sources */,
 				7D8C3D642EB7159C0090A507 /* FirstBackupSheet.swift in Sources */,
+				D9F1E0A22F79B00100ABCDEF /* SettingsPreferences.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -64,7 +64,7 @@ struct OnboardingView: View {
                 ForEach(pages.indices, id: \.self) { index in
                     OnboardingPageView(
                         page: pages[index],
-                        openSettingsAction: pages[index].isBackupReminder ? { openSettings() } : nil
+                        openSettingsAction: pages[index].isBackupReminder ? { openGeneralSettings() } : nil
                     )
                     .opacity(currentPage == index ? 1 : 0)
                     .animation(.easeInOut(duration: 0.3), value: currentPage)
@@ -120,6 +120,11 @@ struct OnboardingView: View {
         .onChange(of: currentPage) { _, newValue in
             handleBackupReminderIfNeeded(for: newValue)
         }
+    }
+
+    private func openGeneralSettings() {
+        UserDefaults.standard.set("general", forKey: SettingsPreferences.selectedTabKey)
+        openSettings()
     }
 
     private func handleBackupReminderIfNeeded(for pageIndex: Int) {
@@ -213,7 +218,7 @@ struct OnboardingPageView: View {
 
                 if let openSettingsAction {
                     Button(action: openSettingsAction) {
-                        Label("Open Settings to Back Up", systemImage: "arrow.up.forward.square")
+                        Label("Open App Settings", systemImage: "arrow.up.forward.square")
                     }
                     .buttonStyle(.borderedProminent)
                 }
@@ -235,8 +240,10 @@ struct OnboardingPageView: View {
     }
 }
 
+#if !DISABLE_PREVIEWS
 #Preview {
     OnboardingView()
         .environmentObject(AppState())
         .frame(width: 900, height: 600)
 }
+#endif

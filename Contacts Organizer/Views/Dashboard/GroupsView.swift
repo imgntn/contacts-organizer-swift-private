@@ -295,7 +295,7 @@ struct GroupsView: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Label("Saved Filters", systemImage: "bookmark")
-                        .responsiveFont(12, weight: .semibold)
+                        .platformCalloutFont(weight: .semibold)
                         .foregroundColor(.secondary)
                     Spacer()
                     if canSaveCurrentFilter {
@@ -315,7 +315,7 @@ struct GroupsView: View {
                                 HStack(spacing: 6) {
                                     Button(action: { applySavedFilter(filter) }) {
                                         Text(filter)
-                                            .responsiveFont(12, weight: .medium)
+                                            .platformBodyFont(weight: .medium)
                                     }
                                     .buttonStyle(.plain)
                                     .foregroundColor(.primary)
@@ -444,7 +444,7 @@ struct GroupsView: View {
                                 Text("Create New Group")
                                     .responsiveFont(14, weight: .semibold)
                                 Text("Manually organize your contacts")
-                                    .responsiveFont(11)
+                                    .platformBodyFont()
                                     .foregroundColor(.secondary)
                             }
                             Spacer()
@@ -525,7 +525,7 @@ struct GroupsView: View {
                                         .foregroundStyle(.secondary)
                                     Spacer()
                                     Text("\(section.groups.count)")
-                                        .responsiveFont(12, weight: .medium)
+                                        .platformCaptionFont(weight: .medium)
                                         .foregroundColor(.secondary)
                                 }
 
@@ -667,9 +667,9 @@ struct SmartGroupTile: View {
                     Spacer()
                     HStack(spacing: 4) {
                         Image(systemName: "person.2.fill")
-                            .responsiveFont(10)
+                            .platformMiniCaptionFont()
                         Text("\(result.contacts.count)")
-                            .responsiveFont(11, weight: .medium)
+                            .platformCaptionFont(weight: .medium)
                     }
                     .foregroundColor(.accentColor)
                     .padding(.horizontal, 8)
@@ -679,7 +679,7 @@ struct SmartGroupTile: View {
                 }
 
                 Text(result.groupName)
-                    .responsiveFont(12.5, weight: .semibold)
+                    .platformBodyFont(weight: .semibold)
                     .lineLimit(2)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -907,7 +907,7 @@ struct SmartGroupDetailSheet: View {
 
                                         if let org = contact.organization {
                                             Text(org)
-                                                .responsiveFont(12)
+                                                .platformCalloutFont()
                                                 .foregroundColor(.secondary)
                                         }
                                     }
@@ -915,7 +915,7 @@ struct SmartGroupDetailSheet: View {
                                     Spacer()
 
                                     Image(systemName: "arrow.up.forward")
-                                        .responsiveFont(12)
+                                        .platformCaptionFont()
                                         .foregroundColor(.secondary)
                                 }
                                 .padding(.horizontal, 24)
@@ -1047,7 +1047,7 @@ struct SmartGroupResultCard: View {
                     Image(systemName: groupIcon).responsiveFont(20).foregroundColor(groupColor)
                     VStack(alignment: .leading, spacing: 4) {
                         Text(result.groupName).responsiveFont(14, weight: .semibold)
-                        Text("\(result.contacts.count) contacts").responsiveFont(11).foregroundColor(.secondary)
+                        Text("\(result.contacts.count) contacts").platformCaptionFont().foregroundColor(.secondary)
                     }
                     Spacer()
 
@@ -1067,7 +1067,7 @@ struct SmartGroupResultCard: View {
 
                 Button(action: onCreateInContacts) {
                     if isCreating {
-                        HStack(spacing: 6) { ProgressView().scaleEffect(0.75); Text("Creating…").responsiveFont(11, weight: .bold) }
+                        HStack(spacing: 6) { ProgressView().scaleEffect(0.75); Text("Creating…").platformCaptionFont(weight: .bold) }
                     } else {
                         Label("Create in Contacts", systemImage: "plus.app")
                     }
@@ -1095,9 +1095,9 @@ struct SmartGroupResultCard: View {
                             Button(action: { openContact(contact) }) {
                                 HStack(spacing: 8) {
                                     Image(systemName: "person.circle.fill").responsiveFont(11).foregroundColor(.secondary)
-                                    Text(contact.fullName).responsiveFont(11).foregroundColor(.primary)
+                                    Text(contact.fullName).platformBodyFont().foregroundColor(.primary)
                                     Spacer()
-                                    Image(systemName: "arrow.up.forward").responsiveFont(10).foregroundColor(.secondary)
+                                    Image(systemName: "arrow.up.forward").platformMiniCaptionFont().foregroundColor(.secondary)
                                 }
                                 .padding(.vertical, 4)
                                 .contentShape(Rectangle())
@@ -1183,7 +1183,7 @@ struct ManualGroupCard: View {
                 Image(systemName: "folder.fill").responsiveFont(20).foregroundColor(.blue)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(group.name).responsiveFont(14, weight: .semibold)
-                    Text("\(contacts.count) contacts").responsiveFont(11).foregroundColor(.secondary)
+                    Text("\(contacts.count) contacts").platformCaptionFont().foregroundColor(.secondary)
                 }
                 Spacer()
 
@@ -1227,9 +1227,9 @@ struct ManualGroupCard: View {
                             Button(action: { openContact(contact) }) {
                                 HStack(spacing: 8) {
                                     Image(systemName: "person.circle.fill").responsiveFont(11).foregroundColor(.secondary)
-                                    Text(contact.fullName).responsiveFont(11).foregroundColor(.primary)
+                                    Text(contact.fullName).platformBodyFont().foregroundColor(.primary)
                                     Spacer()
-                                    Image(systemName: "arrow.up.forward").responsiveFont(10).foregroundColor(.secondary)
+                                    Image(systemName: "arrow.up.forward").platformMiniCaptionFont().foregroundColor(.secondary)
                                 }
                                 .padding(.vertical, 4)
                                 .contentShape(Rectangle())
@@ -1522,10 +1522,12 @@ struct ContactSelectionRow: View {
     }
 }
 
+#if !DISABLE_PREVIEWS
 #Preview {
     GroupsView(initialTab: .smart, targetSmartGroupName: .constant(nil))
         .environmentObject(ContactsManager.shared)
 }
+#endif
 
 struct RenameGroupSheet: View {
     @Environment(\.dismiss) private var dismiss
