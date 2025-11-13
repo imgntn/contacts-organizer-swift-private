@@ -220,7 +220,7 @@ struct GroupsView: View {
                         createSingleSmartGroup(result)
                     },
                     onExport: { exportType in
-                        makeSmartGroupExecutor().exportGroup(result, as: exportType)
+                        exportSmartGroup(result, as: exportType)
                     }
                 )
             }
@@ -573,6 +573,37 @@ struct GroupsView: View {
     }
 
     @MainActor
+    private func exportSmartGroup(_ result: SmartGroupResult, as type: GroupExportService.ExportType) -> GroupExportService.ExportResult {
+        let executor = makeSmartGroupExecutor()
+        let exportResult = executor.exportGroup(result, as: type)
+        logFileExportIfNeeded(
+            groupName: result.groupName,
+            contactCount: result.contacts.count,
+            exportType: type,
+            exportResult: exportResult
+        )
+        return exportResult
+    }
+
+    @MainActor
+    private func logFileExportIfNeeded(
+        groupName: String,
+        contactCount: Int,
+        exportType: GroupExportService.ExportType,
+        exportResult: GroupExportService.ExportResult
+    ) {
+        guard exportResult.success,
+              exportType == .csv || exportType == .vcardFile else { return }
+        let formatLabel = exportType == .csv ? "CSV" : "vCard"
+        contactsManager.logActivity(
+            kind: .export,
+            title: "Exported \(groupName)",
+            detail: "\(contactCount) contacts to \(formatLabel)",
+            icon: "square.and.arrow.down"
+        )
+    }
+
+    @MainActor
     private func generateSmartGroupsAsync() async {
         if isLoadingSmartGroups { return }
         isLoadingSmartGroups = true
@@ -848,6 +879,7 @@ struct SmartGroupDetailSheet: View {
     let onExport: (GroupExportService.ExportType) -> GroupExportService.ExportResult
     @State private var exportResult: GroupExportService.ExportResult?
     @State private var showExportAlert = false
+    @State private var showOpenGroupAlert = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -913,7 +945,7 @@ struct SmartGroupDetailSheet: View {
                 .controlSize(.large)
                 .disabled(isCreating)
 
-                Button(action: { openContactsForGroup() }) {
+                Button(action: handleOpenGroupTap) {
                     Label("View All", systemImage: "arrow.up.forward.app")
                         .frame(maxWidth: .infinity)
                 }
@@ -990,6 +1022,14 @@ struct SmartGroupDetailSheet: View {
         } message: {
             Text(exportResult?.message ?? "Export complete")
         }
+        .alert("Open \(result.contacts.count) contacts in Contacts?", isPresented: $showOpenGroupAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Open", role: .destructive) {
+                openContactsForGroup()
+            }
+        } message: {
+            Text("Opening this group will launch \(result.contacts.count) Contact cards at once.")
+        }
     }
 
     private var groupIcon: String {
@@ -1058,6 +1098,14 @@ struct SmartGroupDetailSheet: View {
         }
     }
 
+    private func handleOpenGroupTap() {
+        if result.contacts.count >= 10 {
+            showOpenGroupAlert = true
+        } else {
+            openContactsForGroup()
+        }
+    }
+
     private func openContactsForGroup() {
         for contact in result.contacts {
             if let url = URL(string: "addressbook://\(contact.id)") {
@@ -1082,6 +1130,7 @@ struct SmartGroupResultCard: View {
     @State private var showExportMenu = false
     @State private var exportResult: String?
     @State private var showExportAlert = false
+    @State private var showOpenGroupAlert = false
 
     var body: some View {
         Button(action: onTap) {
@@ -1119,7 +1168,7 @@ struct SmartGroupResultCard: View {
                 .controlSize(.small)
                 .disabled(isCreating)
 
-                Button(action: { openContactsForGroup() }) {
+                Button(action: handleOpenGroupTap) {
                     Label("View All", systemImage: "arrow.up.forward.app")
                 }
                 .buttonStyle(.bordered)
@@ -1129,6 +1178,14 @@ struct SmartGroupResultCard: View {
                 Button("OK") { }
             } message: {
                 Text(exportResult ?? "")
+            }
+            .alert("Open \(result.contacts.count) contacts in Contacts?", isPresented: $showOpenGroupAlert) {
+                Button("Cancel", role: .cancel) { }
+                Button("Open", role: .destructive) {
+                    openContactsForGroup()
+                }
+            } message: {
+                Text("Opening this group will launch \(result.contacts.count) Contact cards.")
             }
 
             if !result.contacts.isEmpty {
@@ -1176,6 +1233,14 @@ struct SmartGroupResultCard: View {
         case .organization: return .green
         case .geographic: return .blue
         case .custom: return .orange
+        }
+    }
+
+    private func handleOpenGroupTap() {
+        if result.contacts.count >= 10 {
+            showOpenGroupAlert = true
+        } else {
+            openContactsForGroup()
         }
     }
 
@@ -1320,6 +1385,16 @@ struct ManualGroupCard: View {
             undoManager: undoManager
         )
         let result = executor.exportGroup(groupName: group.name, contacts: contacts, type: type)
+
+        if result.success, (type == .csv || type == .vcardFile) {
+            let formatLabel = type == .csv ? "CSV" : "vCard"
+            contactsManager.logActivity(
+                kind: .export,
+                title: "Exported \(group.name)",
+                detail: "\(contacts.count) contacts to \(formatLabel)",
+                icon: "square.and.arrow.down"
+            )
+        }
 
         if let fileURL = result.fileURL {
             // Open file location in Finder for CSV exports

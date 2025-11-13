@@ -118,66 +118,35 @@ struct DashboardView: View {
             .navigationTitle("Contacts Organizer")
             .frame(minWidth: 200)
         } detail: {
-            // Main content
-            Group {
-                switch selectedTab ?? .overview {
-                case .overview:
-                    OverviewView(
-                        duplicateGroups: duplicateGroups,
-                        dataQualityIssues: dataQualityIssues,
-                        selectedTab: $selectedTab,
-                        targetSmartGroupName: $targetSmartGroupName,
-                        contactsManager: contactsManager,
-                        appState: appState,
-                        undoManager: undoManager
-                    )
+            detailContent()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .overlay {
+                    if contactsManager.isLoading || isAnalyzing {
+                        ZStack {
+                            Color.black.opacity(0.3)
+                                .ignoresSafeArea()
 
-                case .recentActivity:
-                    RecentActivityListView()
+                            VStack(spacing: 16) {
+                                ProgressView()
+                                    .scaleEffect(1.5)
+                                    .frame(width: 40, height: 40)
 
-                case .duplicates:
-                    DuplicatesView(duplicateGroups: duplicateGroups)
+                                Text(loadingMessage)
+                                    .font(.headline)
 
-                case .healthReport:
-                    HealthReportView(issues: dataQualityIssues)
-
-                case .smartGroups:
-                    GroupsView(initialTab: .smart, targetSmartGroupName: $targetSmartGroupName)
-
-                case .manualGroups:
-                    GroupsView(initialTab: .manual, targetSmartGroupName: $targetSmartGroupName)
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .overlay {
-                if contactsManager.isLoading || isAnalyzing {
-                    ZStack {
-                        // Semi-transparent background
-                        Color.black.opacity(0.3)
-                            .ignoresSafeArea()
-
-                        // Loading indicator card
-                        VStack(spacing: 16) {
-                            ProgressView()
-                                .scaleEffect(1.5)
-                                .frame(width: 40, height: 40)
-
-                            Text(loadingMessage)
-                                .font(.headline)
-
-                            if isAnalyzing {
-                                Text("This may take a moment for large contact lists")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                                if isAnalyzing {
+                                    Text("This may take a moment for large contact lists")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
                             }
+                            .padding(32)
+                            .background(.ultraThinMaterial)
+                            .cornerRadius(16)
+                            .shadow(radius: 10)
                         }
-                        .padding(32)
-                        .background(.ultraThinMaterial)
-                        .cornerRadius(16)
-                        .shadow(radius: 10)
                     }
                 }
-            }
         }
         .onAppear {
             // Restore sidebar order if previously saved
@@ -309,6 +278,51 @@ struct DashboardView: View {
     }
 }
 
+extension DashboardView {
+    fileprivate func handleActivityTap(_ activity: RecentActivity) {
+        switch activity.kind {
+        case .smartGroupCreated:
+            targetSmartGroupName = activity.detail
+            selectedTab = .smartGroups
+        case .manualGroupCreated:
+            selectedTab = .manualGroups
+        case .duplicatesCleaned:
+            selectedTab = .duplicates
+        case .healthAction, .export:
+            selectedTab = .recentActivity
+        }
+    }
+
+    @ViewBuilder
+    fileprivate func detailContent() -> some View {
+        switch selectedTab ?? .overview {
+        case .overview:
+            OverviewView(
+                duplicateGroups: duplicateGroups,
+                dataQualityIssues: dataQualityIssues,
+                selectedTab: $selectedTab,
+                targetSmartGroupName: $targetSmartGroupName,
+                contactsManager: contactsManager,
+                appState: appState,
+                undoManager: undoManager,
+                onActivityTap: self.handleActivityTap
+            )
+        case .recentActivity:
+            RecentActivityListView(onActivityTap: { activity in
+                handleActivityTap(activity)
+            })
+        case .duplicates:
+            DuplicatesView(duplicateGroups: duplicateGroups)
+        case .healthReport:
+            HealthReportView(issues: dataQualityIssues)
+        case .smartGroups:
+            GroupsView(initialTab: .smart, targetSmartGroupName: $targetSmartGroupName)
+        case .manualGroups:
+            GroupsView(initialTab: .manual, targetSmartGroupName: $targetSmartGroupName)
+        }
+    }
+}
+
 // MARK: - Overview View
 
 struct OverviewView: View {
@@ -318,6 +332,7 @@ struct OverviewView: View {
     @Binding var selectedTab: DashboardView.DashboardTab?
     @Binding var targetSmartGroupName: String?
     @StateObject private var viewModel: OverviewDashboardModel
+    let onActivityTap: (RecentActivity) -> Void
 
     init(
         duplicateGroups: [DuplicateGroup],
@@ -326,12 +341,14 @@ struct OverviewView: View {
         targetSmartGroupName: Binding<String?>,
         contactsManager: OverviewContactsProviding,
         appState: OverviewAppStateProviding,
-        undoManager: ContactsUndoManager
+        undoManager: ContactsUndoManager,
+        onActivityTap: @escaping (RecentActivity) -> Void = { _ in }
     ) {
         self.duplicateGroups = duplicateGroups
         self.dataQualityIssues = dataQualityIssues
         _selectedTab = selectedTab
         _targetSmartGroupName = targetSmartGroupName
+        self.onActivityTap = onActivityTap
         let navigator = OverviewNavigator(selectedTab: selectedTab, targetSmartGroupName: targetSmartGroupName)
         _viewModel = StateObject(wrappedValue: OverviewDashboardModel(
             contactsProvider: contactsManager,
@@ -525,7 +542,7 @@ struct OverviewView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(viewModel.recentActivities) { activity in
-                        Button(action: { handleActivityTap(activity) }) {
+                        Button(action: { onActivityTap(activity) }) {
                             VStack(alignment: .leading, spacing: 4) {
                                 HStack(spacing: 6) {
                                     Image(systemName: activity.icon)
@@ -556,20 +573,6 @@ struct OverviewView: View {
 
     private func relativeTimeDescription(for date: Date) -> String {
         OverviewView.relativeFormatter.localizedString(for: date, relativeTo: Date())
-    }
-
-    private func handleActivityTap(_ activity: RecentActivity) {
-        switch activity.kind {
-        case .smartGroupCreated:
-            targetSmartGroupName = activity.detail
-            selectedTab = .smartGroups
-        case .manualGroupCreated:
-            selectedTab = .manualGroups
-        case .duplicatesCleaned:
-            selectedTab = .duplicates
-        case .healthAction:
-            selectedTab = .recentActivity
-        }
     }
 
     private func openGeneralSettings() {
@@ -655,6 +658,11 @@ struct OverviewView: View {
 
 struct RecentActivityListView: View {
     @EnvironmentObject var contactsManager: ContactsManager
+    var onActivityTap: ((RecentActivity) -> Void)?
+
+    init(onActivityTap: ((RecentActivity) -> Void)? = nil) {
+        self.onActivityTap = onActivityTap
+    }
 
     private var groupedActivities: [(Date, [RecentActivity])] {
         RecentActivitySections.groupedByDay(contactsManager.recentActivities)
@@ -678,7 +686,10 @@ struct RecentActivityListView: View {
 
                                 VStack(spacing: 12) {
                                     ForEach(entries) { activity in
-                                        RecentActivityRow(activity: activity)
+                                        RecentActivityRow(
+                                            activity: activity,
+                                            onTap: { onActivityTap?(activity) }
+                                        )
                                     }
                                 }
                             }
@@ -725,11 +736,17 @@ struct RecentActivityListView: View {
 
 private struct RecentActivityRow: View {
     let activity: RecentActivity
+    let onTap: () -> Void
     private static let relativeFormatter: RelativeDateTimeFormatter = {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
         return formatter
     }()
+
+    init(activity: RecentActivity, onTap: @escaping () -> Void = {}) {
+        self.activity = activity
+        self.onTap = onTap
+    }
 
     var body: some View {
         HStack(alignment: .top, spacing: 16) {
@@ -756,6 +773,10 @@ private struct RecentActivityRow: View {
             RoundedRectangle(cornerRadius: 14)
                 .fill(Color.secondary.opacity(0.08))
         )
+        .contentShape(RoundedRectangle(cornerRadius: 14))
+        .onTapGesture {
+            onTap()
+        }
     }
 }
 

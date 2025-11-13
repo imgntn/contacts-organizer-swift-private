@@ -3,6 +3,14 @@ import XCTest
 
 final class GroupExportServiceTests: XCTestCase {
 
+    override func tearDown() {
+#if DEBUG
+        GroupExportService.testDownloadsDirectory = nil
+        GroupExportService.testMessageShareHandler = nil
+#endif
+        super.tearDown()
+    }
+
     func testGenerateCSVStringEscapesSpecialCharacters() {
         let contacts = [
             ContactSummary(
@@ -59,10 +67,7 @@ final class GroupExportServiceTests: XCTestCase {
         let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         GroupExportService.testDownloadsDirectory = tempDir
-        defer {
-            GroupExportService.testDownloadsDirectory = nil
-            try? FileManager.default.removeItem(at: tempDir)
-        }
+        defer { try? FileManager.default.removeItem(at: tempDir) }
 
         let contacts = [
             ContactSummary(
@@ -90,10 +95,7 @@ final class GroupExportServiceTests: XCTestCase {
         let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         GroupExportService.testDownloadsDirectory = tempDir
-        defer {
-            GroupExportService.testDownloadsDirectory = nil
-            try? FileManager.default.removeItem(at: tempDir)
-        }
+        defer { try? FileManager.default.removeItem(at: tempDir) }
 
         let url = GroupExportService.shared.exportToCSV(
             contacts: [],
@@ -103,6 +105,67 @@ final class GroupExportServiceTests: XCTestCase {
         XCTAssertNotNil(url)
         guard let fileURL = url else { return }
         XCTAssertTrue(fileURL.lastPathComponent.contains("Needs_Review_VIP"))
+    }
+
+    func testExportToVCardFileWritesFile() throws {
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        GroupExportService.testDownloadsDirectory = tempDir
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let contacts = [
+            ContactSummary(
+                id: "1",
+                fullName: "Jane Doe",
+                organization: "ACME",
+                phoneNumbers: ["123-456"],
+                emailAddresses: ["jane@example.com"],
+                hasProfileImage: false,
+                creationDate: nil,
+                modificationDate: nil
+            )
+        ]
+
+        let url = GroupExportService.shared.exportToVCardFile(contacts: contacts, groupName: "VIP List")
+        XCTAssertNotNil(url)
+        guard let fileURL = url else { return }
+        let contents = try String(contentsOf: fileURL, encoding: .utf8)
+        XCTAssertTrue(contents.contains("BEGIN:VCARD"))
+        XCTAssertTrue(contents.contains("FN:Jane Doe"))
+    }
+
+    func testMessagesVCardExportUsesShareHandler() {
+        let expectation = expectation(description: "share handler called")
+        var capturedURL: URL?
+        GroupExportService.testMessageShareHandler = { items in
+            capturedURL = items.first as? URL
+            expectation.fulfill()
+            return true
+        }
+
+        let contacts = [
+            ContactSummary(
+                id: "1",
+                fullName: "Jane Doe",
+                organization: nil,
+                phoneNumbers: [],
+                emailAddresses: [],
+                hasProfileImage: false,
+                creationDate: nil,
+                modificationDate: nil
+            )
+        ]
+
+        let result = GroupExportService.shared.performExport(
+            type: .messagesVCard,
+            contacts: contacts,
+            groupName: "VCF Group"
+        )
+
+        XCTAssertTrue(result.success)
+        wait(for: [expectation], timeout: 0.1)
+        XCTAssertNotNil(capturedURL)
+        XCTAssertEqual(capturedURL?.pathExtension.lowercased(), "vcf")
     }
 #endif
 }

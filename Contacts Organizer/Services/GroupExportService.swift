@@ -12,9 +12,10 @@ import UniformTypeIdentifiers
 
 class GroupExportService {
     static let shared = GroupExportService()
-    #if DEBUG
+#if DEBUG
     static var testDownloadsDirectory: URL?
-    #endif
+    static var testMessageShareHandler: (([Any]) -> Bool)?
+#endif
 
     private init() {}
 
@@ -22,14 +23,36 @@ class GroupExportService {
 
     /// Exports a group of contacts to CSV format
     func exportToCSV(contacts: [ContactSummary], groupName: String) -> URL? {
-        let csvString = generateCSVString(contacts: contacts)
+        exportTextFile(
+            contents: generateCSVString(contacts: contacts),
+            groupName: groupName,
+            fileExtension: "csv",
+            contentType: .commaSeparatedText
+        )
+    }
 
+    /// Exports a group of contacts to a .vcf file
+    func exportToVCardFile(contacts: [ContactSummary], groupName: String) -> URL? {
+        exportTextFile(
+            contents: generateVCardString(contacts: contacts),
+            groupName: groupName,
+            fileExtension: "vcf",
+            contentType: .vCard
+        )
+    }
+
+    private func exportTextFile(
+        contents: String,
+        groupName: String,
+        fileExtension: String,
+        contentType: UTType
+    ) -> URL? {
         // Create filename with timestamp
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
         let timestamp = dateFormatter.string(from: Date())
         let baseName = sanitizedFilenameComponent(from: groupName)
-        let filename = "\(baseName)_\(timestamp).csv"
+        let filename = "\(baseName)_\(timestamp).\(fileExtension)"
 
         // Get Downloads folder
 #if DEBUG
@@ -45,21 +68,25 @@ class GroupExportService {
 #if DEBUG
         if let testDirectory = GroupExportService.testDownloadsDirectory {
             let fileURL = testDirectory.appendingPathComponent(filename)
-            return write(csvString: csvString, to: fileURL)
+            return write(string: contents, to: fileURL)
         }
 #endif
 
         let defaultURL = downloadsURL.appendingPathComponent(filename)
 
-        if let fileURL = write(csvString: csvString, to: defaultURL) {
+        if let fileURL = write(string: contents, to: defaultURL) {
             return fileURL
         }
 
         // If the default location failed (likely sandbox permissions), prompt the user
-        guard let saveURL = promptForCSVSaveLocation(suggestedName: filename, startingDirectory: downloadsURL) else {
+        guard let saveURL = promptForSaveLocation(
+            suggestedName: filename,
+            startingDirectory: downloadsURL,
+            contentType: contentType
+        ) else {
             return nil
         }
-        return write(csvString: csvString, to: saveURL)
+        return write(string: contents, to: saveURL)
     }
 
     func generateCSVString(contacts: [ContactSummary]) -> String {
@@ -88,7 +115,7 @@ class GroupExportService {
         return field
     }
 
-    private func write(csvString: String, to url: URL) -> URL? {
+    private func write(string: String, to url: URL) -> URL? {
         let directoryURL = url.deletingLastPathComponent()
         if !FileManager.default.fileExists(atPath: directoryURL.path) {
             do {
@@ -100,21 +127,21 @@ class GroupExportService {
         }
 
         do {
-            try csvString.write(to: url, atomically: true, encoding: .utf8)
+            try string.write(to: url, atomically: true, encoding: .utf8)
             return url
         } catch {
-            print("Error writing CSV: \(error)")
+            print("Error writing export: \(error)")
             return nil
         }
     }
 
-    private func promptForCSVSaveLocation(suggestedName: String, startingDirectory: URL) -> URL? {
+    private func promptForSaveLocation(suggestedName: String, startingDirectory: URL, contentType: UTType) -> URL? {
         var selectedURL: URL?
 
         let panelWork = {
             let savePanel = NSSavePanel()
             if #available(macOS 12.0, *) {
-                savePanel.allowedContentTypes = [.commaSeparatedText]
+                savePanel.allowedContentTypes = [contentType]
             }
             savePanel.canCreateDirectories = true
             savePanel.nameFieldStringValue = suggestedName
@@ -131,6 +158,20 @@ class GroupExportService {
         }
 
         return selectedURL
+    }
+
+    @MainActor
+    private func presentMessageShare(with items: [Any]) -> Bool {
+#if DEBUG
+        if let handler = GroupExportService.testMessageShareHandler {
+            return handler(items)
+        }
+#endif
+        if let service = NSSharingService(named: .composeMessage) {
+            service.perform(withItems: items)
+            return true
+        }
+        return false
     }
 
     private func sanitizedFilenameComponent(from rawName: String) -> String {
@@ -283,13 +324,20 @@ class GroupExportService {
     func openInMessages(contacts: [ContactSummary], groupName: String) -> Bool {
         let messageBody = GroupMessageComposer.makeBody(for: contacts, groupName: groupName)
 
-        if let service = NSSharingService(named: .composeMessage) {
-            service.perform(withItems: [messageBody])
+        if presentMessageShare(with: [messageBody]) {
             return true
         }
-
         // Fallback to sms: URL if the sharing service is unavailable
         return openMessagesFallback(contacts: contacts, messageBody: messageBody)
+    }
+
+    /// Opens Messages with vCard attachments so recipients can import contacts.
+    @MainActor
+    func openInMessagesWithVCard(contacts: [ContactSummary], groupName: String) -> Bool {
+        guard let vCardURL = createVCardFile(contacts: contacts, groupName: groupName) else {
+            return false
+        }
+        return presentMessageShare(with: [vCardURL])
     }
 
     private func openMessagesFallback(contacts: [ContactSummary], messageBody: String) -> Bool {
@@ -367,6 +415,13 @@ class GroupExportService {
                 return ExportResult(success: false, fileURL: nil, message: "Failed to export CSV")
             }
 
+        case .vcardFile:
+            if let url = exportToVCardFile(contacts: contacts, groupName: groupName) {
+                return ExportResult(success: true, fileURL: url, message: "Exported \(contacts.count) contacts to vCard")
+            } else {
+                return ExportResult(success: false, fileURL: nil, message: "Failed to export vCard")
+            }
+
         case .mail:
             let success = openInMail(contacts: contacts, groupName: groupName)
             return ExportResult(
@@ -382,6 +437,13 @@ class GroupExportService {
                 fileURL: nil,
                 message: success ? "Opened Messages with \(contacts.count) contacts" : "No phone numbers found"
             )
+        case .messagesVCard:
+            let success = openInMessagesWithVCard(contacts: contacts, groupName: groupName)
+            return ExportResult(
+                success: success,
+                fileURL: nil,
+                message: success ? "Opened Messages with vCards attached" : "Could not prepare vCards for Messages"
+            )
 
         case .imessage:
             let success = createiMessageGroup(contacts: contacts, groupName: groupName)
@@ -395,15 +457,19 @@ class GroupExportService {
 
     enum ExportType: String, CaseIterable {
         case csv = "CSV File"
+        case vcardFile = "vCard File"
         case mail = "Mail (BCC)"
         case messages = "Messages"
+        case messagesVCard = "Messages (vCards)"
         case imessage = "iMessage Group"
 
         var icon: String {
             switch self {
             case .csv: return "doc.text"
+            case .vcardFile: return "doc.richtext"
             case .mail: return "envelope"
             case .messages: return "message"
+            case .messagesVCard: return "paperclip"
             case .imessage: return "message.fill"
             }
         }
@@ -411,10 +477,12 @@ class GroupExportService {
         var description: String {
             switch self {
             case .csv: return "Export to CSV file"
+            case .vcardFile: return "Download vCard file"
             case .mail: return "Send email to all (BCC)"
             case .messages: return "Create SMS group"
+            case .messagesVCard: return "Compose Messages with vCards"
             case .imessage: return "Create iMessage group"
             }
-        }
     }
+}
 }

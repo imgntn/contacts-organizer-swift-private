@@ -31,8 +31,8 @@ ExecuteExternalTool /Applications/Xcode-beta.app/Contents/Developer/Toolchains/X
 
 ExecuteExternalTool /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
 
-Build description signature: cd2402619ff1289faed50f933d805d15
-Build description path: /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/XCBuildData/cd2402619ff1289faed50f933d805d15.xcbuilddata
+Build description signature: f398558c523d5d8b81719f935937d1d5
+Build description path: /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/XCBuildData/f398558c523d5d8b81719f935937d1d5.xcbuilddata
 ClangStatCache /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk /Users/minimac/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/macosx26.2-25C5031g-28ca432d5676da3146507086b13d17f8.sdkstatcache
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ Organizer.xcodeproj
     /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk -o /Users/minimac/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/macosx26.2-25C5031g-28ca432d5676da3146507086b13d17f8.sdkstatcache
@@ -40,26 +40,6 @@ ClangStatCache /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeD
 MkDir /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/PlugIns (in target 'Contacts Organizer' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     /bin/mkdir -p /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/PlugIns
-
-MkDir /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/Frameworks (in target 'Contacts Organizer' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    /bin/mkdir -p /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/Frameworks
-
-MkDir /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/PlugIns/Contacts\ OrganizerTests.xctest (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    /bin/mkdir -p /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/PlugIns/Contacts\ OrganizerTests.xctest
-
-WriteAuxiliaryFile /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-own-target-headers.hmap (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    write-file /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-own-target-headers.hmap
-
-WriteAuxiliaryFile /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-all-target-headers.hmap (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    write-file /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-all-target-headers.hmap
-
-WriteAuxiliaryFile /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-project-headers.hmap (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    write-file /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-project-headers.hmap
 
 WriteAuxiliaryFile /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/empty-Contacts\ OrganizerTests.plist (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
@@ -69,45 +49,65 @@ WriteAuxiliaryFile /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_O
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     write-file /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests.hmap
 
-WriteAuxiliaryFile /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests_const_extract_protocols.json (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+WriteAuxiliaryFile /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests.DependencyStaticMetadataFileList (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    write-file /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests_const_extract_protocols.json
+    write-file /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests.DependencyStaticMetadataFileList
 
 WriteAuxiliaryFile /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests.SwiftFileList (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     write-file /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests.SwiftFileList
 
-WriteAuxiliaryFile /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests.SwiftConstValuesFileList (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    write-file /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests.SwiftConstValuesFileList
-
 WriteAuxiliaryFile /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests.LinkFileList (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     write-file /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests.LinkFileList
+
+WriteAuxiliaryFile /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests.SwiftConstValuesFileList (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    write-file /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests.SwiftConstValuesFileList
 
 WriteAuxiliaryFile /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests-OutputFileMap.json (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     write-file /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests-OutputFileMap.json
 
-WriteAuxiliaryFile /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests.DependencyStaticMetadataFileList (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+WriteAuxiliaryFile /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests_const_extract_protocols.json (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    write-file /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests.DependencyStaticMetadataFileList
+    write-file /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests_const_extract_protocols.json
 
 WriteAuxiliaryFile /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests.DependencyMetadataFileList (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     write-file /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests.DependencyMetadataFileList
 
+WriteAuxiliaryFile /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-project-headers.hmap (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    write-file /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-project-headers.hmap
+
+WriteAuxiliaryFile /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-own-target-headers.hmap (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    write-file /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-own-target-headers.hmap
+
 WriteAuxiliaryFile /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-generated-files.hmap (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     write-file /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-generated-files.hmap
+
+WriteAuxiliaryFile /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-all-target-headers.hmap (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    write-file /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-all-target-headers.hmap
 
 WriteAuxiliaryFile /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-all-non-framework-target-headers.hmap (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     write-file /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-all-non-framework-target-headers.hmap
 
+MkDir /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/PlugIns/Contacts\ OrganizerTests.xctest (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    /bin/mkdir -p /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/PlugIns/Contacts\ OrganizerTests.xctest
+
 MkDir /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/PlugIns/Contacts\ OrganizerTests.xctest/Contents (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     /bin/mkdir -p /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/PlugIns/Contacts\ OrganizerTests.xctest/Contents
+
+MkDir /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/Frameworks (in target 'Contacts Organizer' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    /bin/mkdir -p /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/Frameworks
 
 MkDir /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/PlugIns/Contacts\ OrganizerTests.xctest/Contents/MacOS (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
@@ -129,13 +129,13 @@ Copy /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvk
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -exclude Headers -exclude PrivateHeaders -exclude Modules -exclude \*.tbd -resolve-src-symlinks /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib/libXCTestBundleInject.dylib /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/Frameworks
 
-Copy /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/Frameworks/XCTest.framework /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks/XCTest.framework (in target 'Contacts Organizer' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -exclude Headers -exclude PrivateHeaders -exclude Modules -exclude \*.tbd -resolve-src-symlinks /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks/XCTest.framework /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/Frameworks
-
 Copy /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/Frameworks/XCUnit.framework /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks/XCUnit.framework (in target 'Contacts Organizer' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -exclude Headers -exclude PrivateHeaders -exclude Modules -exclude \*.tbd -resolve-src-symlinks /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks/XCUnit.framework /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/Frameworks
+
+Copy /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/Frameworks/XCUIAutomation.framework /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks/XCUIAutomation.framework (in target 'Contacts Organizer' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -exclude Headers -exclude PrivateHeaders -exclude Modules -exclude \*.tbd -resolve-src-symlinks /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks/XCUIAutomation.framework /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/Frameworks
 
 Copy /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/Frameworks/XCTestCore.framework /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks/XCTestCore.framework (in target 'Contacts Organizer' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
@@ -145,9 +145,9 @@ Copy /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvk
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -exclude Headers -exclude PrivateHeaders -exclude Modules -exclude \*.tbd -resolve-src-symlinks /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks/XCTestSupport.framework /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/Frameworks
 
-Copy /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/Frameworks/XCUIAutomation.framework /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks/XCUIAutomation.framework (in target 'Contacts Organizer' from project 'Contacts Organizer')
+Copy /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/Frameworks/XCTest.framework /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks/XCTest.framework (in target 'Contacts Organizer' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -exclude Headers -exclude PrivateHeaders -exclude Modules -exclude \*.tbd -resolve-src-symlinks /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks/XCUIAutomation.framework /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/Frameworks
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -exclude Headers -exclude PrivateHeaders -exclude Modules -exclude \*.tbd -resolve-src-symlinks /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks/XCTest.framework /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/Frameworks
 
 Copy /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/Frameworks/XCTAutomationSupport.framework /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks/XCTAutomationSupport.framework (in target 'Contacts Organizer' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
@@ -161,34 +161,15 @@ SwiftDriver Contacts\ Organizer normal arm64 com.apple.xcode.tools.swift.compile
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     builtin-SwiftDriver -- /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Contacts_Organizer -Onone -enforce-exclusivity\=checked @/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Objects-normal/arm64/Contacts\ Organizer.SwiftFileList -DDEBUG -default-isolation\=MainActor -enable-bare-slash-regex -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk -target arm64-apple-macos26.0 -g -module-cache-path /Users/minimac/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -profile-coverage-mapping -profile-generate -enable-testing -index-store-path /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug -F /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug -emit-localized-strings -emit-localized-strings-path /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Objects-normal/arm64 -c -j10 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/minimac/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/macosx26.2-25C5031g-28ca432d5676da3146507086b13d17f8.sdkstatcache -output-file-map /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Objects-normal/arm64/Contacts\ Organizer-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/minimac/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/minimac/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Objects-normal/arm64/Contacts_Organizer.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/minimac/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Objects-normal/arm64/Contacts\ Organizer_const_extract_protocols.json -Xcc -iquote -Xcc /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Contacts\ Organizer-generated-files.hmap -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Contacts\ Organizer-own-target-headers.hmap -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Contacts\ Organizer-all-target-headers.hmap -Xcc -iquote -Xcc /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Contacts\ Organizer-project-headers.hmap -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/include -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/DerivedSources-normal/arm64 -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/DerivedSources/arm64 -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Objects-normal/arm64/Contacts_Organizer-Swift.h -working-directory /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer -experimental-emit-module-separately -disable-cmo
 
+SwiftCompile normal arm64 Compiling\ DashboardView.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Views/Dashboard/DashboardView.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Views/Dashboard/DashboardView.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
+
 SwiftEmitModule normal arm64 Emitting\ module\ for\ Contacts_Organizer (in target 'Contacts Organizer' from project 'Contacts Organizer')
 
 EmitSwiftModule normal arm64 (in target 'Contacts Organizer' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    
-
-SwiftCompile normal arm64 Compiling\ GroupExportService.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Services/GroupExportService.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
-
-SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Services/GroupExportService.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    
-
-SwiftDriverJobDiscovery normal arm64 Compiling GroupExportService.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
-
-SwiftCompile normal arm64 Compiling\ GroupsView.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Views/Dashboard/GroupsView.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
-SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Views/Dashboard/GroupsView.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    
-
-SwiftCompile normal arm64 Compiling\ ManualGroupActionExecutor.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Services/ManualGroupActionExecutor.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
-
-SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Services/ManualGroupActionExecutor.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    
-
-SwiftCompile normal arm64 Compiling\ SmartGroupActionExecutor.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Services/SmartGroupActionExecutor.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
-
-SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Services/SmartGroupActionExecutor.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     
 
@@ -198,13 +179,13 @@ SwiftDriver\ Compilation\ Requirements Contacts\ Organizer normal arm64 com.appl
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     builtin-Swift-Compilation-Requirements -- /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Contacts_Organizer -Onone -enforce-exclusivity\=checked @/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Objects-normal/arm64/Contacts\ Organizer.SwiftFileList -DDEBUG -default-isolation\=MainActor -enable-bare-slash-regex -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk -target arm64-apple-macos26.0 -g -module-cache-path /Users/minimac/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -profile-coverage-mapping -profile-generate -enable-testing -index-store-path /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug -F /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug -emit-localized-strings -emit-localized-strings-path /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Objects-normal/arm64 -c -j10 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/minimac/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/macosx26.2-25C5031g-28ca432d5676da3146507086b13d17f8.sdkstatcache -output-file-map /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Objects-normal/arm64/Contacts\ Organizer-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/minimac/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/minimac/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Objects-normal/arm64/Contacts_Organizer.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/minimac/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Objects-normal/arm64/Contacts\ Organizer_const_extract_protocols.json -Xcc -iquote -Xcc /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Contacts\ Organizer-generated-files.hmap -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Contacts\ Organizer-own-target-headers.hmap -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Contacts\ Organizer-all-target-headers.hmap -Xcc -iquote -Xcc /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Contacts\ Organizer-project-headers.hmap -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/include -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/DerivedSources-normal/arm64 -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/DerivedSources/arm64 -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Objects-normal/arm64/Contacts_Organizer-Swift.h -working-directory /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer -experimental-emit-module-separately -disable-cmo
 
-Copy /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts_Organizer.swiftmodule/arm64-apple-macos.abi.json /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Objects-normal/arm64/Contacts_Organizer.abi.json (in target 'Contacts Organizer' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Objects-normal/arm64/Contacts_Organizer.abi.json /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts_Organizer.swiftmodule/arm64-apple-macos.abi.json
-
 Copy /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts_Organizer.swiftmodule/arm64-apple-macos.swiftmodule /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Objects-normal/arm64/Contacts_Organizer.swiftmodule (in target 'Contacts Organizer' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Objects-normal/arm64/Contacts_Organizer.swiftmodule /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts_Organizer.swiftmodule/arm64-apple-macos.swiftmodule
+
+Copy /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts_Organizer.swiftmodule/arm64-apple-macos.abi.json /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Objects-normal/arm64/Contacts_Organizer.abi.json (in target 'Contacts Organizer' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Objects-normal/arm64/Contacts_Organizer.abi.json /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts_Organizer.swiftmodule/arm64-apple-macos.abi.json
 
 Copy /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts_Organizer.swiftmodule/Project/arm64-apple-macos.swiftsourceinfo /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Objects-normal/arm64/Contacts_Organizer.swiftsourceinfo (in target 'Contacts Organizer' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
@@ -214,25 +195,173 @@ SwiftDriver Contacts\ OrganizerTests normal arm64 com.apple.xcode.tools.swift.co
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     builtin-SwiftDriver -- /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Contacts_OrganizerTests -Onone -enforce-exclusivity\=checked @/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests.SwiftFileList -DDEBUG -plugin-path /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-bare-slash-regex -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk -target arm64-apple-macos26.0 -g -module-cache-path /Users/minimac/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -profile-coverage-mapping -profile-generate -enable-testing -index-store-path /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug -Isystem /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib -F /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug -F /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -c -j10 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/minimac/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/macosx26.2-25C5031g-28ca432d5676da3146507086b13d17f8.sdkstatcache -output-file-map /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/minimac/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/minimac/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts_OrganizerTests.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/minimac/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests_const_extract_protocols.json -Xcc -iquote -Xcc /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-generated-files.hmap -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-own-target-headers.hmap -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-all-target-headers.hmap -Xcc -iquote -Xcc /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-project-headers.hmap -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/include -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/DerivedSources-normal/arm64 -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/DerivedSources/arm64 -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts_OrganizerTests-Swift.h -working-directory /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer -experimental-emit-module-separately -disable-cmo
 
-SwiftDriverJobDiscovery normal arm64 Compiling SmartGroupActionExecutor.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
-
-SwiftDriverJobDiscovery normal arm64 Compiling ManualGroupActionExecutor.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
-
 SwiftExplicitDependencyCompileModuleFromInterface arm64 /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules/Testing-3T6YIOS40WFAW.swiftmodule
 
 SwiftExplicitDependencyGeneratePcm arm64 /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules/XCUIAutomation-2NSYN4ANSUR8NE0ZX6RVXTY2X.pcm
 
-SwiftExplicitDependencyGeneratePcm arm64 /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules/XCTest-6Z9CCEKFDMVS7WMWMVQCW3X7R.pcm
-
 SwiftExplicitDependencyCompileModuleFromInterface arm64 /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules/XCUIAutomation-361B1VAD2QDIQ.swiftmodule
 
+SwiftExplicitDependencyGeneratePcm arm64 /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules/XCTest-6Z9CCEKFDMVS7WMWMVQCW3X7R.pcm
+
 SwiftExplicitDependencyCompileModuleFromInterface arm64 /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules/XCTest-103QE70J67I3M.swiftmodule
+
+SwiftCompile normal arm64 Compiling\ ContactsManagerConcurrencyTests.swift,\ ContactsUndoManagerTests.swift,\ DataQualityAnalyzerTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/ContactsManagerConcurrencyTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/ContactsUndoManagerTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/DataQualityAnalyzerTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/ContactsManagerConcurrencyTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
+
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/ContactsUndoManagerTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
+/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/ContactsUndoManagerTests.swift:119:80: warning: main actor-isolated static property 'archiveGroupName' can not be referenced from a nonisolated autoclosure
+        XCTAssertEqual(mock.removeGroupCalls.last?.1, HealthIssueActionCatalog.archiveGroupName)
+                                                                               ^
+Contacts_Organizer.HealthIssueActionCatalog.archiveGroupName:2:32: note: static property declared here
+@MainActor internal static let archiveGroupName: String}
+                               ^
+
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/DataQualityAnalyzerTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
+
+SwiftCompile normal arm64 Compiling\ PrivacyMonitorServiceTests.swift,\ RecentActivitySectionsTests.swift,\ RefreshStateMachineTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/PrivacyMonitorServiceTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/RecentActivitySectionsTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/RefreshStateMachineTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/PrivacyMonitorServiceTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
+
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/RecentActivitySectionsTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
+
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/RefreshStateMachineTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
 
 SwiftEmitModule normal arm64 Emitting\ module\ for\ Contacts_OrganizerTests (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
 
 EmitSwiftModule normal arm64 (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     
+
+SwiftCompile normal arm64 Compiling\ MergeContactsManagerTests.swift,\ MergeEngineTests.swift,\ OverviewDashboardModelTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/MergeContactsManagerTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/MergeEngineTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/OverviewDashboardModelTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/MergeContactsManagerTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
+
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/MergeEngineTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
+
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/OverviewDashboardModelTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
+/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/OverviewDashboardModelTests.swift:103:9: warning: no 'async' operations occur within 'await' expression
+        await undoManager.undo()
+        ^
+/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/OverviewDashboardModelTests.swift:107:9: warning: no 'async' operations occur within 'await' expression
+        await undoManager.redo()
+        ^
+
+SwiftCompile normal arm64 Compiling\ HealthReportActionUndoTests.swift,\ ImportExportServiceTests.swift,\ ManualGroupActionExecutorTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/HealthReportActionUndoTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/ImportExportServiceTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/ManualGroupActionExecutorTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/HealthReportActionUndoTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
+/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/HealthReportActionUndoTests.swift:57:99: warning: main actor-isolated static property 'emailFollowUpGroupName' can not be referenced from a nonisolated autoclosure
+                XCTAssertEqual(performer.addGroupCalls.first?.groupName, HealthIssueActionCatalog.emailFollowUpGroupName)
+                                                                                                  ^
+Contacts_Organizer.HealthIssueActionCatalog.emailFollowUpGroupName:2:32: note: static property declared here
+@MainActor internal static let emailFollowUpGroupName: String}
+                               ^
+/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/HealthReportActionUndoTests.swift:62:102: warning: main actor-isolated static property 'emailFollowUpGroupName' can not be referenced from a nonisolated autoclosure
+                XCTAssertEqual(performer.removeGroupCalls.first?.groupName, HealthIssueActionCatalog.emailFollowUpGroupName)
+                                                                                                     ^
+Contacts_Organizer.HealthIssueActionCatalog.emailFollowUpGroupName:2:32: note: static property declared here
+@MainActor internal static let emailFollowUpGroupName: String}
+                               ^
+/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/HealthReportActionUndoTests.swift:82:102: warning: main actor-isolated static property 'archiveGroupName' can not be referenced from a nonisolated autoclosure
+                XCTAssertEqual(performer.removeGroupCalls.first?.groupName, HealthIssueActionCatalog.archiveGroupName)
+                                                                                                     ^
+Contacts_Organizer.HealthIssueActionCatalog.archiveGroupName:2:32: note: static property declared here
+@MainActor internal static let archiveGroupName: String}
+                               ^
+
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/ImportExportServiceTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
+
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/ManualGroupActionExecutorTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
+/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/ManualGroupActionExecutorTests.swift:22:9: warning: no 'async' operations occur within 'await' expression
+        await undoManager.undo()
+        ^
+/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/ManualGroupActionExecutorTests.swift:26:9: warning: no 'async' operations occur within 'await' expression
+        await undoManager.redo()
+        ^
+/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/ManualGroupActionExecutorTests.swift:47:9: warning: no 'async' operations occur within 'await' expression
+        await undoManager.undo()
+        ^
+/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/ManualGroupActionExecutorTests.swift:52:9: warning: no 'async' operations occur within 'await' expression
+        await undoManager.redo()
+        ^
+/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/ManualGroupActionExecutorTests.swift:72:9: warning: no 'async' operations occur within 'await' expression
+        await undoManager.undo()
+        ^
+/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/ManualGroupActionExecutorTests.swift:76:9: warning: no 'async' operations occur within 'await' expression
+        await undoManager.redo()
+        ^
+/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/ManualGroupActionExecutorTests.swift:84:9: warning: no 'async' operations occur within 'await' expression
+        await undoManager.undo()
+        ^
+/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/ManualGroupActionExecutorTests.swift:108:9: warning: no 'async' operations occur within 'await' expression
+        await undoManager.undo()
+        ^
+/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/ManualGroupActionExecutorTests.swift:112:9: warning: no 'async' operations occur within 'await' expression
+        await undoManager.redo()
+        ^
+/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/ManualGroupActionExecutorTests.swift:134:9: warning: no 'async' operations occur within 'await' expression
+        await undoManager.undo()
+        ^
+/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/ManualGroupActionExecutorTests.swift:139:9: warning: no 'async' operations occur within 'await' expression
+        await undoManager.redo()
+        ^
+
+SwiftCompile normal arm64 Compiling\ DuplicateDetectorTests.swift,\ GroupExportServiceFileTests.swift,\ GroupExportServiceTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/DuplicateDetectorTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/GroupExportServiceFileTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/GroupExportServiceTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/DuplicateDetectorTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
+
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/GroupExportServiceFileTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
+/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/GroupExportServiceFileTests.swift:13:28: warning: main actor-isolated class property 'testDownloadsDirectory' can not be mutated from a nonisolated context
+        GroupExportService.testDownloadsDirectory = nil
+                           ^
+/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/GroupExportServiceFileTests.swift:13:28: note: consider declaring an isolated method on 'MainActor' to perform the mutation
+        GroupExportService.testDownloadsDirectory = nil
+                           ^
+Contacts_Organizer.GroupExportService.testDownloadsDirectory:2:31: note: mutation of this class property is only permitted within the actor
+@MainActor internal class var testDownloadsDirectory: URL?}
+                              ^
+/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/GroupExportServiceFileTests.swift:30:32: warning: 'init(contentsOf:)' was deprecated in macOS 15: Use `init(contentsOf:encoding:)` instead
+            let contents = try String(contentsOf: url)
+                               ^
+/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/GroupExportServiceFileTests.swift:44:32: warning: 'init(contentsOf:)' was deprecated in macOS 15: Use `init(contentsOf:encoding:)` instead
+            let contents = try String(contentsOf: url)
+                               ^
+
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/GroupExportServiceTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
+/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/GroupExportServiceTests.swift:177:9: warning: variable 'chars' was never mutated; consider changing to 'let' constant
+    var chars = Array(line)
+    ~~~ ^
+    let
 
 SwiftCompile normal arm64 Compiling\ ResponsiveTypography.swift,\ SettingsActionControllerTests.swift,\ SmartGroupActionExecutorTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/ResponsiveTypography.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/SettingsActionControllerTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/SmartGroupActionExecutorTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
 
@@ -263,26 +392,6 @@ SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Or
         await undoManager.undo()
         ^
 /Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/SmartGroupActionExecutorTests.swift:97:9: warning: no 'async' operations occur within 'await' expression
-        await undoManager.redo()
-        ^
-
-SwiftCompile normal arm64 Compiling\ MergeContactsManagerTests.swift,\ MergeEngineTests.swift,\ OverviewDashboardModelTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/MergeContactsManagerTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/MergeEngineTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/OverviewDashboardModelTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-
-SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/MergeContactsManagerTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    
-
-SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/MergeEngineTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    
-
-SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/OverviewDashboardModelTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    
-/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/OverviewDashboardModelTests.swift:103:9: warning: no 'async' operations occur within 'await' expression
-        await undoManager.undo()
-        ^
-/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/OverviewDashboardModelTests.swift:107:9: warning: no 'async' operations occur within 'await' expression
         await undoManager.redo()
         ^
 
@@ -370,70 +479,19 @@ Contacts_Organizer.HealthIssueActionCatalog.reviewedGroupName:2:32: note: static
                                                            ~~~~~~~^~~~~~
                                                            await 
 
-SwiftCompile normal arm64 Compiling\ HealthReportActionUndoTests.swift,\ ImportExportServiceTests.swift,\ ManualGroupActionExecutorTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/HealthReportActionUndoTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/ImportExportServiceTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/ManualGroupActionExecutorTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+SwiftCompile normal arm64 Compiling\ SmartGroupTests.swift,\ TestDataGeneratorTests.swift,\ TypographyTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/SmartGroupTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/TestDataGeneratorTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/TypographyTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
 
-SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/HealthReportActionUndoTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    
-/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/HealthReportActionUndoTests.swift:57:99: warning: main actor-isolated static property 'emailFollowUpGroupName' can not be referenced from a nonisolated autoclosure
-                XCTAssertEqual(performer.addGroupCalls.first?.groupName, HealthIssueActionCatalog.emailFollowUpGroupName)
-                                                                                                  ^
-Contacts_Organizer.HealthIssueActionCatalog.emailFollowUpGroupName:2:32: note: static property declared here
-@MainActor internal static let emailFollowUpGroupName: String}
-                               ^
-/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/HealthReportActionUndoTests.swift:62:102: warning: main actor-isolated static property 'emailFollowUpGroupName' can not be referenced from a nonisolated autoclosure
-                XCTAssertEqual(performer.removeGroupCalls.first?.groupName, HealthIssueActionCatalog.emailFollowUpGroupName)
-                                                                                                     ^
-Contacts_Organizer.HealthIssueActionCatalog.emailFollowUpGroupName:2:32: note: static property declared here
-@MainActor internal static let emailFollowUpGroupName: String}
-                               ^
-/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/HealthReportActionUndoTests.swift:82:102: warning: main actor-isolated static property 'archiveGroupName' can not be referenced from a nonisolated autoclosure
-                XCTAssertEqual(performer.removeGroupCalls.first?.groupName, HealthIssueActionCatalog.archiveGroupName)
-                                                                                                     ^
-Contacts_Organizer.HealthIssueActionCatalog.archiveGroupName:2:32: note: static property declared here
-@MainActor internal static let archiveGroupName: String}
-                               ^
-
-SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/ImportExportServiceTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/SmartGroupTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     
 
-SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/ManualGroupActionExecutorTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/TestDataGeneratorTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     
-/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/ManualGroupActionExecutorTests.swift:22:9: warning: no 'async' operations occur within 'await' expression
-        await undoManager.undo()
-        ^
-/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/ManualGroupActionExecutorTests.swift:26:9: warning: no 'async' operations occur within 'await' expression
-        await undoManager.redo()
-        ^
-/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/ManualGroupActionExecutorTests.swift:47:9: warning: no 'async' operations occur within 'await' expression
-        await undoManager.undo()
-        ^
-/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/ManualGroupActionExecutorTests.swift:52:9: warning: no 'async' operations occur within 'await' expression
-        await undoManager.redo()
-        ^
-/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/ManualGroupActionExecutorTests.swift:72:9: warning: no 'async' operations occur within 'await' expression
-        await undoManager.undo()
-        ^
-/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/ManualGroupActionExecutorTests.swift:76:9: warning: no 'async' operations occur within 'await' expression
-        await undoManager.redo()
-        ^
-/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/ManualGroupActionExecutorTests.swift:84:9: warning: no 'async' operations occur within 'await' expression
-        await undoManager.undo()
-        ^
-/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/ManualGroupActionExecutorTests.swift:108:9: warning: no 'async' operations occur within 'await' expression
-        await undoManager.undo()
-        ^
-/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/ManualGroupActionExecutorTests.swift:112:9: warning: no 'async' operations occur within 'await' expression
-        await undoManager.redo()
-        ^
-/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/ManualGroupActionExecutorTests.swift:134:9: warning: no 'async' operations occur within 'await' expression
-        await undoManager.undo()
-        ^
-/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/ManualGroupActionExecutorTests.swift:139:9: warning: no 'async' operations occur within 'await' expression
-        await undoManager.redo()
-        ^
+
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/TypographyTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
 
 SwiftCompile normal arm64 Compiling\ AppStateFlowTests.swift,\ BackupServiceTests.swift,\ Contacts_OrganizerTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/AppStateFlowTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/BackupServiceTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/Contacts_OrganizerTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
 
@@ -467,58 +525,13 @@ SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Or
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     
 
-SwiftCompile normal arm64 Compiling\ ContactsManagerConcurrencyTests.swift,\ ContactsUndoManagerTests.swift,\ DataQualityAnalyzerTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/ContactsManagerConcurrencyTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/ContactsUndoManagerTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/DataQualityAnalyzerTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+SwiftDriverJobDiscovery normal arm64 Emitting module for Contacts_OrganizerTests (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
 
-SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/ContactsManagerConcurrencyTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+SwiftDriver\ Compilation\ Requirements Contacts\ OrganizerTests normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Contacts_OrganizerTests -Onone -enforce-exclusivity\=checked @/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests.SwiftFileList -DDEBUG -plugin-path /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-bare-slash-regex -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk -target arm64-apple-macos26.0 -g -module-cache-path /Users/minimac/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -profile-coverage-mapping -profile-generate -enable-testing -index-store-path /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug -Isystem /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib -F /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug -F /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -c -j10 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/minimac/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/macosx26.2-25C5031g-28ca432d5676da3146507086b13d17f8.sdkstatcache -output-file-map /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/minimac/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/minimac/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts_OrganizerTests.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/minimac/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests_const_extract_protocols.json -Xcc -iquote -Xcc /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-generated-files.hmap -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-own-target-headers.hmap -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-all-target-headers.hmap -Xcc -iquote -Xcc /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-project-headers.hmap -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/include -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/DerivedSources-normal/arm64 -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/DerivedSources/arm64 -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts_OrganizerTests-Swift.h -working-directory /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer -experimental-emit-module-separately -disable-cmo
 
-SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/ContactsUndoManagerTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    
-/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/ContactsUndoManagerTests.swift:119:80: warning: main actor-isolated static property 'archiveGroupName' can not be referenced from a nonisolated autoclosure
-        XCTAssertEqual(mock.removeGroupCalls.last?.1, HealthIssueActionCatalog.archiveGroupName)
-                                                                               ^
-Contacts_Organizer.HealthIssueActionCatalog.archiveGroupName:2:32: note: static property declared here
-@MainActor internal static let archiveGroupName: String}
-                               ^
-
-SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/DataQualityAnalyzerTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    
-
-SwiftCompile normal arm64 Compiling\ DuplicateDetectorTests.swift,\ GroupExportServiceFileTests.swift,\ GroupExportServiceTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/DuplicateDetectorTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/GroupExportServiceFileTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/GroupExportServiceTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-
-SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/DuplicateDetectorTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    
-
-SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/GroupExportServiceFileTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    
-/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/GroupExportServiceFileTests.swift:13:28: warning: main actor-isolated class property 'testDownloadsDirectory' can not be mutated from a nonisolated context
-        GroupExportService.testDownloadsDirectory = nil
-                           ^
-/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/GroupExportServiceFileTests.swift:13:28: note: consider declaring an isolated method on 'MainActor' to perform the mutation
-        GroupExportService.testDownloadsDirectory = nil
-                           ^
-Contacts_Organizer.GroupExportService.testDownloadsDirectory:2:31: note: mutation of this class property is only permitted within the actor
-@MainActor internal class var testDownloadsDirectory: URL?}
-                              ^
-/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/GroupExportServiceFileTests.swift:30:32: warning: 'init(contentsOf:)' was deprecated in macOS 15: Use `init(contentsOf:encoding:)` instead
-            let contents = try String(contentsOf: url)
-                               ^
-/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/GroupExportServiceFileTests.swift:44:32: warning: 'init(contentsOf:)' was deprecated in macOS 15: Use `init(contentsOf:encoding:)` instead
-            let contents = try String(contentsOf: url)
-                               ^
-
-SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/GroupExportServiceTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    
-/Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/GroupExportServiceTests.swift:114:9: warning: variable 'chars' was never mutated; consider changing to 'let' constant
-    var chars = Array(line)
-    ~~~ ^
-    let
+SwiftDriverJobDiscovery normal arm64 Compiling PrivacyMonitorServiceTests.swift, RecentActivitySectionsTests.swift, RefreshStateMachineTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
 
 SwiftCompile normal arm64 Compiling\ SettingsPreferenceStoreTests.swift,\ RecordingContactActionPerformer.swift,\ TemporaryDirectory.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/SettingsPreferenceStoreTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/TestSupport/RecordingContactActionPerformer.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/TestSupport/TemporaryDirectory.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
 
@@ -546,42 +559,6 @@ SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Or
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     
 
-SwiftCompile normal arm64 Compiling\ PrivacyMonitorServiceTests.swift,\ RecentActivitySectionsTests.swift,\ RefreshStateMachineTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/PrivacyMonitorServiceTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/RecentActivitySectionsTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/RefreshStateMachineTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-
-SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/PrivacyMonitorServiceTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    
-
-SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/RecentActivitySectionsTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    
-
-SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/RefreshStateMachineTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    
-
-SwiftDriverJobDiscovery normal arm64 Compiling SettingsPreferenceStoreTests.swift, RecordingContactActionPerformer.swift, TemporaryDirectory.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-
-SwiftCompile normal arm64 Compiling\ SmartGroupTests.swift,\ TestDataGeneratorTests.swift,\ TypographyTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/SmartGroupTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/TestDataGeneratorTests.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/TypographyTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-
-SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/SmartGroupTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    
-
-SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/TestDataGeneratorTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    
-
-SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Contacts\ OrganizerTests/TypographyTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    
-
-SwiftDriverJobDiscovery normal arm64 Emitting module for Contacts_OrganizerTests (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-
-SwiftDriver\ Compilation\ Requirements Contacts\ OrganizerTests normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
-    builtin-Swift-Compilation-Requirements -- /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Contacts_OrganizerTests -Onone -enforce-exclusivity\=checked @/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests.SwiftFileList -DDEBUG -plugin-path /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-bare-slash-regex -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk -target arm64-apple-macos26.0 -g -module-cache-path /Users/minimac/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -profile-coverage-mapping -profile-generate -enable-testing -index-store-path /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug -Isystem /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib -F /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug -F /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -c -j10 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/minimac/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/macosx26.2-25C5031g-28ca432d5676da3146507086b13d17f8.sdkstatcache -output-file-map /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/minimac/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/minimac/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts_OrganizerTests.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/minimac/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests_const_extract_protocols.json -Xcc -iquote -Xcc /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-generated-files.hmap -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-own-target-headers.hmap -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-all-target-headers.hmap -Xcc -iquote -Xcc /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-project-headers.hmap -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/include -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/DerivedSources-normal/arm64 -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/DerivedSources/arm64 -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts_OrganizerTests-Swift.h -working-directory /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer -experimental-emit-module-separately -disable-cmo
-
 SwiftDriverJobDiscovery normal arm64 Compiling GroupMessageComposerTests.swift, HealthActivityFactoryTests.swift, HealthIssueActionExecutorTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
 
 SwiftMergeGeneratedHeaders /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/DerivedSources/Contacts_OrganizerTests-Swift.h /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts_OrganizerTests-Swift.h (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
@@ -604,25 +581,108 @@ Copy /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvk
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts_OrganizerTests.swiftsourceinfo /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts_OrganizerTests.swiftmodule/Project/arm64-apple-macos.swiftsourceinfo
 
-SwiftDriverJobDiscovery normal arm64 Compiling AppStateFlowTests.swift, BackupServiceTests.swift, Contacts_OrganizerTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+SwiftDriverJobDiscovery normal arm64 Compiling ResponsiveTypography.swift, SettingsActionControllerTests.swift, SmartGroupActionExecutorTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
 
 SwiftDriverJobDiscovery normal arm64 Compiling MergeContactsManagerTests.swift, MergeEngineTests.swift, OverviewDashboardModelTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
 
-SwiftDriverJobDiscovery normal arm64 Compiling ResponsiveTypography.swift, SettingsActionControllerTests.swift, SmartGroupActionExecutorTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-
 SwiftDriverJobDiscovery normal arm64 Compiling DuplicateDetectorTests.swift, GroupExportServiceFileTests.swift, GroupExportServiceTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
 
-SwiftDriverJobDiscovery normal arm64 Compiling PrivacyMonitorServiceTests.swift, RecentActivitySectionsTests.swift, RefreshStateMachineTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+SwiftDriverJobDiscovery normal arm64 Compiling SettingsPreferenceStoreTests.swift, RecordingContactActionPerformer.swift, TemporaryDirectory.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+
+SwiftDriverJobDiscovery normal arm64 Compiling AppStateFlowTests.swift, BackupServiceTests.swift, Contacts_OrganizerTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
 
 SwiftDriverJobDiscovery normal arm64 Compiling HealthReportActionUndoTests.swift, ImportExportServiceTests.swift, ManualGroupActionExecutorTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
 
-SwiftDriverJobDiscovery normal arm64 Compiling ContactsManagerConcurrencyTests.swift, ContactsUndoManagerTests.swift, DataQualityAnalyzerTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
-
 SwiftDriverJobDiscovery normal arm64 Compiling SmartGroupTests.swift, TestDataGeneratorTests.swift, TypographyTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
+
+SwiftDriverJobDiscovery normal arm64 Compiling ContactsManagerConcurrencyTests.swift, ContactsUndoManagerTests.swift, DataQualityAnalyzerTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
 
 SwiftDriver\ Compilation Contacts\ OrganizerTests normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     builtin-Swift-Compilation -- /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Contacts_OrganizerTests -Onone -enforce-exclusivity\=checked @/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests.SwiftFileList -DDEBUG -plugin-path /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-bare-slash-regex -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk -target arm64-apple-macos26.0 -g -module-cache-path /Users/minimac/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -profile-coverage-mapping -profile-generate -enable-testing -index-store-path /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug -Isystem /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib -F /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug -F /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -c -j10 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/minimac/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/macosx26.2-25C5031g-28ca432d5676da3146507086b13d17f8.sdkstatcache -output-file-map /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/minimac/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/minimac/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts_OrganizerTests.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/minimac/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests_const_extract_protocols.json -Xcc -iquote -Xcc /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-generated-files.hmap -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-own-target-headers.hmap -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-all-target-headers.hmap -Xcc -iquote -Xcc /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests-project-headers.hmap -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/include -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/DerivedSources-normal/arm64 -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/DerivedSources/arm64 -Xcc -I/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts_OrganizerTests-Swift.h -working-directory /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer -experimental-emit-module-separately -disable-cmo
+
+SwiftDriverJobDiscovery normal arm64 Compiling DashboardView.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+
+SwiftCompile normal arm64 Compiling\ PrivacyDashboardView.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Views/Privacy/PrivacyDashboardView.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Views/Privacy/PrivacyDashboardView.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
+
+SwiftCompile normal arm64 Compiling\ GroupsView.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Views/Dashboard/GroupsView.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Views/Dashboard/GroupsView.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
+
+SwiftCompile normal arm64 Compiling\ ContentView.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Views/ContentView.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Views/ContentView.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
+
+SwiftCompile normal arm64 Compiling\ FirstBackupSheet.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Views/Onboarding/FirstBackupSheet.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Views/Onboarding/FirstBackupSheet.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
+
+SwiftCompile normal arm64 Compiling\ SettingsView.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Views/SettingsView.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Views/SettingsView.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
+
+SwiftCompile normal arm64 Compiling\ HealthReportView.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Views/HealthReport/HealthReportView.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Views/HealthReport/HealthReportView.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
+
+SwiftCompile normal arm64 Compiling\ PermissionRequestView.swift,\ DuplicatesView.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Views/Onboarding/PermissionRequestView.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Views/Dashboard/DuplicatesView.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Views/Onboarding/PermissionRequestView.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
+
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Views/Dashboard/DuplicatesView.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
+
+SwiftCompile normal arm64 Compiling\ OverviewNavigator.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Views/Dashboard/OverviewNavigator.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Views/Dashboard/OverviewNavigator.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
+
+SwiftCompile normal arm64 Compiling\ OnboardingView.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Views/Onboarding/OnboardingView.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/Views/Onboarding/OnboardingView.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
+
+SwiftCompile normal arm64 Compiling\ OverviewDashboardModel.swift /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/ViewModels/OverviewDashboardModel.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+
+SwiftCompile normal arm64 /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer/ViewModels/OverviewDashboardModel.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling OverviewNavigator.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+
+SwiftDriverJobDiscovery normal arm64 Compiling OverviewDashboardModel.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+
+SwiftDriverJobDiscovery normal arm64 Compiling ContentView.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+
+SwiftDriverJobDiscovery normal arm64 Compiling FirstBackupSheet.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+
+SwiftDriverJobDiscovery normal arm64 Compiling PrivacyDashboardView.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+
+SwiftDriverJobDiscovery normal arm64 Compiling OnboardingView.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+
+SwiftDriverJobDiscovery normal arm64 Compiling HealthReportView.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+
+SwiftDriverJobDiscovery normal arm64 Compiling SettingsView.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
+
+SwiftDriverJobDiscovery normal arm64 Compiling PermissionRequestView.swift, DuplicatesView.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
 
 SwiftDriverJobDiscovery normal arm64 Compiling GroupsView.swift (in target 'Contacts Organizer' from project 'Contacts Organizer')
 
@@ -651,8 +711,8 @@ Ignoring --strip-bitcode because --sign was not passed
 ExtractAppIntentsMetadata (in target 'Contacts Organizer' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name Contacts_Organizer --sdk-root /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk --xcode-version 17C5013i --platform-family macOS --deployment-target 26.0 --bundle-identifier com.playablefuture.Contacts-Organizer --output /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/Resources --target-triple arm64-apple-macos26.0 --binary-file /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/MacOS/Contacts\ Organizer --dependency-file /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Objects-normal/arm64/Contacts\ Organizer_dependency_info.dat --stringsdata-file /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Objects-normal/arm64/Contacts\ Organizer.SwiftFileList --metadata-file-list /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Contacts\ Organizer.DependencyMetadataFileList --static-metadata-file-list /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Contacts\ Organizer.DependencyStaticMetadataFileList --swift-const-vals-list /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ Organizer.build/Objects-normal/arm64/Contacts\ Organizer.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --validate-assistant-intents --no-app-shortcuts-localization
-2025-11-13 02:54:40.177 appintentsmetadataprocessor[6906:1645870] Starting appintentsmetadataprocessor export
-2025-11-13 02:54:40.178 appintentsmetadataprocessor[6906:1645870] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+2025-11-13 05:02:44.516 appintentsmetadataprocessor[12883:1783833] Starting appintentsmetadataprocessor export
+2025-11-13 05:02:44.517 appintentsmetadataprocessor[12883:1783833] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
 
 ProcessInfoPlistFile /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/PlugIns/Contacts\ OrganizerTests.xctest/Contents/Info.plist /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/empty-Contacts\ OrganizerTests.plist (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
@@ -670,8 +730,8 @@ Ignoring --strip-bitcode because --sign was not passed
 ExtractAppIntentsMetadata (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name Contacts_OrganizerTests --sdk-root /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk --xcode-version 17C5013i --platform-family macOS --deployment-target 26.0 --bundle-identifier com.playablefuture.Contacts-OrganizerTests --output /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/PlugIns/Contacts\ OrganizerTests.xctest/Contents/Resources --target-triple arm64-apple-macos26.0 --binary-file /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/PlugIns/Contacts\ OrganizerTests.xctest/Contents/MacOS/Contacts\ OrganizerTests --dependency-file /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests_dependency_info.dat --stringsdata-file /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests.SwiftFileList --metadata-file-list /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests.DependencyMetadataFileList --static-metadata-file-list /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Contacts\ OrganizerTests.DependencyStaticMetadataFileList --swift-const-vals-list /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Intermediates.noindex/Contacts\ Organizer.build/Debug/Contacts\ OrganizerTests.build/Objects-normal/arm64/Contacts\ OrganizerTests.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --validate-assistant-intents --no-app-shortcuts-localization
-2025-11-13 02:54:40.401 appintentsmetadataprocessor[6909:1645885] Starting appintentsmetadataprocessor export
-2025-11-13 02:54:40.402 appintentsmetadataprocessor[6909:1645885] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+2025-11-13 05:02:44.740 appintentsmetadataprocessor[12886:1783846] Starting appintentsmetadataprocessor export
+2025-11-13 05:02:44.741 appintentsmetadataprocessor[12886:1783846] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
 
 RegisterExecutionPolicyException /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/PlugIns/Contacts\ OrganizerTests.xctest (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
@@ -681,9 +741,17 @@ Touch /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlv
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     /usr/bin/touch -c /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app/Contents/PlugIns/Contacts\ OrganizerTests.xctest
 
+RegisterExecutionPolicyException /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app (in target 'Contacts Organizer' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    builtin-RegisterExecutionPolicyException /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app
+
 Validate /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app (in target 'Contacts Organizer' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
     builtin-validationUtility /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app -no-validate-extension -infoplist-subpath Contents/Info.plist
+
+Touch /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app (in target 'Contacts Organizer' from project 'Contacts Organizer')
+    cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
+    /usr/bin/touch -c /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app
 
 RegisterWithLaunchServices /Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Build/Products/Debug/Contacts\ Organizer.app (in target 'Contacts Organizer' from project 'Contacts Organizer')
     cd /Volumes/CORSAIR/swift_contacts_organizer/Contacts\ Organizer
@@ -701,170 +769,172 @@ warning: Skipping duplicate build file in Compile Sources build phase: /Volumes/
 warning: Skipping duplicate build file in Compile Sources build phase: /Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/RecentActivitySectionsTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
 warning: Skipping duplicate build file in Compile Sources build phase: /Volumes/CORSAIR/swift_contacts_organizer/Contacts Organizer/Contacts OrganizerTests/GroupMessageComposerTests.swift (in target 'Contacts OrganizerTests' from project 'Contacts Organizer')
 Testing started
-Test suite 'ContactsManagerConcurrencyTests' started on 'My Mac - Contacts Organizer (6912)'
-Test case 'ContactsManagerConcurrencyTests.testConcurrentOperationsProduceCorrectResults()' passed on 'My Mac - Contacts Organizer (6912)' (0.103 seconds)
-Test case 'ContactsManagerConcurrencyTests.testConcurrentSmartGroupGenerations()' passed on 'My Mac - Contacts Organizer (6912)' (0.008 seconds)
-Test case 'ContactsManagerConcurrencyTests.testErrorHandlingInConcurrentOperations()' passed on 'My Mac - Contacts Organizer (6912)' (0.003 seconds)
-Test case 'ContactsManagerConcurrencyTests.testGenerateSmartGroupsDoesNotBlockMainThread()' passed on 'My Mac - Contacts Organizer (6912)' (0.036 seconds)
-Test suite 'SmartGroupTests' started on 'My Mac - Contacts Organizer (6913)'
-Test case 'SmartGroupTests.testCustomCriteriaHasPhone()' passed on 'My Mac - Contacts Organizer (6913)' (0.001 seconds)
-Test case 'SmartGroupTests.testCustomCriteriaHasPhoto()' passed on 'My Mac - Contacts Organizer (6913)' (0.001 seconds)
-Test case 'SmartGroupTests.testCustomCriteriaMissingEmail()' passed on 'My Mac - Contacts Organizer (6913)' (0.001 seconds)
-Test case 'SmartGroupTests.testCustomCriteriaMultipleRules()' passed on 'My Mac - Contacts Organizer (6913)' (0.001 seconds)
-Test case 'SmartGroupTests.testCustomCriteriaNameContains()' passed on 'My Mac - Contacts Organizer (6913)' (0.001 seconds)
-Test case 'SmartGroupTests.testCustomCriteriaOrganizationContains()' passed on 'My Mac - Contacts Organizer (6913)' (0.001 seconds)
-Test case 'SmartGroupTests.testDefaultSmartGroups()' passed on 'My Mac - Contacts Organizer (6913)' (0.001 seconds)
-Test case 'SmartGroupTests.testDisabledDefinitionsNotGenerated()' passed on 'My Mac - Contacts Organizer (6913)' (0.001 seconds)
-Test case 'SmartGroupTests.testEmptyContactList()' passed on 'My Mac - Contacts Organizer (6913)' (0.001 seconds)
-Test case 'SmartGroupTests.testMultipleDefinitions()' passed on 'My Mac - Contacts Organizer (6913)' (0.000 seconds)
-Test case 'SmartGroupTests.testOrganizationGrouping()' passed on 'My Mac - Contacts Organizer (6913)' (0.000 seconds)
-Test case 'SmartGroupTests.testOrganizationGroupingMinimumTwoContacts()' passed on 'My Mac - Contacts Organizer (6913)' (0.001 seconds)
-Test case 'SmartGroupTests.testPhase1EmailOnly()' passed on 'My Mac - Contacts Organizer (6913)' (0.001 seconds)
-Test case 'SmartGroupTests.testPhase1MultipleEmails()' passed on 'My Mac - Contacts Organizer (6913)' (0.007 seconds)
-Test case 'SmartGroupTests.testPhase1MultiplePhones()' passed on 'My Mac - Contacts Organizer (6913)' (0.001 seconds)
-Test case 'SmartGroupTests.testPhase1NoCriticalInfo()' passed on 'My Mac - Contacts Organizer (6913)' (0.001 seconds)
-Test case 'SmartGroupTests.testPhase1PhoneOnly()' passed on 'My Mac - Contacts Organizer (6913)' (0.001 seconds)
-Test case 'SmartGroupTests.testPhase2BirthdayThisMonth()' passed on 'My Mac - Contacts Organizer (6913)' (0.001 seconds)
-Test suite 'SettingsPreferenceStoreTests' started on 'My Mac - Contacts Organizer (6914)'
-Test case 'SmartGroupTests.testPhase2BirthdayThisWeek()' passed on 'My Mac - Contacts Organizer (6913)' (0.003 seconds)
-Test case 'SmartGroupTests.testPhase2RecentlyAdded()' passed on 'My Mac - Contacts Organizer (6913)' (0.001 seconds)
-Test case 'SmartGroupTests.testPhase2RecentlyModified()' passed on 'My Mac - Contacts Organizer (6913)' (0.001 seconds)
-Test case 'SmartGroupTests.testPhase2StaleContacts()' passed on 'My Mac - Contacts Organizer (6913)' (0.001 seconds)
-Test suite 'DataQualityAnalyzerTests' started on 'My Mac - Contacts Organizer (6915)'
-Test case 'DataQualityAnalyzerTests.testCompleteContact()' passed on 'My Mac - Contacts Organizer (6915)' (0.001 seconds)
-Test case 'DataQualityAnalyzerTests.testEmptyContactList()' passed on 'My Mac - Contacts Organizer (6915)' (0.000 seconds)
-Test case 'DataQualityAnalyzerTests.testHealthScoreDecreasesWithIssues()' passed on 'My Mac - Contacts Organizer (6915)' (0.000 seconds)
-Test case 'DataQualityAnalyzerTests.testHealthScoreForNoIssues()' passed on 'My Mac - Contacts Organizer (6915)' (0.000 seconds)
-Test case 'DataQualityAnalyzerTests.testHealthScoreLowPriorityCappedAt5Percent()' passed on 'My Mac - Contacts Organizer (6915)' (0.000 seconds)
-Test case 'DataQualityAnalyzerTests.testHealthScoreMixedSeverities()' passed on 'My Mac - Contacts Organizer (6915)' (0.000 seconds)
-Test case 'DataQualityAnalyzerTests.testHealthScoreSeverityWeighting()' passed on 'My Mac - Contacts Organizer (6915)' (0.004 seconds)
-Test case 'DataQualityAnalyzerTests.testHealthScoreSuggestionsNoImpact()' passed on 'My Mac - Contacts Organizer (6915)' (0.000 seconds)
-Test case 'DataQualityAnalyzerTests.testIssuesSortedBySeverity()' passed on 'My Mac - Contacts Organizer (6915)' (0.000 seconds)
-Test case 'DataQualityAnalyzerTests.testMissingEmailDetection()' passed on 'My Mac - Contacts Organizer (6915)' (0.000 seconds)
-Test case 'DataQualityAnalyzerTests.testMissingNameDetection()' passed on 'My Mac - Contacts Organizer (6915)' (0.002 seconds)
-Test case 'DataQualityAnalyzerTests.testMissingPhoneDetection()' passed on 'My Mac - Contacts Organizer (6915)' (0.000 seconds)
-Test case 'DataQualityAnalyzerTests.testMultipleIssuesOnSameContact()' passed on 'My Mac - Contacts Organizer (6915)' (0.000 seconds)
-Test case 'DataQualityAnalyzerTests.testNoContactInfoDetection()' passed on 'My Mac - Contacts Organizer (6915)' (0.002 seconds)
-Test case 'DataQualityAnalyzerTests.testOrganizationSuggestion()' passed on 'My Mac - Contacts Organizer (6915)' (0.000 seconds)
-Test suite 'PrivacyMonitorServiceTests' started on 'My Mac - Contacts Organizer (6917)'
-Test suite 'OverviewDashboardModelTests' started on 'My Mac - Contacts Organizer (6916)'
-Test case 'OverviewDashboardModelTests.testBackupReminderRespectsInitialAppState()' passed on 'My Mac - Contacts Organizer (6916)' (0.001 seconds)
-Test suite 'DuplicateDetectorTests' started on 'My Mac - Contacts Organizer (6918)'
-Test case 'DuplicateDetectorTests.testEmptyContactList()' passed on 'My Mac - Contacts Organizer (6918)' (0.001 seconds)
-Test case 'DuplicateDetectorTests.testExactNameMatch()' passed on 'My Mac - Contacts Organizer (6918)' (0.000 seconds)
-Test case 'DuplicateDetectorTests.testMultipleMatchCriteria()' passed on 'My Mac - Contacts Organizer (6918)' (0.000 seconds)
-Test case 'DuplicateDetectorTests.testNoExactNameMatchWithDifferentNames()' passed on 'My Mac - Contacts Organizer (6918)' (0.000 seconds)
-Test case 'OverviewDashboardModelTests.testDismissBackupReminderRegistersUndo()' failed on 'My Mac - Contacts Organizer (6916)' (0.171 seconds)
-Test case 'PrivacyMonitorServiceTests.testRecordingProcessingMetricsUpdatesAverages()' passed on 'My Mac - Contacts Organizer (6917)' (0.204 seconds)
-Test case 'OverviewDashboardModelTests.testDuplicateAndIssueCountsTrackUpdates()' passed on 'My Mac - Contacts Organizer (6916)' (0.103 seconds)
-Test case 'ContactsManagerConcurrencyTests.testMainThreadLatencyDuringOperations()' passed on 'My Mac - Contacts Organizer (6912)' (0.630 seconds)
-Test case 'SettingsPreferenceStoreTests.testUpdateAutoRefreshPersistsAndIsUndoable()' passed on 'My Mac - Contacts Organizer (6914)' (0.308 seconds)
-Test case 'DuplicateDetectorTests.testPerformanceWithLargeDataset()' passed on 'My Mac - Contacts Organizer (6918)' (0.326 seconds)
-Test case 'DuplicateDetectorTests.testPrimaryContactSelectionWithMoreData()' passed on 'My Mac - Contacts Organizer (6918)' (0.000 seconds)
-Test case 'DuplicateDetectorTests.testSameEmailMatch()' passed on 'My Mac - Contacts Organizer (6918)' (0.000 seconds)
-Test case 'DuplicateDetectorTests.testSamePhoneNumberMatch()' passed on 'My Mac - Contacts Organizer (6918)' (0.000 seconds)
-Test case 'DuplicateDetectorTests.testSimilarNameMatch()' passed on 'My Mac - Contacts Organizer (6918)' (0.000 seconds)
-Test case 'DuplicateDetectorTests.testSingleContact()' passed on 'My Mac - Contacts Organizer (6918)' (0.000 seconds)
-Test suite 'ManualGroupActionExecutorTests' started on 'My Mac - Contacts Organizer (6918)'
-Test case 'OverviewDashboardModelTests.testManualGroupCountUpdatesFromPublisher()' passed on 'My Mac - Contacts Organizer (6916)' (0.103 seconds)
-Test case 'OverviewDashboardModelTests.testMetricsUpdateWhenStatisticsChange()' passed on 'My Mac - Contacts Organizer (6916)' (0.001 seconds)
-Test case 'SettingsPreferenceStoreTests.testUpdateDeveloperSettingsPersistsKey()' passed on 'My Mac - Contacts Organizer (6914)' (0.129 seconds)
-Test case 'PrivacyMonitorServiceTests.testRefreshMetricsUpdatesTimestamp()' passed on 'My Mac - Contacts Organizer (6917)' (0.213 seconds)
-Test suite 'BackupServiceTests' started on 'My Mac - Contacts Organizer (6917)'
-Test case 'OverviewDashboardModelTests.testNavigationActionsRouteToTabs()' passed on 'My Mac - Contacts Organizer (6916)' (0.046 seconds)
-Test case 'ContactsManagerConcurrencyTests.testMainThreadResponsivenessDuringSmartGroupGeneration()' passed on 'My Mac - Contacts Organizer (6912)' (0.150 seconds)
-Test case 'ManualGroupActionExecutorTests.testAddAndRemoveContactsRegisterUndoRedo()' passed on 'My Mac - Contacts Organizer (6918)' (0.057 seconds)
-Test case 'OverviewDashboardModelTests.testRecentActivitiesPublish()' passed on 'My Mac - Contacts Organizer (6916)' (0.001 seconds)
-Test case 'ManualGroupActionExecutorTests.testCleanupDuplicatesDeletesAllSnapshotsAndRegistersUndo()' passed on 'My Mac - Contacts Organizer (6918)' (0.003 seconds)
-Test case 'ManualGroupActionExecutorTests.testCreateGroupRegistersUndoRedo()' passed on 'My Mac - Contacts Organizer (6918)' (0.001 seconds)
-Test case 'ManualGroupActionExecutorTests.testExportGroupRecordsHistoryAndSupportsUndo()' passed on 'My Mac - Contacts Organizer (6918)' (0.001 seconds)
-Test suite 'SettingsActionControllerTests' started on 'My Mac - Contacts Organizer (6916)'
-Test case 'ContactsManagerConcurrencyTests.testManySimultaneousOperations()' passed on 'My Mac - Contacts Organizer (6912)' (0.005 seconds)
-Test case 'ContactsManagerConcurrencyTests.testMixedOperationsConcurrency()' passed on 'My Mac - Contacts Organizer (6912)' (0.003 seconds)
-Test case 'ContactsManagerConcurrencyTests.testOperationsPriorityIndependence()' passed on 'My Mac - Contacts Organizer (6912)' (0.002 seconds)
-Test case 'ContactsManagerConcurrencyTests.testOperationsWorkFromBackgroundContext()' passed on 'My Mac - Contacts Organizer (6912)' (0.002 seconds)
-Test case 'DataQualityAnalyzerTests.testPerformanceWithLargeDataset()' passed on 'My Mac - Contacts Organizer (6915)' (0.455 seconds)
-Test case 'DataQualityAnalyzerTests.testSummaryGeneration()' passed on 'My Mac - Contacts Organizer (6915)' (0.000 seconds)
-Test suite 'HealthReportActionUndoTests' started on 'My Mac - Contacts Organizer (6915)'
-Test case 'HealthReportActionUndoTests.testAddEmailActionRegistersUndoRedo()' passed on 'My Mac - Contacts Organizer (6915)' (0.005 seconds)
-Test case 'HealthReportActionUndoTests.testAddPhoneActionRegistersUndoRedo()' passed on 'My Mac - Contacts Organizer (6915)' (0.001 seconds)
-Test case 'BackupServiceTests.testCreateBackupPropagatesWriteErrors()' passed on 'My Mac - Contacts Organizer (6917)' (0.081 seconds)
-Test case 'BackupServiceTests.testCreateBackupWritesUserAndAppCopies()' passed on 'My Mac - Contacts Organizer (6917)' (0.013 seconds)
-Test case 'BackupServiceTests.testCreateSafetySnapshotWritesFile()' passed on 'My Mac - Contacts Organizer (6917)' (0.006 seconds)
-Test suite 'MergeContactsManagerTests' started on 'My Mac - Contacts Organizer (6917)'
-Test case 'MergeContactsManagerTests.testMergeContactsUsesOverridePipeline()' passed on 'My Mac - Contacts Organizer (6917)' (0.004 seconds)
-Test suite 'MergeEngineTests' started on 'My Mac - Contacts Organizer (6917)'
-Test case 'SettingsActionControllerTests.testCreateBackupPassesThroughToContactsManager()' passed on 'My Mac - Contacts Organizer (6916)' (0.103 seconds)
-Test case 'ManualGroupActionExecutorTests.testRenameGroupRegistersUndoRedo()' passed on 'My Mac - Contacts Organizer (6918)' (0.101 seconds)
-Test suite 'ContactsUndoManagerTests' started on 'My Mac - Contacts Organizer (6918)'
-Test case 'ContactsUndoManagerTests.testAddedEmailEffectUndoRedo()' passed on 'My Mac - Contacts Organizer (6918)' (0.001 seconds)
-Test case 'ContactsUndoManagerTests.testAddedPhoneEffectUndoRedo()' passed on 'My Mac - Contacts Organizer (6918)' (0.001 seconds)
-Test case 'ContactsUndoManagerTests.testAddedToGroupEffectUndoRedo()' passed on 'My Mac - Contacts Organizer (6918)' (0.001 seconds)
-Test case 'ContactsUndoManagerTests.testArchivedContactEffectUndoRedo()' passed on 'My Mac - Contacts Organizer (6918)' (0.001 seconds)
-Test case 'ContactsUndoManagerTests.testFailedUndoReturnsOperationToStack()' passed on 'My Mac - Contacts Organizer (6918)' (0.001 seconds)
-Test case 'ContactsUndoManagerTests.testRegisterAndUndoRedo()' passed on 'My Mac - Contacts Organizer (6918)' (0.001 seconds)
-Test case 'ContactsUndoManagerTests.testUpdatedNameEffectUndoRedo()' passed on 'My Mac - Contacts Organizer (6918)' (0.001 seconds)
-Test suite 'HealthIssueActionExecutorTests' started on 'My Mac - Contacts Organizer (6918)'
-Test case 'HealthIssueActionExecutorTests.testExecuteAddEmailCallsPerformer()' passed on 'My Mac - Contacts Organizer (6918)' (0.001 seconds)
-Test case 'HealthIssueActionExecutorTests.testExecuteAddPhoneCallsPerformer()' passed on 'My Mac - Contacts Organizer (6918)' (0.000 seconds)
-Test case 'HealthIssueActionExecutorTests.testExecuteAddToGroup()' passed on 'My Mac - Contacts Organizer (6918)' (0.001 seconds)
-Test case 'HealthIssueActionExecutorTests.testExecuteArchive()' passed on 'My Mac - Contacts Organizer (6918)' (0.000 seconds)
-Test case 'HealthIssueActionExecutorTests.testExecuteFailsForEmptyInput()' passed on 'My Mac - Contacts Organizer (6918)' (0.000 seconds)
-Test case 'HealthIssueActionExecutorTests.testExecuteUpdateName()' passed on 'My Mac - Contacts Organizer (6918)' (0.000 seconds)
-Test case 'HealthIssueActionExecutorTests.testMarkReviewedAddsToReviewedGroup()' passed on 'My Mac - Contacts Organizer (6918)' (0.001 seconds)
-Test suite 'GroupExportServiceTests' started on 'My Mac - Contacts Organizer (6918)'
-Test case 'GroupExportServiceTests.testExportToCSVSanitizesFilenameCharacters()' passed on 'My Mac - Contacts Organizer (6918)' (0.001 seconds)
-Test case 'GroupExportServiceTests.testExportToCSVWritesFileAndReturnsURLInTestDirectory()' passed on 'My Mac - Contacts Organizer (6918)' (0.001 seconds)
-Test case 'GroupExportServiceTests.testGenerateCSVStringEscapesSpecialCharacters()' passed on 'My Mac - Contacts Organizer (6918)' (0.000 seconds)
-Test case 'GroupExportServiceTests.testGenerateVCardStringIncludesOrganizationAndContacts()' passed on 'My Mac - Contacts Organizer (6918)' (0.000 seconds)
-Test suite 'ImportExportServiceTests' started on 'My Mac - Contacts Organizer (6918)'
-Test case 'ImportExportServiceTests.testDefaultExportURLUsesDocumentsDirectory()' passed on 'My Mac - Contacts Organizer (6918)' (0.000 seconds)
-Test case 'ImportExportServiceTests.testExportImportRoundTripPreservesExtendedFields()' passed on 'My Mac - Contacts Organizer (6918)' (0.001 seconds)
-Test case 'ImportExportServiceTests.testGenerateAndSaveTestDatabaseCreatesReadableFile()' passed on 'My Mac - Contacts Organizer (6918)' (0.001 seconds)
-Test suite 'GroupExportServiceFileTests' started on 'My Mac - Contacts Organizer (6918)'
-Test case 'GroupExportServiceFileTests.testCreateVCardFileStoresTempFile()' passed on 'My Mac - Contacts Organizer (6918)' (0.001 seconds)
-Test case 'GroupExportServiceFileTests.testExportToCSVWritesIntoDownloadsOverride()' passed on 'My Mac - Contacts Organizer (6918)' (0.001 seconds)
-Test suite 'RefreshStateMachineTests' started on 'My Mac - Contacts Organizer (6918)'
-Test case 'RefreshStateMachineTests.testConsumePendingRefreshClearsFlag()' passed on 'My Mac - Contacts Organizer (6918)' (0.000 seconds)
-Test case 'RefreshStateMachineTests.testPrepareForLoadReturnsFalseWhenBusy()' passed on 'My Mac - Contacts Organizer (6918)' (0.000 seconds)
-Test case 'RefreshStateMachineTests.testTriggerIgnoredWhenAutoRefreshDisabled()' passed on 'My Mac - Contacts Organizer (6918)' (0.000 seconds)
-Test case 'RefreshStateMachineTests.testTriggerWhileBusyQueuesRefresh()' passed on 'My Mac - Contacts Organizer (6918)' (0.000 seconds)
-Test case 'Refr
+Test suite 'ContactsManagerConcurrencyTests' started on 'My Mac - Contacts Organizer (12894)'
+Test case 'ContactsManagerConcurrencyTests.testConcurrentOperationsProduceCorrectResults()' passed on 'My Mac - Contacts Organizer (12894)' (0.003 seconds)
+Test case 'ContactsManagerConcurrencyTests.testConcurrentSmartGroupGenerations()' passed on 'My Mac - Contacts Organizer (12894)' (0.004 seconds)
+Test case 'ContactsManagerConcurrencyTests.testErrorHandlingInConcurrentOperations()' passed on 'My Mac - Contacts Organizer (12894)' (0.001 seconds)
+Test case 'ContactsManagerConcurrencyTests.testGenerateSmartGroupsDoesNotBlockMainThread()' passed on 'My Mac - Contacts Organizer (12894)' (0.008 seconds)
+Test suite 'SettingsPreferenceStoreTests' started on 'My Mac - Contacts Organizer (12901)'
+Test suite 'SmartGroupTests' started on 'My Mac - Contacts Organizer (12902)'
+Test case 'SmartGroupTests.testCustomCriteriaHasPhone()' passed on 'My Mac - Contacts Organizer (12902)' (0.001 seconds)
+Test case 'SmartGroupTests.testCustomCriteriaHasPhoto()' passed on 'My Mac - Contacts Organizer (12902)' (0.001 seconds)
+Test case 'SmartGroupTests.testCustomCriteriaMissingEmail()' passed on 'My Mac - Contacts Organizer (12902)' (0.001 seconds)
+Test case 'SmartGroupTests.testCustomCriteriaMultipleRules()' passed on 'My Mac - Contacts Organizer (12902)' (0.001 seconds)
+Test case 'SettingsPreferenceStoreTests.testUpdateAutoRefreshPersistsAndIsUndoable()' passed on 'My Mac - Contacts Organizer (12901)' (0.004 seconds)
+Test case 'SmartGroupTests.testCustomCriteriaNameContains()' passed on 'My Mac - Contacts Organizer (12902)' (0.001 seconds)
+Test case 'SmartGroupTests.testCustomCriteriaOrganizationContains()' passed on 'My Mac - Contacts Organizer (12902)' (0.001 seconds)
+Test case 'SmartGroupTests.testDefaultSmartGroups()' passed on 'My Mac - Contacts Organizer (12902)' (0.001 seconds)
+Test case 'SettingsPreferenceStoreTests.testUpdateDeveloperSettingsPersistsKey()' passed on 'My Mac - Contacts Organizer (12901)' (0.011 seconds)
+Test case 'SettingsPreferenceStoreTests.testUpdateSelectedTabPersistsKey()' passed on 'My Mac - Contacts Organizer (12901)' (0.012 seconds)
+Test suite 'DataQualityAnalyzerTests' started on 'My Mac - Contacts Organizer (12903)'
+Test case 'DataQualityAnalyzerTests.testCompleteContact()' passed on 'My Mac - Contacts Organizer (12903)' (0.001 seconds)
+Test case 'DataQualityAnalyzerTests.testEmptyContactList()' passed on 'My Mac - Contacts Organizer (12903)' (0.000 seconds)
+Test case 'DataQualityAnalyzerTests.testHealthScoreDecreasesWithIssues()' passed on 'My Mac - Contacts Organizer (12903)' (0.001 seconds)
+Test case 'DataQualityAnalyzerTests.testHealthScoreForNoIssues()' passed on 'My Mac - Contacts Organizer (12903)' (0.000 seconds)
+Test case 'DataQualityAnalyzerTests.testHealthScoreLowPriorityCappedAt5Percent()' passed on 'My Mac - Contacts Organizer (12903)' (0.000 seconds)
+Test case 'DataQualityAnalyzerTests.testHealthScoreMixedSeverities()' passed on 'My Mac - Contacts Organizer (12903)' (0.000 seconds)
+Test case 'DataQualityAnalyzerTests.testHealthScoreSeverityWeighting()' passed on 'My Mac - Contacts Organizer (12903)' (0.000 seconds)
+Test case 'DataQualityAnalyzerTests.testHealthScoreSuggestionsNoImpact()' passed on 'My Mac - Contacts Organizer (12903)' (0.000 seconds)
+Test case 'DataQualityAnalyzerTests.testIssuesSortedBySeverity()' passed on 'My Mac - Contacts Organizer (12903)' (0.000 seconds)
+Test case 'DataQualityAnalyzerTests.testMissingEmailDetection()' passed on 'My Mac - Contacts Organizer (12903)' (0.000 seconds)
+Test case 'DataQualityAnalyzerTests.testMissingNameDetection()' passed on 'My Mac - Contacts Organizer (12903)' (0.000 seconds)
+Test case 'DataQualityAnalyzerTests.testMissingPhoneDetection()' passed on 'My Mac - Contacts Organizer (12903)' (0.001 seconds)
+Test case 'DataQualityAnalyzerTests.testMultipleIssuesOnSameContact()' passed on 'My Mac - Contacts Organizer (12903)' (0.000 seconds)
+Test case 'SettingsPreferenceStoreTests.testUpdateTextScalePersistsAndIsUndoable()' passed on 'My Mac - Contacts Organizer (12901)' (0.011 seconds)
+Test suite 'SettingsActionControllerTests' started on 'My Mac - Contacts Organizer (12901)'
+Test case 'SettingsActionControllerTests.testCreateBackupPassesThroughToContactsManager()' passed on 'My Mac - Contacts Organizer (12901)' (0.001 seconds)
+Test case 'DataQualityAnalyzerTests.testNoContactInfoDetection()' passed on 'My Mac - Contacts Organizer (12903)' (0.000 seconds)
+Test case 'DataQualityAnalyzerTests.testOrganizationSuggestion()' passed on 'My Mac - Contacts Organizer (12903)' (0.000 seconds)
+Test suite 'OverviewDashboardModelTests' started on 'My Mac - Contacts Organizer (12904)'
+Test case 'OverviewDashboardModelTests.testBackupReminderRespectsInitialAppState()' passed on 'My Mac - Contacts Organizer (12904)' (0.002 seconds)
+Test case 'ContactsManagerConcurrencyTests.testMainThreadLatencyDuringOperations()' passed on 'My Mac - Contacts Organizer (12894)' (0.537 seconds)
+Test suite 'DuplicateDetectorTests' started on 'My Mac - Contacts Organizer (12905)'
+Test case 'DuplicateDetectorTests.testEmptyContactList()' passed on 'My Mac - Contacts Organizer (12905)' (0.001 seconds)
+Test case 'DuplicateDetectorTests.testExactNameMatch()' passed on 'My Mac - Contacts Organizer (12905)' (0.001 seconds)
+Test case 'DuplicateDetectorTests.testMultipleMatchCriteria()' passed on 'My Mac - Contacts Organizer (12905)' (0.000 seconds)
+Test case 'DuplicateDetectorTests.testNoExactNameMatchWithDifferentNames()' passed on 'My Mac - Contacts Organizer (12905)' (0.001 seconds)
+Test suite 'SmartGroupActionExecutorTests' started on 'My Mac - Contacts Organizer (12906)'
+Test case 'SettingsActionControllerTests.testRequestAccessCallsContactsManager()' passed on 'My Mac - Contacts Organizer (12901)' (0.052 seconds)
+Test suite 'HealthReportActionUndoTests' started on 'My Mac - Contacts Organizer (12901)'
+Test case 'HealthReportActionUndoTests.testAddEmailActionRegistersUndoRedo()' passed on 'My Mac - Contacts Organizer (12901)' (0.002 seconds)
+Test case 'HealthReportActionUndoTests.testAddPhoneActionRegistersUndoRedo()' passed on 'My Mac - Contacts Organizer (12901)' (0.001 seconds)
+Test case 'HealthReportActionUndoTests.testAddToGroupActionRegistersUndoRedo()' passed on 'My Mac - Contacts Organizer (12901)' (0.001 seconds)
+Test case 'HealthReportActionUndoTests.testArchiveActionRegistersUndoRedo()' passed on 'My Mac - Contacts Organizer (12901)' (0.001 seconds)
+Test case 'HealthReportActionUndoTests.testMarkReviewedRegistersUndoRedo()' passed on 'My Mac - Contacts Organizer (12901)' (0.001 seconds)
+Test case 'HealthReportActionUndoTests.testUpdateNameRegistersUndoRedo()' passed on 'My Mac - Contacts Organizer (12901)' (0.001 seconds)
+Test suite 'MergeContactsManagerTests' started on 'My Mac - Contacts Organizer (12901)'
+Test case 'SmartGroupTests.testDisabledDefinitionsNotGenerated()' passed on 'My Mac - Contacts Organizer (12902)' (0.101 seconds)
+Test case 'MergeContactsManagerTests.testMergeContactsUsesOverridePipeline()' passed on 'My Mac - Contacts Organizer (12901)' (0.007 seconds)
+Test suite 'PrivacyMonitorServiceTests' started on 'My Mac - Contacts Organizer (12901)'
+Test case 'SmartGroupActionExecutorTests.testCreateGroupRegistersUndoRedoAndUpdatesStore()' passed on 'My Mac - Contacts Organizer (12906)' (0.103 seconds)
+Test case 'SmartGroupTests.testEmptyContactList()' passed on 'My Mac - Contacts Organizer (12902)' (0.102 seconds)
+Test case 'SmartGroupTests.testMultipleDefinitions()' passed on 'My Mac - Contacts Organizer (12902)' (0.001 seconds)
+Test case 'SmartGroupTests.testOrganizationGrouping()' passed on 'My Mac - Contacts Organizer (12902)' (0.001 seconds)
+Test case 'OverviewDashboardModelTests.testDismissBackupReminderRegistersUndo()' failed on 'My Mac - Contacts Organizer (12904)' (0.170 seconds)
+Test case 'OverviewDashboardModelTests.testDuplicateAndIssueCountsTrackUpdates()' passed on 'My Mac - Contacts Organizer (12904)' (0.004 seconds)
+Test case 'OverviewDashboardModelTests.testManualGroupCountUpdatesFromPublisher()' passed on 'My Mac - Contacts Organizer (12904)' (0.004 seconds)
+Test case 'OverviewDashboardModelTests.testMetricsUpdateWhenStatisticsChange()' passed on 'My Mac - Contacts Organizer (12904)' (0.004 seconds)
+Test case 'OverviewDashboardModelTests.testNavigationActionsRouteToTabs()' passed on 'My Mac - Contacts Organizer (12904)' (0.003 seconds)
+Test case 'OverviewDashboardModelTests.testRecentActivitiesPublish()' passed on 'My Mac - Contacts Organizer (12904)' (0.001 seconds)
+Test suite 'BackupServiceTests' started on 'My Mac - Contacts Organizer (12904)'
+Test case 'SmartGroupActionExecutorTests.testDeleteGroupRegistersUndoRedo()' passed on 'My Mac - Contacts Organizer (12906)' (0.103 seconds)
+Test case 'ContactsManagerConcurrencyTests.testMainThreadResponsivenessDuringSmartGroupGeneration()' passed on 'My Mac - Contacts Organizer (12894)' (0.227 seconds)
+Test case 'BackupServiceTests.testCreateBackupPropagatesWriteErrors()' passed on 'My Mac - Contacts Organizer (12904)' (0.067 seconds)
+Test case 'BackupServiceTests.testCreateBackupWritesUserAndAppCopies()' passed on 'My Mac - Contacts Organizer (12904)' (0.006 seconds)
+Test case 'SmartGroupTests.testOrganizationGroupingMinimumTwoContacts()' passed on 'My Mac - Contacts Organizer (12902)' (0.102 seconds)
+Test case 'SmartGroupTests.testPhase1EmailOnly()' passed on 'My Mac - Contacts Organizer (12902)' (0.001 seconds)
+Test case 'SmartGroupTests.testPhase1MultipleEmails()' passed on 'My Mac - Contacts Organizer (12902)' (0.001 seconds)
+Test case 'PrivacyMonitorServiceTests.testRecordingProcessingMetricsUpdatesAverages()' passed on 'My Mac - Contacts Organizer (12901)' (0.204 seconds)
+Test case 'SmartGroupTests.testPhase1MultiplePhones()' passed on 'My Mac - Contacts Organizer (12902)' (0.001 seconds)
+Test case 'BackupServiceTests.testCreateSafetySnapshotWritesFile()' passed on 'My Mac - Contacts Organizer (12904)' (0.005 seconds)
+Test case 'SmartGroupTests.testPhase1NoCriticalInfo()' passed on 'My Mac - Contacts Organizer (12902)' (0.001 seconds)
+Test suite 'MergeEngineTests' started on 'My Mac - Contacts Organizer (12904)'
+Test case 'SmartGroupTests.testPhase1PhoneOnly()' passed on 'My Mac - Contacts Organizer (12902)' (0.001 seconds)
+Test case 'SmartGroupTests.testPhase2BirthdayThisMonth()' passed on 'My Mac - Contacts Organizer (12902)' (0.001 seconds)
+Test case 'SmartGroupTests.testPhase2BirthdayThisWeek()' passed on 'My Mac - Contacts Organizer (12902)' (0.001 seconds)
+Test case 'SmartGroupTests.testPhase2RecentlyAdded()' passed on 'My Mac - Contacts Organizer (12902)' (0.001 seconds)
+Test case 'SmartGroupTests.testPhase2RecentlyModified()' passed on 'My Mac - Contacts Organizer (12902)' (0.001 seconds)
+Test case 'MergeEngineTests.testMergeEngineRespectsPreferredSourcesAndAllowedValues()' failed on 'My Mac - Contacts Organizer (12904)' (0.007 seconds)
+Test case 'MergeEngineTests.testMergePlanProducesConfigurationWithSelectedValues()' passed on 'My Mac - Contacts Organizer (12904)' (0.000 seconds)
+Test case 'SmartGroupTests.testPhase2StaleContacts()' passed on 'My Mac - Contacts Organizer (12902)' (0.001 seconds)
+Test suite 'ManualGroupActionExecutorTests' started on 'My Mac - Contacts Organizer (12904)'
+Test case 'ManualGroupActionExecutorTests.testAddAndRemoveContactsRegisterUndoRedo()' passed on 'My Mac - Contacts Organizer (12904)' (0.003 seconds)
+Test case 'ManualGroupActionExecutorTests.testCleanupDuplicatesDeletesAllSnapshotsAndRegistersUndo()' passed on 'My Mac - Contacts Organizer (12904)' (0.004 seconds)
+Test case 'ManualGroupActionExecutorTests.testCreateGroupRegistersUndoRedo()' passed on 'My Mac - Contacts Organizer (12904)' (0.001 seconds)
+Test case 'ManualGroupActionExecutorTests.testExportGroupRecordsHistoryAndSupportsUndo()' passed on 'My Mac - Contacts Organizer (12904)' (0.001 seconds)
+Test case 'ManualGroupActionExecutorTests.testRenameGroupRegistersUndoRedo()' passed on 'My Mac - Contacts Organizer (12904)' (0.003 seconds)
+Test suite 'HealthIssueActionExecutorTests' started on 'My Mac - Contacts Organizer (12904)'
+Test case 'HealthIssueActionExecutorTests.testExecuteAddEmailCallsPerformer()' passed on 'My Mac - Contacts Organizer (12904)' (0.001 seconds)
+Test case 'HealthIssueActionExecutorTests.testExecuteAddPhoneCallsPerformer()' passed on 'My Mac - Contacts Organizer (12904)' (0.000 seconds)
+Test case 'HealthIssueActionExecutorTests.testExecuteAddToGroup()' passed on 'My Mac - Contacts Organizer (12904)' (0.000 seconds)
+Test case 'HealthIssueActionExecutorTests.testExecuteArchive()' passed on 'My Mac - Contacts Organizer (12904)' (0.000 seconds)
+Test case 'HealthIssueActionExecutorTests.testExecuteFailsForEmptyInput()' passed on 'My Mac - Contacts Organizer (12904)' (0.000 seconds)
+Test case 'HealthIssueActionExecutorTests.testExecuteUpdateName()' passed on 'My Mac - Contacts Organizer (12904)' (0.000 seconds)
+Test case 'HealthIssueActionExecutorTests.testMarkReviewedAddsToReviewedGroup()' passed on 'My Mac - Contacts Organizer (12904)' (0.000 seconds)
+Test suite 'ContactsUndoManagerTests' started on 'My Mac - Contacts Organizer (12904)'
+Test case 'ContactsUndoManagerTests.testAddedEmailEffectUndoRedo()' passed on 'My Mac - Contacts Organizer (12904)' (0.002 seconds)
+Test case 'ContactsUndoManagerTests.testAddedPhoneEffectUndoRedo()' passed on 'My Mac - Contacts Organizer (12904)' (0.001 seconds)
+Test case 'ContactsUndoManagerTests.testAddedToGroupEffectUndoRedo()' passed on 'My Mac - Contacts Organizer (12904)' (0.001 seconds)
+Test case 'ContactsUndoManagerTests.testArchivedContactEffectUndoRedo()' passed on 'My Mac - Contacts Organizer (12904)' (0.001 seconds)
+Test case 'ContactsUndoManagerTests.testFailedUndoReturnsOperationToStack()' passed on 'My Mac - Contacts Organizer (12904)' (0.005 seconds)
+Test case 'ContactsUndoManagerTests.testRegisterAndUndoRedo()' passed on 'My Mac - Contacts Organizer (12904)' (0.001 seconds)
+Test case 'ContactsUndoManagerTests.testUpdatedNameEffectUndoRedo()' passed on 'My Mac - Contacts Organizer (12904)' (0.001 seconds)
+Test suite 'RefreshStateMachineTests' started on 'My Mac - Contacts Organizer (12904)'
+Test case 'RefreshStateMachineTests.testConsumePendingRefreshClearsFlag()' passed on 'My Mac - Contacts Organizer (12904)' (0.000 seconds)
+Test case 'RefreshStateMachineTests.testPrepareForLoadReturnsFalseWhenBusy()' passed on 'My Mac - Contacts Organizer (12904)' (0.000 seconds)
+Test case 'RefreshStateMachineTests.testTriggerIgnoredWhenAutoRefreshDisabled()' passed on 'My Mac - Contacts Organizer (12904)' (0.000 seconds)
+Test case 'RefreshStateMachineTests.testTriggerWhileBusyQueuesRefresh()' passed on 'My Mac - Contacts Organizer (12904)' (0.000 seconds)
+Test case 'RefreshStateMachineTests.testTriggerWhileIdleStartsRefresh()' passed on 'My Mac - Contacts Organizer (12904)' (0.000 seconds)
+Test case 'PrivacyMonitorServiceTests.testRefreshMetricsUpdatesTimestamp()' passed on 'My Mac - Contacts Organizer (12901)' (0.056 seconds)
+Test suite 'GroupExportServiceFileTests' started on 'My Mac - Contacts Organizer (12904)'
+Test case 'GroupExportServiceFileTests.testCreateVCardFileStoresTempFile()' passed on 'My Mac - Contacts Organizer (12904)' (0.001 seconds)
+Test case 'GroupExportServiceFileTests.testExportToCSVWritesIntoDownloadsOverride()' passed on 'My Mac - Contacts Organizer (12904)' (0.001 seconds)
+Test suite 'ImportExportServiceTests' started on 'My Mac - Contacts Organizer (12904)'
+Test case 'ImportExportServiceTests.testDefaultExportURLUsesDocumentsDirectory()' passed on 'My Mac - Contacts Organizer (12904)' (0.001 seconds)
+Test case 'ImportExportServiceTests.testExportImportRoundTripPreservesExtendedFields()' passed on 'My Mac - Contacts Organizer (12904)' (0.002 seconds)
+Test case 'ImportExportServiceTests.testGenerateAndSaveTestDatabaseCreatesReadableFile()' passed on 'My Mac - Contacts Organizer (12904)' (0.001 seconds)
+Test suite 'TypographyTests' started on 'My Mac - Contacts Organizer (12904)'
+Test case 'SmartGroupActionExecutorTests.testExportRecordsHistoryAndSupportsUndo()' passed on 'My Mac - Contacts Organizer (12906)' (0.102 seconds)
+Test case 'TypographyTests.testPlatformTypographyMatchesMacGuidelines()' passed on 'My Mac - Contacts Organizer (12904)' (0.000 s
 Test session results, code coverage, and logs:
-	/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Logs/Test/Test-Contacts Organizer-2025.11.13_02-54-36--0800.xcresult
+	/Users/minimac/Library/Developer/Xcode/DerivedData/Contacts_Organizer-dmlvkghjqgzlvnezvxtllcgdmqpu/Logs/Test/Test-Contacts Organizer-2025.11.13_05-02-39--0800.xcresult
 
-eshStateMachineTests.testTriggerWhileIdleStartsRefresh()' passed on 'My Mac - Contacts Organizer (6918)' (0.000 seconds)
-Test case 'HealthReportActionUndoTests.testAddToGroupActionRegistersUndoRedo()' passed on 'My Mac - Contacts Organizer (6915)' (0.101 seconds)
-Test case 'HealthReportActionUndoTests.testArchiveActionRegistersUndoRedo()' passed on 'My Mac - Contacts Organizer (6915)' (0.001 seconds)
-Test case 'HealthReportActionUndoTests.testMarkReviewedRegistersUndoRedo()' passed on 'My Mac - Contacts Organizer (6915)' (0.001 seconds)
-Test case 'HealthReportActionUndoTests.testUpdateNameRegistersUndoRedo()' passed on 'My Mac - Contacts Organizer (6915)' (0.001 seconds)
-Test suite 'SmartGroupActionExecutorTests' started on 'My Mac - Contacts Organizer (6918)'
-Test case 'SmartGroupActionExecutorTests.testCreateGroupRegistersUndoRedoAndUpdatesStore()' passed on 'My Mac - Contacts Organizer (6918)' (0.001 seconds)
-Test case 'SmartGroupActionExecutorTests.testDeleteGroupRegistersUndoRedo()' passed on 'My Mac - Contacts Organizer (6918)' (0.001 seconds)
-Test case 'SmartGroupActionExecutorTests.testExportRecordsHistoryAndSupportsUndo()' passed on 'My Mac - Contacts Organizer (6918)' (0.001 seconds)
-Test suite 'TypographyTests' started on 'My Mac - Contacts Organizer (6915)'
-Test case 'TypographyTests.testPlatformTypographyMatchesMacGuidelines()' passed on 'My Mac - Contacts Organizer (6915)' (0.000 seconds)
-Test case 'TypographyTests.testTextScaleMultipliers()' passed on 'My Mac - Contacts Organizer (6915)' (0.000 seconds)
-Test case 'TypographyTests.testTypographySizesAreMonotonic()' passed on 'My Mac - Contacts Organizer (6915)' (0.000 seconds)
-Test suite 'TestDataGeneratorTests' started on 'My Mac - Contacts Organizer (6918)'
-Test case 'TestDataGeneratorTests.testGeneratorProducesDuplicatesAndIncompleteContacts()' passed on 'My Mac - Contacts Organizer (6918)' (0.001 seconds)
-Test suite 'GroupMessageComposerTests' started on 'My Mac - Contacts Organizer (6918)'
-Test case 'GroupMessageComposerTests.testComposerAddsOverflowLine()' passed on 'My Mac - Contacts Organizer (6918)' (0.000 seconds)
-Test suite 'AppStateFlowTests' started on 'My Mac - Contacts Organizer (6915)'
-Test case 'GroupMessageComposerTests.testComposerListsContactsWithDetails()' passed on 'My Mac - Contacts Organizer (6918)' (0.000 seconds)
-Test case 'AppStateFlowTests.testFlowReflectsAuthorizationChangesImmediately()' passed on 'My Mac - Contacts Organizer (6915)' (0.003 seconds)
-Test case 'AppStateFlowTests.testFlowTransitionsThroughOnboardingPermissionAndDashboard()' passed on 'My Mac - Contacts Organizer (6915)' (0.000 seconds)
-Test suite 'HealthActivityFactoryTests' started on 'My Mac - Contacts Organizer (6915)'
-Test case 'HealthActivityFactoryTests.testFactoryBuildsActivityWithCorrectFields()' passed on 'My Mac - Contacts Organizer (6915)' (0.000 seconds)
-Test suite 'RecentActivitySectionsTests' started on 'My Mac - Contacts Organizer (6918)'
-Test case 'RecentActivitySectionsTests.testGroupsActivitiesByDayInDescendingOrder()' passed on 'My Mac - Contacts Organizer (6918)' (0.000 seconds)
-Test suite 'Contacts_OrganizerTests' started on 'My Mac - Contacts Organizer (6918)'
-Test case 'Contacts_OrganizerTests/example()' passed on 'My Mac - Contacts Organizer (6918)' (0.000 seconds)
-Test case 'MergeEngineTests.testMergeEngineRespectsPreferredSourcesAndAllowedValues()' failed on 'My Mac - Contacts Organizer (6917)' (0.059 seconds)
-Test case 'MergeEngineTests.testMergePlanProducesConfigurationWithSelectedValues()' passed on 'My Mac - Contacts Organizer (6917)' (0.000 seconds)
-Test case 'SettingsPreferenceStoreTests.testUpdateSelectedTabPersistsKey()' passed on 'My Mac - Contacts Organizer (6914)' (0.215 seconds)
-Test case 'SettingsActionControllerTests.testRequestAccessCallsContactsManager()' passed on 'My Mac - Contacts Organizer (6916)' (0.102 seconds)
-Test case 'SettingsPreferenceStoreTests.testUpdateTextScalePersistsAndIsUndoable()' passed on 'My Mac - Contacts Organizer (6914)' (0.308 seconds)
-Test case 'SmartGroupTests.testSmartGroupGenerationPerformance()' passed on 'My Mac - Contacts Organizer (6913)' (1.148 seconds)
-Test case 'ContactsManagerConcurrencyTests.testSmartGroupConcurrentPerformance()' passed on 'My Mac - Contacts Organizer (6912)' (1.237 seconds)
-Test case 'ContactsManagerConcurrencyTests.testStateConsistencyDuringConcurrentOperations()' passed on 'My Mac - Contacts Organizer (6912)' (0.110 seconds)
+econds)
+Test case 'TypographyTests.testTextScaleMultipliers()' passed on 'My Mac - Contacts Organizer (12904)' (0.000 seconds)
+Test case 'TypographyTests.testTypographySizesAreMonotonic()' passed on 'My Mac - Contacts Organizer (12904)' (0.000 seconds)
+Test suite 'GroupExportServiceTests' started on 'My Mac - Contacts Organizer (12904)'
+Test suite 'GroupMessageComposerTests' started on 'My Mac - Contacts Organizer (12906)'
+Test case 'GroupExportServiceTests.testExportToCSVSanitizesFilenameCharacters()' passed on 'My Mac - Contacts Organizer (12904)' (0.001 seconds)
+Test case 'GroupExportServiceTests.testExportToCSVWritesFileAndReturnsURLInTestDirectory()' passed on 'My Mac - Contacts Organizer (12904)' (0.001 seconds)
+Test case 'GroupMessageComposerTests.testComposerAddsOverflowLine()' passed on 'My Mac - Contacts Organizer (12906)' (0.001 seconds)
+Test case 'GroupExportServiceTests.testExportToVCardFileWritesFile()' passed on 'My Mac - Contacts Organizer (12904)' (0.001 seconds)
+Test case 'GroupExportServiceTests.testGenerateCSVStringEscapesSpecialCharacters()' passed on 'My Mac - Contacts Organizer (12904)' (0.000 seconds)
+Test case 'GroupExportServiceTests.testGenerateVCardStringIncludesOrganizationAndContacts()' passed on 'My Mac - Contacts Organizer (12904)' (0.000 seconds)
+Test case 'GroupExportServiceTests.testMessagesVCardExportUsesShareHandler()' passed on 'My Mac - Contacts Organizer (12904)' (0.001 seconds)
+Test case 'GroupMessageComposerTests.testComposerListsContactsWithDetails()' passed on 'My Mac - Contacts Organizer (12906)' (0.001 seconds)
+Test suite 'AppStateFlowTests' started on 'My Mac - Contacts Organizer (12906)'
+Test case 'AppStateFlowTests.testFlowReflectsAuthorizationChangesImmediately()' passed on 'My Mac - Contacts Organizer (12906)' (0.001 seconds)
+Test case 'AppStateFlowTests.testFlowTransitionsThroughOnboardingPermissionAndDashboard()' passed on 'My Mac - Contacts Organizer (12906)' (0.001 seconds)
+Test suite 'TestDataGeneratorTests' started on 'My Mac - Contacts Organizer (12906)'
+Test suite 'RecentActivitySectionsTests' started on 'My Mac - Contacts Organizer (12904)'
+Test case 'TestDataGeneratorTests.testGeneratorProducesDuplicatesAndIncompleteContacts()' passed on 'My Mac - Contacts Organizer (12906)' (0.002 seconds)
+Test case 'RecentActivitySectionsTests.testGroupsActivitiesByDayInDescendingOrder()' passed on 'My Mac - Contacts Organizer (12904)' (0.001 seconds)
+Test suite 'HealthActivityFactoryTests' started on 'My Mac - Contacts Organizer (12904)'
+Test case 'HealthActivityFactoryTests.testFactoryBuildsActivityWithCorrectFields()' passed on 'My Mac - Contacts Organizer (12904)' (0.000 seconds)
+Test case 'DuplicateDetectorTests.testPerformanceWithLargeDataset()' passed on 'My Mac - Contacts Organizer (12905)' (0.331 seconds)
+Test case 'DuplicateDetectorTests.testPrimaryContactSelectionWithMoreData()' passed on 'My Mac - Contacts Organizer (12905)' (0.000 seconds)
+Test case 'DuplicateDetectorTests.testSameEmailMatch()' passed on 'My Mac - Contacts Organizer (12905)' (0.000 seconds)
+Test case 'DuplicateDetectorTests.testSamePhoneNumberMatch()' passed on 'My Mac - Contacts Organizer (12905)' (0.000 seconds)
+Test case 'DuplicateDetectorTests.testSimilarNameMatch()' passed on 'My Mac - Contacts Organizer (12905)' (0.000 seconds)
+Test suite 'Contacts_OrganizerTests' started on 'My Mac - Contacts Organizer (12906)'
+Test case 'Contacts_OrganizerTests/example()' passed on 'My Mac - Contacts Organizer (12906)' (0.000 seconds)
+Test case 'DuplicateDetectorTests.testSingleContact()' passed on 'My Mac - Contacts Organizer (12905)' (0.000 seconds)
+Test case 'ContactsManagerConcurrencyTests.testManySimultaneousOperations()' passed on 'My Mac - Contacts Organizer (12894)' (0.208 seconds)
+Test case 'DataQualityAnalyzerTests.testPerformanceWithLargeDataset()' passed on 'My Mac - Contacts Organizer (12903)' (0.476 seconds)
+Test case 'DataQualityAnalyzerTests.testSummaryGeneration()' passed on 'My Mac - Contacts Organizer (12903)' (0.000 seconds)
+Test case 'ContactsManagerConcurrencyTests.testMixedOperationsConcurrency()' passed on 'My Mac - Contacts Organizer (12894)' (0.116 seconds)
+Test case 'ContactsManagerConcurrencyTests.testOperationsPriorityIndependence()' passed on 'My Mac - Contacts Organizer (12894)' (0.008 seconds)
+Test case 'ContactsManagerConcurrencyTests.testOperationsWorkFromBackgroundContext()' passed on 'My Mac - Contacts Organizer (12894)' (0.211 seconds)
+Test case 'SmartGroupTests.testSmartGroupGenerationPerformance()' passed on 'My Mac - Contacts Organizer (12902)' (1.135 seconds)
+Test case 'ContactsManagerConcurrencyTests.testSmartGroupConcurrentPerformance()' passed on 'My Mac - Contacts Organizer (12894)' (1.136 seconds)
+Test case 'ContactsManagerConcurrencyTests.testStateConsistencyDuringConcurrentOperations()' passed on 'My Mac - Contacts Organizer (12894)' (0.212 seconds)
