@@ -33,7 +33,7 @@ class PrivacyMonitorService: ObservableObject {
 
     // MARK: - Initialization
 
-    private init() {
+    init(startMonitoringImmediately: Bool = true) {
         // Initialize with default metrics
         self.currentMetrics = PrivacyMetrics(
             networkStatus: NetworkActivityStatus(
@@ -67,8 +67,9 @@ class PrivacyMonitorService: ObservableObject {
             lastUpdated: Date()
         )
 
-        // Start monitoring
-        startMonitoring()
+        if startMonitoringImmediately {
+            startMonitoring()
+        }
     }
 
     // MARK: - Monitoring Control
@@ -281,4 +282,3 @@ class PrivacyMonitorService: ObservableObject {
         updateAllMetrics()
     }
 }
-

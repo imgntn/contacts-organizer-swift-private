@@ -11,6 +11,7 @@ import ApplicationServices
 
 struct GroupsView: View {
     @EnvironmentObject var contactsManager: ContactsManager
+    @EnvironmentObject var undoManager: ContactsUndoManager
     @Binding var targetSmartGroupName: String?
     @State private var showCreateGroupSheet = false
     @State private var smartGroupResults: [SmartGroupResult] = []
@@ -212,9 +213,16 @@ struct GroupsView: View {
                 CreateGroupSheet()
             }
             .sheet(item: $selectedGroupForModal) { result in
-                SmartGroupDetailSheet(result: result, isCreating: isCreatingGroups) {
-                    Task { await createSingleSmartGroup(result) }
-                }
+                SmartGroupDetailSheet(
+                    result: result,
+                    isCreating: isCreatingGroups,
+                    onCreateInContacts: {
+                        Task { await createSingleSmartGroup(result) }
+                    },
+                    onExport: { exportType in
+                        makeSmartGroupExecutor().exportGroup(result, as: exportType)
+                    }
+                )
             }
             .onChange(of: contactsManager.contacts, initial: false) { _,_  in
                 Task { await generateSmartGroupsAsync() }
@@ -547,6 +555,24 @@ struct GroupsView: View {
     }
 
     @MainActor
+    private func makeSmartGroupExecutor() -> SmartGroupActionExecutor {
+        SmartGroupActionExecutor(
+            contactsGateway: contactsManager,
+            exportGateway: GroupExportService.shared,
+            undoManager: undoManager
+        )
+    }
+
+    @MainActor
+    private func makeManualGroupExecutor() -> ManualGroupActionExecutor {
+        ManualGroupActionExecutor(
+            contactsGateway: contactsManager,
+            exportGateway: GroupExportService.shared,
+            undoManager: undoManager
+        )
+    }
+
+    @MainActor
     private func generateSmartGroupsAsync() async {
         if isLoadingSmartGroups { return }
         isLoadingSmartGroups = true
@@ -565,8 +591,8 @@ struct GroupsView: View {
     private func confirmAndCreateGroup() async {
         guard let result = groupToCreate else { return }
         isCreatingGroups = true
-        let contactIds = result.contacts.map { $0.id }
-        let success = await contactsManager.createGroup(name: result.groupName, contactIds: contactIds)
+        let executor = makeSmartGroupExecutor()
+        let success = await executor.createGroup(from: result)
         isCreatingGroups = false
         if success {
             creationResults = CreationResults(successCount: 1, failureCount: 0, failedGroups: [])
@@ -586,18 +612,18 @@ struct GroupsView: View {
     @MainActor
     private func cleanUpDuplicates() async {
         isCleaningDuplicates = true
-        let (deleted, errors) = await contactsManager.deleteDuplicateGroups(keepFirst: true)
+        let cleanupResult = await makeManualGroupExecutor().cleanupDuplicateGroups(keepFirst: true)
         isCleaningDuplicates = false
-        cleanupResults = CleanupResults(deletedCount: deleted, errorCount: errors)
+        cleanupResults = CleanupResults(deletedCount: cleanupResult.deletedCount, errorCount: cleanupResult.errorCount)
         showCleanupResults = true
         let duplicates = await contactsManager.findDuplicateGroups()
         duplicateGroupCount = duplicates.values.reduce(0) { $0 + $1.count - 1 }
 
-        if deleted > 0 {
+        if cleanupResult.deletedCount > 0 {
             contactsManager.logActivity(
                 kind: .duplicatesCleaned,
                 title: "Cleaned Duplicate Groups",
-                detail: "\(deleted) removed",
+                detail: "\(cleanupResult.deletedCount) removed",
                 icon: "arrow.triangle.merge"
             )
         }
@@ -815,6 +841,9 @@ struct SmartGroupDetailSheet: View {
     let result: SmartGroupResult
     let isCreating: Bool
     let onCreateInContacts: () -> Void
+    let onExport: (GroupExportService.ExportType) -> GroupExportService.ExportResult
+    @State private var exportResult: GroupExportService.ExportResult?
+    @State private var showExportAlert = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -850,7 +879,10 @@ struct SmartGroupDetailSheet: View {
                 // Export Menu
                 Menu {
                     ForEach(GroupExportService.ExportType.allCases, id: \.self) { exportType in
-                        Button(action: { }) {
+                        Button {
+                            exportResult = onExport(exportType)
+                            showExportAlert = true
+                        } label: {
                             Label(exportType.rawValue, systemImage: exportType.icon)
                         }
                     }
@@ -947,6 +979,13 @@ struct SmartGroupDetailSheet: View {
         }
         .frame(width: 650, height: 600)
         .background(Color(NSColor.windowBackgroundColor))
+        .alert("Export Result", isPresented: $showExportAlert) {
+            Button("OK") {
+                exportResult = nil
+            }
+        } message: {
+            Text(exportResult?.message ?? "Export complete")
+        }
     }
 
     private var groupIcon: String {
@@ -1176,6 +1215,7 @@ struct ManualGroupCard: View {
     @State private var showExportAlert = false
     @State private var showRenameSheet = false
     @EnvironmentObject var contactsManager: ContactsManager
+    @EnvironmentObject var undoManager: ContactsUndoManager
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -1270,11 +1310,12 @@ struct ManualGroupCard: View {
     }
 
     private func performExport(type: GroupExportService.ExportType) {
-        let result = GroupExportService.shared.performExport(
-            type: type,
-            contacts: contacts,
-            groupName: group.name
+        let executor = ManualGroupActionExecutor(
+            contactsGateway: contactsManager,
+            exportGateway: GroupExportService.shared,
+            undoManager: undoManager
         )
+        let result = executor.exportGroup(groupName: group.name, contacts: contacts, type: type)
 
         if let fileURL = result.fileURL {
             // Open file location in Finder for CSV exports
@@ -1288,7 +1329,12 @@ struct ManualGroupCard: View {
     private func renameGroup(to newName: String) async -> Bool {
         let trimmed = newName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, trimmed != group.name else { return false }
-        let success = await contactsManager.renameGroup(group, to: trimmed)
+        let executor = ManualGroupActionExecutor(
+            contactsGateway: contactsManager,
+            exportGateway: GroupExportService.shared,
+            undoManager: undoManager
+        )
+        let success = await executor.renameGroup(currentName: group.name, newName: trimmed)
         if success {
             await contactsManager.fetchAllGroups()
         }
@@ -1414,6 +1460,7 @@ struct SmartGroupDefinitionRow: View {
 struct CreateGroupSheet: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var contactsManager: ContactsManager
+    @EnvironmentObject var undoManager: ContactsUndoManager
     @State private var groupName = ""
     @State private var selectedContactIds: Set<String> = []
     @State private var searchText = ""
@@ -1477,7 +1524,12 @@ struct CreateGroupSheet: View {
         isCreating = true
         errorMessage = nil
         Task {
-            let success = await contactsManager.createGroup(name: groupName, contactIds: Array(selectedContactIds))
+            let executor = ManualGroupActionExecutor(
+                contactsGateway: contactsManager,
+                exportGateway: GroupExportService.shared,
+                undoManager: undoManager
+            )
+            let success = await executor.createGroup(name: groupName, contactIds: Array(selectedContactIds))
             await MainActor.run {
                 isCreating = false
                 if success {
@@ -1487,6 +1539,9 @@ struct CreateGroupSheet: View {
                         detail: groupName,
                         icon: "folder.fill"
                     )
+                    Task {
+                        await contactsManager.fetchAllGroups()
+                    }
                     dismiss()
                 } else {
                     errorMessage = contactsManager.errorMessage ?? "Failed to create group"

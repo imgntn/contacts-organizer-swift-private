@@ -52,6 +52,29 @@ class ContactsManager: ObservableObject {
         CNContactImageDataKey as CNKeyDescriptor
     ]
 
+#if DEBUG
+    struct BackupOverride {
+        let contacts: [CNContact]
+        let userDirectory: URL
+        let appDirectory: URL
+    }
+
+    struct SnapshotOverride {
+        let contacts: [CNContact]
+        let snapshotDirectory: URL
+    }
+
+    struct MergeOverride {
+        let destination: CNContact
+        let sources: [CNContact]
+        let onSave: (CNMutableContact, [CNContact]) -> Void
+    }
+
+    nonisolated(unsafe) static var backupOverride: BackupOverride?
+    nonisolated(unsafe) static var snapshotOverride: SnapshotOverride?
+    nonisolated(unsafe) static var mergeOverride: MergeOverride?
+#endif
+
     private init() {
         updateAuthorizationStatus()
         Task { @MainActor in
@@ -295,6 +318,18 @@ class ContactsManager: ObservableObject {
     func mergeContacts(using configuration: MergeConfiguration) async -> Bool {
         guard authorizationStatus == .authorized else { return false }
 
+#if DEBUG
+        if let override = ContactsManager.mergeOverride {
+            let mergedContact = MergeEngine.mergedContact(
+                configuration: configuration,
+                destinationContact: override.destination,
+                sourceContacts: override.sources
+            )
+            override.onSave(mergedContact, override.sources)
+            return true
+        }
+#endif
+
         do {
             let keysToFetch: [CNKeyDescriptor] = [
                 CNContactGivenNameKey as CNKeyDescriptor,
@@ -335,38 +370,11 @@ class ContactsManager: ObservableObject {
                 }
             }
 
-            let allContacts = [destinationContact] + sourceContacts
-            let mergedContact = destinationContact.mutableCopy() as! CNMutableContact
-
-            applyPreferredName(configuration, to: mergedContact, from: allContacts)
-            applyPreferredOrganization(configuration, to: mergedContact, from: allContacts)
-            applyPreferredPhoto(configuration, to: mergedContact, from: allContacts)
-
-            mergedContact.phoneNumbers = mergePhoneNumbers(
+            let mergedContact = MergeEngine.mergedContact(
+                configuration: configuration,
                 destinationContact: destinationContact,
-                sources: sourceContacts,
-                allowedValues: configuration.includedPhoneNumbers
+                sourceContacts: sourceContacts
             )
-
-            mergedContact.emailAddresses = mergeEmailAddresses(
-                destinationContact: destinationContact,
-                sources: sourceContacts,
-                allowedValues: configuration.includedEmailAddresses
-            )
-
-            mergePostalAddresses(into: mergedContact, from: sourceContacts)
-            mergeURLAddresses(into: mergedContact, from: sourceContacts)
-            mergeSocialProfiles(into: mergedContact, from: sourceContacts)
-            mergeInstantMessages(into: mergedContact, from: sourceContacts)
-
-            if mergedContact.birthday == nil {
-                for source in sourceContacts {
-                    if let birthday = source.birthday {
-                        mergedContact.birthday = birthday
-                        break
-                    }
-                }
-            }
 
             let saveRequest = CNSaveRequest()
             saveRequest.update(mergedContact)
@@ -386,138 +394,6 @@ class ContactsManager: ObservableObject {
             }
             print("❌ Merge error: \(error)")
             return false
-        }
-    }
-
-    private func applyPreferredName(_ configuration: MergeConfiguration, to contact: CNMutableContact, from contacts: [CNContact]) {
-        let targetId = configuration.preferredNameSourceId ?? configuration.primaryContactId
-        guard let source = contacts.first(where: { $0.identifier == targetId }) else { return }
-        contact.givenName = source.givenName
-        contact.familyName = source.familyName
-        contact.middleName = source.middleName
-        contact.nickname = source.nickname
-        contact.namePrefix = source.namePrefix
-        contact.nameSuffix = source.nameSuffix
-    }
-
-    private func applyPreferredOrganization(_ configuration: MergeConfiguration, to contact: CNMutableContact, from contacts: [CNContact]) {
-        let targetId = configuration.preferredOrganizationSourceId ?? configuration.primaryContactId
-        guard let source = contacts.first(where: { $0.identifier == targetId }) else { return }
-        if !source.organizationName.isEmpty {
-            contact.organizationName = source.organizationName
-            contact.departmentName = source.departmentName
-            contact.jobTitle = source.jobTitle
-        }
-    }
-
-    private func applyPreferredPhoto(_ configuration: MergeConfiguration, to contact: CNMutableContact, from contacts: [CNContact]) {
-        guard let photoSourceId = configuration.preferredPhotoSourceId,
-              let source = contacts.first(where: { $0.identifier == photoSourceId }),
-              source.imageDataAvailable,
-              let imageData = source.imageData else {
-            return
-        }
-        contact.imageData = imageData
-    }
-
-    private func mergePhoneNumbers(
-        destinationContact: CNContact,
-        sources: [CNContact],
-        allowedValues: Set<String>?
-    ) -> [CNLabeledValue<CNPhoneNumber>] {
-        var final: [CNLabeledValue<CNPhoneNumber>] = []
-        var seen = Set<String>()
-        let whitelist = allowedValues
-
-        let allPhones = destinationContact.phoneNumbers + sources.flatMap { $0.phoneNumbers }
-        for phone in allPhones {
-            let value = phone.value.stringValue
-            if let whitelist, !whitelist.contains(value) {
-                continue
-            }
-            if seen.insert(value).inserted {
-                final.append(phone)
-            }
-        }
-
-        return final
-    }
-
-    private func mergeEmailAddresses(
-        destinationContact: CNContact,
-        sources: [CNContact],
-        allowedValues: Set<String>?
-    ) -> [CNLabeledValue<NSString>] {
-        var final: [CNLabeledValue<NSString>] = []
-        var seen = Set<String>()
-        let whitelist = allowedValues
-        let allEmails = destinationContact.emailAddresses + sources.flatMap { $0.emailAddresses }
-
-        for email in allEmails {
-            let value = email.value as String
-            if let whitelist, !whitelist.contains(value) {
-                continue
-            }
-            if seen.insert(value).inserted {
-                final.append(email)
-            }
-        }
-
-        return final
-    }
-
-    private func mergePostalAddresses(into contact: CNMutableContact, from sources: [CNContact]) {
-        for source in sources {
-            for address in source.postalAddresses {
-                let exists = contact.postalAddresses.contains { existing in
-                    let lhs = existing.value
-                    let rhs = address.value
-                    return lhs.street == rhs.street && lhs.city == rhs.city && lhs.postalCode == rhs.postalCode
-                }
-                if !exists {
-                    contact.postalAddresses.append(address)
-                }
-            }
-        }
-    }
-
-    private func mergeURLAddresses(into contact: CNMutableContact, from sources: [CNContact]) {
-        var seen = Set(contact.urlAddresses.map { $0.value as String })
-        for source in sources {
-            for url in source.urlAddresses {
-                let value = url.value as String
-                if seen.insert(value).inserted {
-                    contact.urlAddresses.append(url)
-                }
-            }
-        }
-    }
-
-    private func mergeSocialProfiles(into contact: CNMutableContact, from sources: [CNContact]) {
-        for source in sources {
-            for profile in source.socialProfiles {
-                let duplicate = contact.socialProfiles.contains { existing in
-                    existing.value.service == profile.value.service &&
-                    existing.value.username == profile.value.username
-                }
-                if !duplicate {
-                    contact.socialProfiles.append(profile)
-                }
-            }
-        }
-    }
-
-    private func mergeInstantMessages(into contact: CNMutableContact, from sources: [CNContact]) {
-        for source in sources {
-            for im in source.instantMessageAddresses {
-                let duplicate = contact.instantMessageAddresses.contains { existing in
-                    existing.value.service == im.value.service &&
-                    existing.value.username == im.value.username
-                }
-                if !duplicate {
-                    contact.instantMessageAddresses.append(im)
-                }
-            }
         }
     }
 
@@ -777,7 +653,7 @@ class ContactsManager: ObservableObject {
         return existingGroups.first(where: { $0.name == groupName })
     }
 
-    func createGroup(name: String, contactIds: [String]) async -> Bool {
+    func createGroup(name: String, contactIds: [String], allowDuplicateNames: Bool = false) async -> Bool {
         guard authorizationStatus == .authorized else { return false }
 
         // Use the dedicated queue instead of Task.detached
@@ -789,14 +665,16 @@ class ContactsManager: ObservableObject {
                 }
 
                 do {
-                    // Check if group with this name already exists
-                    let existingGroups = try self.store.groups(matching: nil)
-                    if existingGroups.contains(where: { $0.name == name }) {
-                        Task { @MainActor in
-                            self.errorMessage = "Group '\(name)' already exists"
+                    if !allowDuplicateNames {
+                        // Check if group with this name already exists
+                        let existingGroups = try self.store.groups(matching: nil)
+                        if existingGroups.contains(where: { $0.name == name }) {
+                            Task { @MainActor in
+                                self.errorMessage = "Group '\(name)' already exists"
+                            }
+                            continuation.resume(returning: false)
+                            return
                         }
-                        continuation.resume(returning: false)
-                        return
                     }
 
                     let group = CNMutableGroup()
@@ -820,6 +698,41 @@ class ContactsManager: ObservableObject {
                 } catch {
                     Task { @MainActor in
                         self.errorMessage = "Failed to create group: \(error.localizedDescription)"
+                    }
+                    continuation.resume(returning: false)
+                }
+            }
+        }
+    }
+
+    func deleteGroup(named groupName: String) async -> Bool {
+        guard authorizationStatus == .authorized else { return false }
+
+        return await withCheckedContinuation { continuation in
+            contactsQueue.async { [weak self] in
+                guard let self = self else {
+                    continuation.resume(returning: false)
+                    return
+                }
+
+                do {
+                    guard let group = try self.group(named: groupName) else {
+                        continuation.resume(returning: false)
+                        return
+                    }
+
+                    guard let mutableGroup = group.mutableCopy() as? CNMutableGroup else {
+                        continuation.resume(returning: false)
+                        return
+                    }
+
+                    let saveRequest = CNSaveRequest()
+                    saveRequest.delete(mutableGroup)
+                    try self.store.execute(saveRequest)
+                    continuation.resume(returning: true)
+                } catch {
+                    Task { @MainActor in
+                        self.errorMessage = "Failed to delete group: \(error.localizedDescription)"
                     }
                     continuation.resume(returning: false)
                 }
@@ -867,6 +780,38 @@ class ContactsManager: ObservableObject {
         }
     }
 
+    func renameGroup(named currentName: String, to newName: String) async -> Bool {
+        guard authorizationStatus == .authorized else { return false }
+
+        return await withCheckedContinuation { continuation in
+            contactsQueue.async { [weak self] in
+                guard let self = self else {
+                    continuation.resume(returning: false)
+                    return
+                }
+
+                do {
+                    guard let group = try self.group(named: currentName),
+                          let mutable = group.mutableCopy() as? CNMutableGroup else {
+                        continuation.resume(returning: false)
+                        return
+                    }
+
+                    mutable.name = newName
+                    let saveRequest = CNSaveRequest()
+                    saveRequest.update(mutable)
+                    try self.store.execute(saveRequest)
+                    continuation.resume(returning: true)
+                } catch {
+                    Task { @MainActor in
+                        self.errorMessage = "Failed to rename group: \(error.localizedDescription)"
+                    }
+                    continuation.resume(returning: false)
+                }
+            }
+        }
+    }
+
     // MARK: - Fetch Groups
 
     func fetchAllGroups() async {
@@ -900,6 +845,47 @@ class ContactsManager: ObservableObject {
                 self.errorMessage = "Failed to fetch groups: \(error.localizedDescription)"
             }
         }
+    }
+
+    func fetchContacts(forGroupNamed groupName: String) async -> [ContactSummary] {
+        guard let targetGroup = await withCheckedContinuation({ (continuation: CheckedContinuation<CNGroup?, Never>) in
+            contactsQueue.async { [weak self] in
+                guard let self = self else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                let group = try? self.group(named: groupName)
+                continuation.resume(returning: group)
+            }
+        }) else {
+            return []
+        }
+
+        return await fetchContactsForGroup(targetGroup)
+    }
+
+    func removeContacts(_ contactIds: [String], fromGroupNamed groupName: String) async -> Bool {
+        guard !contactIds.isEmpty else { return true }
+        var succeeded = true
+        for contactId in contactIds {
+            let result = await removeContact(contactId, fromGroupNamed: groupName)
+            succeeded = succeeded && result
+        }
+        return succeeded
+    }
+
+    func duplicateGroupSnapshots(keepFirst: Bool = true) async -> [ManualGroupSnapshot] {
+        let duplicates = await findDuplicateGroups()
+        var snapshots: [ManualGroupSnapshot] = []
+        for (_, groups) in duplicates {
+            let groupsToDelete = keepFirst ? Array(groups.dropFirst()) : Array(groups.dropLast())
+            for group in groupsToDelete {
+                let contacts = await fetchContactsForGroup(group)
+                let contactIds = contacts.map { $0.id }
+                snapshots.append(ManualGroupSnapshot(name: group.name, contactIds: contactIds))
+            }
+        }
+        return snapshots
     }
 
     // MARK: - Fetch Contacts for Group
@@ -1028,6 +1014,12 @@ class ContactsManager: ObservableObject {
     func createSafetySnapshot(tag: String) async -> URL? {
         guard authorizationStatus == .authorized else { return nil }
 
+#if DEBUG
+        if let override = ContactsManager.snapshotOverride {
+            return await createSnapshotUsingOverride(override: override, tag: tag)
+        }
+#endif
+
         return await withCheckedContinuation { continuation in
             contactsQueue.async { [weak self] in
                 guard let self = self else {
@@ -1078,6 +1070,17 @@ class ContactsManager: ObservableObject {
             return (nil, nil)
         }
 
+#if DEBUG
+        if let override = ContactsManager.backupOverride {
+            return await performBackupUsingOverride(
+                contacts: override.contacts,
+                userDirectory: override.userDirectory,
+                appDirectory: override.appDirectory,
+                saveToURL: saveToURL
+            )
+        }
+#endif
+
         let result = await withCheckedContinuation { (continuation: CheckedContinuation<Result<(URL?, URL?), Error>, Never>) in
             contactsQueue.async { [weak self] in
                 guard let self = self else {
@@ -1102,10 +1105,7 @@ class ContactsManager: ObservableObject {
                     let vCardData = try CNContactVCardSerialization.data(with: allContacts)
 
                     // Create filename with timestamp
-                    let dateFormatter = DateFormatter()
-                    dateFormatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
-                    let timestamp = dateFormatter.string(from: Date())
-                    let filename = "Contacts_Backup_\(timestamp).vcf"
+                    let filename = makeBackupFilename()
 
                     var userBackupURL: URL?
                     var appBackupURL: URL?
@@ -1154,12 +1154,81 @@ class ContactsManager: ObservableObject {
         }
     }
 
+#if DEBUG
+    private func performBackupUsingOverride(
+        contacts: [CNContact],
+        userDirectory: URL,
+        appDirectory: URL,
+        saveToURL: URL?
+    ) async -> (userBackup: URL?, appBackup: URL?) {
+        return await withCheckedContinuation { continuation in
+            contactsQueue.async {
+                do {
+                    let vCardData = try CNContactVCardSerialization.data(with: contacts)
+                    let filename = self.makeBackupFilename()
+
+                    let userFileURL: URL
+                    if let saveToURL {
+                        try FileManager.default.createDirectory(at: saveToURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+                        userFileURL = saveToURL
+                    } else {
+                        try FileManager.default.createDirectory(at: userDirectory, withIntermediateDirectories: true)
+                        userFileURL = userDirectory.appendingPathComponent(filename)
+                    }
+                    try vCardData.write(to: userFileURL)
+
+                    try FileManager.default.createDirectory(at: appDirectory, withIntermediateDirectories: true)
+                    let appFileURL = appDirectory.appendingPathComponent(filename)
+                    try vCardData.write(to: appFileURL)
+
+                    continuation.resume(returning: (userFileURL, appFileURL))
+                } catch {
+                    print("❌ Backup override error: \(error)")
+                    Task { @MainActor in
+                        self.errorMessage = "Failed to create backup: \(error.localizedDescription)"
+                    }
+                    continuation.resume(returning: (nil, nil))
+                }
+            }
+        }
+    }
+
+    private func createSnapshotUsingOverride(override: SnapshotOverride, tag: String) async -> URL? {
+        return await withCheckedContinuation { continuation in
+            contactsQueue.async {
+                do {
+                    let vCardData = try CNContactVCardSerialization.data(with: override.contacts)
+                    let sanitizedTag = self.sanitizeFilenameComponent(tag)
+                    let filename = self.makeBackupFilename(prefix: sanitizedTag)
+                    try FileManager.default.createDirectory(at: override.snapshotDirectory, withIntermediateDirectories: true)
+                    let destination = override.snapshotDirectory.appendingPathComponent(filename)
+                    try vCardData.write(to: destination)
+                    continuation.resume(returning: destination)
+                } catch {
+                    print("❌ Snapshot override error: \(error)")
+                    Task { @MainActor in
+                        self.errorMessage = "Failed to create snapshot: \(error.localizedDescription)"
+                    }
+                    continuation.resume(returning: nil)
+                }
+            }
+        }
+    }
+#endif
+
     private func sanitizeFilenameComponent(_ value: String) -> String {
         let invalidCharacters = CharacterSet(charactersIn: "/\\?%*|\"<>:")
         return value
             .components(separatedBy: invalidCharacters)
             .joined(separator: "_")
             .replacingOccurrences(of: " ", with: "_")
+    }
+
+    private func makeBackupFilename(prefix: String = "Contacts_Backup") -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
+        let timestamp = dateFormatter.string(from: Date())
+        return "\(prefix)_\(timestamp).vcf"
     }
 
     // MARK: - Smart Groups
@@ -1887,3 +1956,6 @@ extension ContactsUndoManager {
         }
     }
 }
+
+extension ContactsManager: SmartGroupContactPerforming {}
+extension ContactsManager: ManualGroupContactPerforming {}

@@ -11,6 +11,9 @@ import Contacts
 
 class GroupExportService {
     static let shared = GroupExportService()
+    #if DEBUG
+    static var testDownloadsDirectory: URL?
+    #endif
 
     private init() {}
 
@@ -27,7 +30,13 @@ class GroupExportService {
         let filename = "\(groupName.replacingOccurrences(of: " ", with: "_"))_\(timestamp).csv"
 
         // Get Downloads folder
-        guard let downloadsURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first else {
+        #if DEBUG
+        let downloadsURL = GroupExportService.testDownloadsDirectory ?? FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
+        #else
+        let downloadsURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
+        #endif
+
+        guard let downloadsURL else {
             return nil
         }
 

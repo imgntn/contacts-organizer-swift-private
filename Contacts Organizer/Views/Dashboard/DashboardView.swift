@@ -9,6 +9,8 @@ import SwiftUI
 
 struct DashboardView: View {
     @EnvironmentObject var contactsManager: ContactsManager
+    @EnvironmentObject var appState: AppState
+    @EnvironmentObject var undoManager: ContactsUndoManager
     @Environment(\.dismiss) private var dismiss
     @State private var selectedTab: DashboardTab? = .overview
     @State private var navigationHistory: [DashboardTab] = []
@@ -122,7 +124,10 @@ struct DashboardView: View {
                         duplicateGroups: duplicateGroups,
                         dataQualityIssues: dataQualityIssues,
                         selectedTab: $selectedTab,
-                        targetSmartGroupName: $targetSmartGroupName
+                        targetSmartGroupName: $targetSmartGroupName,
+                        contactsManager: contactsManager,
+                        appState: appState,
+                        undoManager: undoManager
                     )
 
                 case .duplicates:
@@ -302,14 +307,34 @@ struct DashboardView: View {
 // MARK: - Overview View
 
 struct OverviewView: View {
-    @EnvironmentObject var contactsManager: ContactsManager
-    @EnvironmentObject var appState: AppState
     @Environment(\.openSettings) private var openSettings
-    let duplicateGroups: [DuplicateGroup]
-    let dataQualityIssues: [DataQualityIssue]
+    var duplicateGroups: [DuplicateGroup]
+    var dataQualityIssues: [DataQualityIssue]
     @Binding var selectedTab: DashboardView.DashboardTab?
     @Binding var targetSmartGroupName: String?
-    private var shouldShowBackupReminder: Bool { !appState.hasSeenBackupReminder }
+    @StateObject private var viewModel: OverviewDashboardModel
+
+    init(
+        duplicateGroups: [DuplicateGroup],
+        dataQualityIssues: [DataQualityIssue],
+        selectedTab: Binding<DashboardView.DashboardTab?>,
+        targetSmartGroupName: Binding<String?>,
+        contactsManager: OverviewContactsProviding,
+        appState: OverviewAppStateProviding,
+        undoManager: ContactsUndoManager
+    ) {
+        self.duplicateGroups = duplicateGroups
+        self.dataQualityIssues = dataQualityIssues
+        _selectedTab = selectedTab
+        _targetSmartGroupName = targetSmartGroupName
+        let navigator = OverviewNavigator(selectedTab: selectedTab, targetSmartGroupName: targetSmartGroupName)
+        _viewModel = StateObject(wrappedValue: OverviewDashboardModel(
+            contactsProvider: contactsManager,
+            appState: appState,
+            navigator: navigator,
+            undoManager: undoManager
+        ))
+    }
 
     var body: some View {
         ScrollView {
@@ -319,16 +344,14 @@ struct OverviewView: View {
                     Text("Overview")
                         .responsiveFont(36, weight: .bold)
 
-                    if let stats = contactsManager.statistics {
-                        Text("\(stats.totalContacts) contacts")
-                            .responsiveFont(20)
-                            .foregroundColor(.secondary)
-                    }
+                    Text("\(viewModel.totalContacts) contacts")
+                        .responsiveFont(20)
+                        .foregroundColor(.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
                 // Safety reminder (required)
-                if shouldShowBackupReminder {
+                if viewModel.showBackupReminder {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
                             Label("Create a Backup First!", systemImage: "exclamationmark.shield.fill")
@@ -353,6 +376,12 @@ struct OverviewView: View {
                         .buttonStyle(.borderedProminent)
                         .controlSize(.small)
                         .help("Open Settings or press ⌘,")
+
+                        Button("Dismiss Reminder") {
+                            viewModel.dismissBackupReminder()
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
                     }
                     .padding()
                     .background(
@@ -365,7 +394,7 @@ struct OverviewView: View {
                     )
                 }
 
-                if !contactsManager.recentActivities.isEmpty {
+                if !viewModel.recentActivities.isEmpty {
                     recentActivitySection
                 }
 
@@ -383,14 +412,13 @@ struct OverviewView: View {
                         primaryButtonTitle: "Browse Smart Groups",
                         primaryButtonIcon: "sparkles",
                         primaryAction: {
-                            selectedTab = .smartGroups
+                            viewModel.browseSmartGroups()
                         },
                         secondary: (
                             title: "Review Missing Info",
                             icon: "exclamationmark.circle",
                             action: {
-                                targetSmartGroupName = "Missing Email"
-                                selectedTab = .smartGroups
+                                viewModel.reviewSmartGroup(named: "Missing Email")
                             }
                         )
                     )
@@ -400,7 +428,7 @@ struct OverviewView: View {
                         icon: "folder.fill.badge.plus",
                         color: .blue,
                         description: "Build your own folders for projects, events, or VIP lists with full control.",
-                        status: "\(contactsManager.groups.count) groups in Contacts",
+                        status: "\(viewModel.manualGroupCount) groups in Contacts",
                         highlights: [
                             ("plus.circle", "Spin up a fresh manual group"),
                             ("trash", "Clean up duplicate folders safely")
@@ -408,13 +436,13 @@ struct OverviewView: View {
                         primaryButtonTitle: "Open Manual Groups",
                         primaryButtonIcon: "folder.fill",
                         primaryAction: {
-                            selectedTab = .manualGroups
+                            viewModel.browseManualGroups()
                         },
                         secondary: (
                             title: "Create New Group",
                             icon: "plus.circle",
                             action: {
-                                selectedTab = .manualGroups
+                                viewModel.browseManualGroups()
                             }
                         )
                     )
@@ -424,7 +452,7 @@ struct OverviewView: View {
                         icon: "arrow.triangle.merge",
                         color: .green,
                         description: "Review contacts that look identical so you can merge, link, or ignore them.",
-                        status: "\(duplicateGroups.count) groups detected",
+                        status: "\(viewModel.duplicateCount) groups detected",
                         highlights: [
                             ("eye", "Compare conflicting values side-by-side"),
                             ("arrow.down", "Apply quick merges with confidence")
@@ -432,7 +460,7 @@ struct OverviewView: View {
                         primaryButtonTitle: "Review Duplicates",
                         primaryButtonIcon: "arrow.triangle.merge",
                         primaryAction: {
-                            selectedTab = .duplicates
+                            viewModel.reviewDuplicates()
                         }
                     )
 
@@ -441,7 +469,7 @@ struct OverviewView: View {
                         icon: "heart.text.square",
                         color: .pink,
                         description: "Spot missing phone numbers, emails, birthdays, and other gaps in your address book.",
-                        status: "\(dataQualityIssues.count) issues flagged",
+                        status: "\(viewModel.issuesCount) issues flagged",
                         highlights: [
                             ("stethoscope", "Prioritize high-severity fixes first"),
                             ("bolt", "Jump straight into auto-fix suggestions")
@@ -449,12 +477,22 @@ struct OverviewView: View {
                         primaryButtonTitle: "Open Health Report",
                         primaryButtonIcon: "heart.text.square",
                         primaryAction: {
-                            selectedTab = .healthReport
+                            viewModel.reviewHealthReport()
                         }
                     )
                 }
             }
             .padding(24)
+        }
+        .onAppear {
+            viewModel.updateDuplicates(duplicateGroups)
+            viewModel.updateIssues(dataQualityIssues)
+        }
+        .onChange(of: duplicateGroups.map(\.id)) { _, _ in
+            viewModel.updateDuplicates(duplicateGroups)
+        }
+        .onChange(of: dataQualityIssues.map(\.id)) { _, _ in
+            viewModel.updateIssues(dataQualityIssues)
         }
     }
 
@@ -481,7 +519,7 @@ struct OverviewView: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
-                    ForEach(contactsManager.recentActivities) { activity in
+                    ForEach(viewModel.recentActivities) { activity in
                         Button(action: { handleActivityTap(activity) }) {
                             VStack(alignment: .leading, spacing: 4) {
                                 HStack(spacing: 6) {
@@ -641,6 +679,7 @@ struct RefreshStateMachine {
     DashboardView()
         .environmentObject(AppState())
         .environmentObject(ContactsManager.shared)
+        .environmentObject(ContactsUndoManager())
         .frame(width: 1200, height: 800)
 }
 #endif

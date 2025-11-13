@@ -14,6 +14,8 @@ class AppState: ObservableObject {
     @Published var hasCompletedOnboarding: Bool = false
     @Published var hasSeenBackupReminder: Bool = false
     @Published var authorizationStatus: CNAuthorizationStatus = .notDetermined
+    private let defaults: UserDefaults
+    private var flow: AppStateFlow
 
     enum AppView {
         case onboarding
@@ -21,25 +23,24 @@ class AppState: ObservableObject {
         case dashboard
     }
 
-    init() {
+    init(
+        userDefaults: UserDefaults = .standard,
+        initialAuthorizationStatus: CNAuthorizationStatus = CNContactStore.authorizationStatus(for: .contacts)
+    ) {
+        self.defaults = userDefaults
         // Read values from UserDefaults and system
-        let hasCompletedOnboardingValue = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
-        let hasSeenBackupReminderValue = UserDefaults.standard.bool(forKey: "hasSeenBackupReminder")
-        let authStatusValue = CNContactStore.authorizationStatus(for: .contacts)
+        let hasCompletedOnboardingValue = defaults.bool(forKey: "hasCompletedOnboarding")
+        let hasSeenBackupReminderValue = defaults.bool(forKey: "hasSeenBackupReminder")
 
         // Initialize all stored properties
         self.hasCompletedOnboarding = hasCompletedOnboardingValue
         self.hasSeenBackupReminder = hasSeenBackupReminderValue
-        self.authorizationStatus = authStatusValue
-
-        // Determine initial view
-        if !hasCompletedOnboardingValue {
-            self.currentView = .onboarding
-        } else if authStatusValue != .authorized {
-            self.currentView = .permissionRequest
-        } else {
-            self.currentView = .dashboard
-        }
+        self.authorizationStatus = initialAuthorizationStatus
+        self.flow = AppStateFlow(
+            hasCompletedOnboarding: hasCompletedOnboardingValue,
+            authorizationStatus: initialAuthorizationStatus
+        )
+        self.currentView = flow.currentView
 
         print("🔄 Initial view: \(currentView), Onboarding: \(hasCompletedOnboarding), Auth: \(authorizationStatus.rawValue)")
     }
@@ -47,34 +48,41 @@ class AppState: ObservableObject {
     func updateCurrentView() {
         print("🔄 Updating view - Onboarding: \(hasCompletedOnboarding), Auth: \(authorizationStatus.rawValue)")
 
-        if !hasCompletedOnboarding {
-            currentView = .onboarding
-            print("→ Showing: Onboarding")
-        } else if authorizationStatus != .authorized {
-            currentView = .permissionRequest
-            print("→ Showing: Permission Request")
-        } else {
-            currentView = .dashboard
-            print("→ Showing: Dashboard")
-        }
+        flow.hasCompletedOnboarding = hasCompletedOnboarding
+        flow.authorizationStatus = authorizationStatus
+        currentView = flow.currentView
+        print("→ Showing: \(currentView)")
     }
 
     func completeOnboarding() {
         print("✅ Onboarding completed")
         hasCompletedOnboarding = true
-        UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
-        updateCurrentView()
+        defaults.set(true, forKey: "hasCompletedOnboarding")
+        currentView = flow.markOnboardingComplete()
+        print("→ Showing: \(currentView)")
     }
 
     func markBackupReminderSeen() {
         guard !hasSeenBackupReminder else { return }
         hasSeenBackupReminder = true
-        UserDefaults.standard.set(true, forKey: "hasSeenBackupReminder")
+        defaults.set(true, forKey: "hasSeenBackupReminder")
+    }
+
+    func resetBackupReminder() {
+        hasSeenBackupReminder = false
+        defaults.set(false, forKey: "hasSeenBackupReminder")
     }
 
     func updateAuthorizationStatus(_ status: CNAuthorizationStatus) {
         print("🔐 Authorization status updated to: \(status.rawValue)")
         authorizationStatus = status
-        updateCurrentView()
+        currentView = flow.updateAuthorizationStatus(status)
+        print("→ Showing: \(currentView)")
+    }
+}
+
+extension AppState: OverviewAppStateProviding {
+    var hasSeenBackupReminderPublisher: AnyPublisher<Bool, Never> {
+        $hasSeenBackupReminder.eraseToAnyPublisher()
     }
 }

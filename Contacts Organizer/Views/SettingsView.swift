@@ -12,14 +12,17 @@ import UniformTypeIdentifiers
 struct SettingsView: View {
     @EnvironmentObject var contactsManager: ContactsManager
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var undoManager: ContactsUndoManager
     @AppStorage(SettingsPreferences.selectedTabKey) private var selectedTabRaw: String = SettingsTab.general.rawValue
     @AppStorage(SettingsPreferences.developerToggleKey) private var showDeveloperSettings: Bool = false
+    private let preferenceStore = SettingsPreferenceStore.shared
 
     var body: some View {
         TabView(selection: $selectedTabRaw) {
-            GeneralSettingsView()
+            GeneralSettingsView(showDeveloperSettings: $showDeveloperSettings)
                 .environmentObject(appState)
                 .environmentObject(contactsManager)
+                .environmentObject(undoManager)
                 .tabItem {
                     Label("General", systemImage: "gearshape")
                 }
@@ -50,8 +53,13 @@ struct SettingsView: View {
         }
         .frame(width: 500, height: 700)
         .onAppear(perform: ensureValidSelection)
-        .onChange(of: showDeveloperSettings) {
+        .onChange(of: showDeveloperSettings) { _, newValue in
+            preferenceStore.updateDeveloperSettings(enabled: newValue)
             ensureValidSelection()
+        }
+        .onChange(of: selectedTabRaw) { _, newValue in
+            let tab = SettingsTab(rawValue: newValue) ?? .general
+            preferenceStore.updateSelectedTab(to: tab)
         }
     }
 
@@ -71,10 +79,11 @@ struct SettingsView: View {
 struct GeneralSettingsView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var contactsManager: ContactsManager
+    @EnvironmentObject var undoManager: ContactsUndoManager
     @AppStorage("autoRefresh") private var autoRefresh = true
     @AppStorage("showCompletedActions") private var showCompletedActions = false
     @AppStorage("textScalePreference") private var textScalePreference = "normal"
-    @AppStorage(SettingsPreferences.developerToggleKey) private var showDeveloperSettings: Bool = false
+    @Binding var showDeveloperSettings: Bool
     @State private var isCreatingBackup = false
     @State private var backupSuccess = false
     @State private var userBackupURL: URL?
@@ -86,6 +95,7 @@ struct GeneralSettingsView: View {
     @State private var showExportPicker = false
     @State private var showSuccessAlert = false
     @State private var successMessage = ""
+    private let preferenceStore = SettingsPreferenceStore.shared
 
     var body: some View {
         ScrollView {
@@ -236,10 +246,7 @@ struct GeneralSettingsView: View {
                     accentColor: .gray
                 ) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Toggle("Show developer options", isOn: Binding(
-                            get: { showDeveloperSettings },
-                            set: { showDeveloperSettings = $0 }
-                        ))
+                        Toggle("Show developer options", isOn: $showDeveloperSettings)
                         Text("Enable this when you need access to the Developer tab for QA or support.")
                             .font(.caption)
                             .foregroundColor(.secondary)
@@ -293,6 +300,12 @@ struct GeneralSettingsView: View {
         } message: {
             Text(successMessage)
         }
+        .onChange(of: textScalePreference) { _, newValue in
+            preferenceStore.updateTextScale(to: newValue, undoManager: undoManager)
+        }
+        .onChange(of: autoRefresh) { _, newValue in
+            preferenceStore.updateAutoRefresh(to: newValue, undoManager: undoManager)
+        }
     }
 
     private func generateBackupFilename() -> String {
@@ -308,7 +321,8 @@ struct GeneralSettingsView: View {
         Task {
             do {
                 let saveURL = try result.get()
-                let (userURL, appURL) = await contactsManager.createBackup(saveToURL: saveURL)
+                let controller = await SettingsActionController.sharedActor()
+                let (userURL, appURL) = await controller.createBackup(saveTo: saveURL)
 
                 await MainActor.run {
                     isCreatingBackup = false
@@ -907,7 +921,8 @@ struct PrivacySettingsView: View {
 
     private func requestAccess() {
         Task {
-            await contactsManager.requestAccess()
+            let controller = await SettingsActionController.sharedActor()
+            _ = await controller.requestContactsAccess()
         }
     }
 }
@@ -1093,5 +1108,6 @@ struct AboutView: View {
         .environmentObject(ContactsManager.shared)
         .environmentObject(AppState())
         .environmentObject(PrivacyMonitorService.shared)
+        .environmentObject(ContactsUndoManager())
 }
 #endif

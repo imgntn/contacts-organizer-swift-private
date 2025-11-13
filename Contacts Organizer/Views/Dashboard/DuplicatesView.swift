@@ -488,15 +488,7 @@ struct MergeContactsSheet: View {
         isMerging = true
         showError = false
 
-        let configuration = MergeConfiguration(
-            primaryContactId: selectedPrimaryId,
-            mergingContactIds: group.contacts.map { $0.id },
-            preferredNameSourceId: mergePlan.preferredNameContactId,
-            preferredOrganizationSourceId: mergePlan.preferredOrganizationContactId,
-            preferredPhotoSourceId: mergePlan.preferredPhotoContactId,
-            includedPhoneNumbers: mergePlan.selectedPhoneNumbers,
-            includedEmailAddresses: mergePlan.selectedEmailAddresses
-        )
+        let configuration = mergePlan.configuration(primaryContactId: selectedPrimaryId, group: group)
 
         Task {
             if shouldCreateSnapshot {
