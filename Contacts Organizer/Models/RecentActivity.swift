@@ -12,6 +12,7 @@ struct RecentActivity: Identifiable, Codable {
         case smartGroupCreated
         case manualGroupCreated
         case duplicatesCleaned
+        case healthAction
     }
 
     let id: UUID

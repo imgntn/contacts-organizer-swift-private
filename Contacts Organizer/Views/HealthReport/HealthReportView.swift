@@ -340,6 +340,7 @@ struct HealthReportView: View {
             quickActionInput = ""
             if success {
                 removeIssue(issue)
+                logHealthAction(action, for: issue)
                 if let effect = result.effect {
                     undoManager.register(effect: effect, actionTitle: action.title, contactsManager: contactsManager)
                 }
@@ -388,7 +389,10 @@ struct HealthReportView: View {
                     if let effect = result.effect {
                         effects.append(effect)
                     }
-                    await MainActor.run { removeIssue(issue) }
+                    await MainActor.run {
+                        removeIssue(issue)
+                        logHealthAction(actionDefinition, for: issue)
+                    }
                 }
             }
 
@@ -419,6 +423,12 @@ struct HealthReportView: View {
     private func removeIssue(_ issue: DataQualityIssue) {
         workingIssues.removeAll { $0.id == issue.id }
         selectedIssueIDs.remove(issue.id)
+    }
+
+    @MainActor
+    private func logHealthAction(_ action: HealthIssueAction, for issue: DataQualityIssue) {
+        let activity = HealthActivityFactory.makeActivity(action: action, issue: issue)
+        contactsManager.logActivity(activity)
     }
 
     private struct PendingQuickAction: Identifiable {

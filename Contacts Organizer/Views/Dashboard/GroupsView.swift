@@ -217,7 +217,7 @@ struct GroupsView: View {
                     result: result,
                     isCreating: isCreatingGroups,
                     onCreateInContacts: {
-                        Task { await createSingleSmartGroup(result) }
+                        createSingleSmartGroup(result)
                     },
                     onExport: { exportType in
                         makeSmartGroupExecutor().exportGroup(result, as: exportType)
@@ -582,9 +582,13 @@ struct GroupsView: View {
     }
 
     @MainActor
-    private func createSingleSmartGroup(_ result: SmartGroupResult) async {
+    private func createSingleSmartGroup(_ result: SmartGroupResult) {
+        // Dismiss any open detail sheet so alerts/confirmations appear
+        selectedGroupForModal = nil
         groupToCreate = result
-        showConfirmCreate = true
+        DispatchQueue.main.async {
+            showConfirmCreate = true
+        }
     }
 
     @MainActor

@@ -8,6 +8,7 @@
 import Foundation
 import AppKit
 import Contacts
+import UniformTypeIdentifiers
 
 class GroupExportService {
     static let shared = GroupExportService()
@@ -27,29 +28,38 @@ class GroupExportService {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
         let timestamp = dateFormatter.string(from: Date())
-        let filename = "\(groupName.replacingOccurrences(of: " ", with: "_"))_\(timestamp).csv"
+        let baseName = sanitizedFilenameComponent(from: groupName)
+        let filename = "\(baseName)_\(timestamp).csv"
 
         // Get Downloads folder
-        #if DEBUG
+#if DEBUG
         let downloadsURL = GroupExportService.testDownloadsDirectory ?? FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
-        #else
+#else
         let downloadsURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
-        #endif
+#endif
 
         guard let downloadsURL else {
             return nil
         }
 
-        let fileURL = downloadsURL.appendingPathComponent(filename)
+#if DEBUG
+        if let testDirectory = GroupExportService.testDownloadsDirectory {
+            let fileURL = testDirectory.appendingPathComponent(filename)
+            return write(csvString: csvString, to: fileURL)
+        }
+#endif
 
-        // Write to file
-        do {
-            try csvString.write(to: fileURL, atomically: true, encoding: .utf8)
+        let defaultURL = downloadsURL.appendingPathComponent(filename)
+
+        if let fileURL = write(csvString: csvString, to: defaultURL) {
             return fileURL
-        } catch {
-            print("Error writing CSV: \(error)")
+        }
+
+        // If the default location failed (likely sandbox permissions), prompt the user
+        guard let saveURL = promptForCSVSaveLocation(suggestedName: filename, startingDirectory: downloadsURL) else {
             return nil
         }
+        return write(csvString: csvString, to: saveURL)
     }
 
     func generateCSVString(contacts: [ContactSummary]) -> String {
@@ -76,6 +86,74 @@ class GroupExportService {
             return "\"\(escaped)\""
         }
         return field
+    }
+
+    private func write(csvString: String, to url: URL) -> URL? {
+        let directoryURL = url.deletingLastPathComponent()
+        if !FileManager.default.fileExists(atPath: directoryURL.path) {
+            do {
+                try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+            } catch {
+                print("Error creating directory for export: \(error)")
+                return nil
+            }
+        }
+
+        do {
+            try csvString.write(to: url, atomically: true, encoding: .utf8)
+            return url
+        } catch {
+            print("Error writing CSV: \(error)")
+            return nil
+        }
+    }
+
+    private func promptForCSVSaveLocation(suggestedName: String, startingDirectory: URL) -> URL? {
+        var selectedURL: URL?
+
+        let panelWork = {
+            let savePanel = NSSavePanel()
+            if #available(macOS 12.0, *) {
+                savePanel.allowedContentTypes = [.commaSeparatedText]
+            }
+            savePanel.canCreateDirectories = true
+            savePanel.nameFieldStringValue = suggestedName
+            savePanel.directoryURL = startingDirectory
+            if savePanel.runModal() == .OK {
+                selectedURL = savePanel.url
+            }
+        }
+
+        if Thread.isMainThread {
+            panelWork()
+        } else {
+            DispatchQueue.main.sync(execute: panelWork)
+        }
+
+        return selectedURL
+    }
+
+    private func sanitizedFilenameComponent(from rawName: String) -> String {
+        let fallback = "Contacts_Group"
+        let whitespaceCollapsed = rawName
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "\\s+", with: "_", options: .regularExpression)
+
+        let invalidCharacters = CharacterSet(charactersIn: "/\\:?%*|\"<>")
+        var cleaned = ""
+        for scalar in whitespaceCollapsed.unicodeScalars {
+            if invalidCharacters.contains(scalar) {
+                cleaned.append("_")
+            } else {
+                cleaned.append(String(scalar))
+            }
+        }
+
+        let condensed = cleaned
+            .replacingOccurrences(of: "_{2,}", with: "_", options: .regularExpression)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "_"))
+
+        return condensed.isEmpty ? fallback : condensed
     }
 
     // MARK: - Mail Integration
@@ -157,7 +235,7 @@ class GroupExportService {
 
         // Save to temporary file
         let tempDir = FileManager.default.temporaryDirectory
-        let filename = "\(groupName.replacingOccurrences(of: " ", with: "_")).vcf"
+        let filename = "\(sanitizedFilenameComponent(from: groupName)).vcf"
         let fileURL = tempDir.appendingPathComponent(filename)
 
         do {
@@ -199,35 +277,40 @@ class GroupExportService {
 
     // MARK: - Messages Integration
 
-    /// Opens Messages.app to create a group chat with all contacts who have phone numbers
+    /// Opens Messages.app with a pre-populated body containing the contact summaries.
+    /// Recipients are left empty so the user can decide who to send the list to.
+    @MainActor
     func openInMessages(contacts: [ContactSummary], groupName: String) -> Bool {
-        // Collect all phone numbers
-        let allPhones = contacts.flatMap { $0.phoneNumbers }
+        let messageBody = GroupMessageComposer.makeBody(for: contacts, groupName: groupName)
 
-        guard !allPhones.isEmpty else {
-            print("No phone numbers found in group")
+        if let service = NSSharingService(named: .composeMessage) {
+            service.perform(withItems: [messageBody])
+            return true
+        }
+
+        // Fallback to sms: URL if the sharing service is unavailable
+        return openMessagesFallback(contacts: contacts, messageBody: messageBody)
+    }
+
+    private func openMessagesFallback(contacts: [ContactSummary], messageBody: String) -> Bool {
+        let phoneList = contacts.flatMap { $0.phoneNumbers }.prefix(10).joined(separator: ",")
+        guard let encodedBody = messageBody.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
             return false
         }
 
-        // Messages URL scheme
-        // Format: sms:phone1,phone2,phone3&body=message
-        let phoneList = allPhones.prefix(10).joined(separator: ",") // Limit to 10 for practicality
-
-        let message = "Group message from \(groupName)"
-        guard let encodedMessage = message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let encodedPhones = phoneList.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
-            return false
+        let smsString: String
+        if phoneList.isEmpty {
+            smsString = "sms:&body=\(encodedBody)"
+        } else if let encodedPhones = phoneList.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
+            smsString = "sms:\(encodedPhones)&body=\(encodedBody)"
+        } else {
+            smsString = "sms:&body=\(encodedBody)"
         }
-
-        let smsString = "sms:\(encodedPhones)&body=\(encodedMessage)"
 
         guard let smsURL = URL(string: smsString) else {
             return false
         }
-
-        // Open in Messages.app
-        NSWorkspace.shared.open(smsURL)
-        return true
+        return NSWorkspace.shared.open(smsURL)
     }
 
     // MARK: - iMessage Group (Advanced)

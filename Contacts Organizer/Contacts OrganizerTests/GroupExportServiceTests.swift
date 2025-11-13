@@ -53,6 +53,58 @@ final class GroupExportServiceTests: XCTestCase {
         XCTAssertTrue(vcard.contains("TEL;TYPE=WORK:555-1111"))
         XCTAssertTrue(vcard.contains("END:VCARD"))
     }
+
+#if DEBUG
+    func testExportToCSVWritesFileAndReturnsURLInTestDirectory() throws {
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        GroupExportService.testDownloadsDirectory = tempDir
+        defer {
+            GroupExportService.testDownloadsDirectory = nil
+            try? FileManager.default.removeItem(at: tempDir)
+        }
+
+        let contacts = [
+            ContactSummary(
+                id: "1",
+                fullName: "Jane Doe",
+                organization: "ACME",
+                phoneNumbers: ["123-456-7890"],
+                emailAddresses: ["jane@example.com"],
+                hasProfileImage: false,
+                creationDate: nil,
+                modificationDate: nil
+            )
+        ]
+
+        let url = GroupExportService.shared.exportToCSV(contacts: contacts, groupName: "VIP List")
+        XCTAssertNotNil(url)
+        guard let fileURL = url else { return }
+        XCTAssertTrue(fileURL.path.hasPrefix(tempDir.path))
+        let contents = try String(contentsOf: fileURL, encoding: .utf8)
+        XCTAssertTrue(contents.contains("Jane Doe"))
+        XCTAssertTrue(contents.contains("ACME"))
+    }
+
+    func testExportToCSVSanitizesFilenameCharacters() throws {
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        GroupExportService.testDownloadsDirectory = tempDir
+        defer {
+            GroupExportService.testDownloadsDirectory = nil
+            try? FileManager.default.removeItem(at: tempDir)
+        }
+
+        let url = GroupExportService.shared.exportToCSV(
+            contacts: [],
+            groupName: "Needs/Review: VIP?"
+        )
+
+        XCTAssertNotNil(url)
+        guard let fileURL = url else { return }
+        XCTAssertTrue(fileURL.lastPathComponent.contains("Needs_Review_VIP"))
+    }
+#endif
 }
 
 private func parseCSVLine(_ line: String) -> [String] {

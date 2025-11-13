@@ -2,7 +2,14 @@ import Foundation
 
 protocol SmartGroupContactPerforming: AnyObject {
     func createGroup(name: String, contactIds: [String], allowDuplicateNames: Bool) async -> Bool
+    func createGroup(name: String, contactIds: [String], allowDuplicateNames: Bool, replaceExisting: Bool) async -> Bool
     func deleteGroup(named name: String) async -> Bool
+}
+
+extension SmartGroupContactPerforming {
+    func createGroup(name: String, contactIds: [String], allowDuplicateNames: Bool, replaceExisting: Bool) async -> Bool {
+        await createGroup(name: name, contactIds: contactIds, allowDuplicateNames: allowDuplicateNames)
+    }
 }
 
 protocol SmartGroupExportPerforming: AnyObject {
@@ -52,7 +59,7 @@ final class SmartGroupActionExecutor {
     @discardableResult
     func createGroup(from result: SmartGroupResult) async -> Bool {
         let contactIds = result.contacts.map(\.id)
-        let success = await contactsGateway.createGroup(name: result.groupName, contactIds: contactIds, allowDuplicateNames: false)
+        let success = await contactsGateway.createGroup(name: result.groupName, contactIds: contactIds, allowDuplicateNames: false, replaceExisting: true)
         guard success else { return false }
         registerCreateUndo(groupName: result.groupName, contactIds: contactIds)
         return true

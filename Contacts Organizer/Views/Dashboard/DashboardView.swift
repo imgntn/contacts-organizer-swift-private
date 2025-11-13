@@ -45,6 +45,7 @@ struct DashboardView: View {
 
     enum DashboardTab: String, CaseIterable, Hashable {
         case overview = "Overview"
+        case recentActivity = "Recent Activity"
         case smartGroups = "Smart Groups"
         case manualGroups = "Manual Groups"
         case duplicates = "Duplicates"
@@ -53,6 +54,7 @@ struct DashboardView: View {
         var icon: String {
             switch self {
             case .overview: return "chart.bar.fill"
+            case .recentActivity: return "clock.arrow.circlepath"
             case .duplicates: return "arrow.triangle.merge"
             case .healthReport: return "wrench.and.screwdriver.fill"
             case .smartGroups: return "sparkles"
@@ -129,6 +131,9 @@ struct DashboardView: View {
                         appState: appState,
                         undoManager: undoManager
                     )
+
+                case .recentActivity:
+                    RecentActivityListView()
 
                 case .duplicates:
                     DuplicatesView(duplicateGroups: duplicateGroups)
@@ -562,6 +567,8 @@ struct OverviewView: View {
             selectedTab = .manualGroups
         case .duplicatesCleaned:
             selectedTab = .duplicates
+        case .healthAction:
+            selectedTab = .recentActivity
         }
     }
 
@@ -640,6 +647,114 @@ struct OverviewView: View {
                     RoundedRectangle(cornerRadius: 16)
                         .stroke(color.opacity(0.2), lineWidth: 1)
                 )
+        )
+    }
+}
+
+// MARK: - Recent Activity View
+
+struct RecentActivityListView: View {
+    @EnvironmentObject var contactsManager: ContactsManager
+
+    private var groupedActivities: [(Date, [RecentActivity])] {
+        RecentActivitySections.groupedByDay(contactsManager.recentActivities)
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                Text("Recent Activity")
+                    .responsiveFont(34, weight: .bold)
+
+                if contactsManager.recentActivities.isEmpty {
+                    recentActivityEmptyState
+                } else {
+                    VStack(alignment: .leading, spacing: 24) {
+                        ForEach(groupedActivities, id: \.0) { date, entries in
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text(Self.sectionFormatter.string(from: date))
+                                    .font(.title3.weight(.semibold))
+                                    .foregroundColor(.secondary)
+
+                                VStack(spacing: 12) {
+                                    ForEach(entries) { activity in
+                                        RecentActivityRow(activity: activity)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .padding(24)
+        }
+        .background(Color(nsColor: .windowBackgroundColor))
+    }
+
+    @ViewBuilder
+    private var recentActivityEmptyState: some View {
+        if #available(macOS 13.0, *) {
+            ContentUnavailableView(
+                "No Recent Activity",
+                systemImage: "clock.arrow.circlepath",
+                description: Text("Complete a health report action, create a group, or clean duplicates to populate your history.")
+            )
+            .frame(maxWidth: .infinity, minHeight: 320)
+        } else {
+            VStack(spacing: 12) {
+                Image(systemName: "clock.arrow.circlepath")
+                    .font(.largeTitle)
+                    .foregroundColor(.secondary)
+                Text("No Recent Activity")
+                    .font(.title2.bold())
+                Text("Your future actions in Smart Groups, Manual Groups, Duplicates, and Health Report will appear here.")
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: 420)
+            }
+            .frame(maxWidth: .infinity, minHeight: 320)
+        }
+    }
+
+    private static let sectionFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .full
+        return formatter
+    }()
+}
+
+private struct RecentActivityRow: View {
+    let activity: RecentActivity
+    private static let relativeFormatter: RelativeDateTimeFormatter = {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter
+    }()
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 16) {
+            Image(systemName: activity.icon)
+                .font(.title3)
+                .foregroundColor(.accentColor)
+                .frame(width: 28, height: 28)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(activity.title)
+                    .font(.headline)
+                Text(activity.detail)
+                    .foregroundColor(.secondary)
+                Text(Self.relativeFormatter.localizedString(for: activity.timestamp, relativeTo: Date()))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(Color.secondary.opacity(0.08))
         )
     }
 }

@@ -41,6 +41,12 @@
 		D9B2F70D2F90000000A1BEEF /* AppStateFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9B2F70C2F90000000A1BEEF /* AppStateFlow.swift */; };
 		D9B2F7102F7E1A4C00A1BEEF /* ViewModels/OverviewDashboardModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9B2F70E2F7E1A4C00A1BEEF /* ViewModels/OverviewDashboardModel.swift */; };
 		D9B2F7122F7E1A4C00A1BEEF /* Views/Dashboard/OverviewNavigator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9B2F70D2F7E1A4C00A1BEEF /* Views/Dashboard/OverviewNavigator.swift */; };
+		D9C500012F90000000A1BEEF /* HealthActivityFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C500112F90000000A1BEEF /* HealthActivityFactory.swift */; };
+		D9C500022F90000000A1BEEF /* RecentActivitySections.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C500122F90000000A1BEEF /* RecentActivitySections.swift */; };
+		D9C500032F90000000A1BEEF /* Contacts OrganizerTests/HealthActivityFactoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C500132F90000000A1BEEF /* Contacts OrganizerTests/HealthActivityFactoryTests.swift */; };
+		D9C500042F90000000A1BEEF /* Contacts OrganizerTests/RecentActivitySectionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C500142F90000000A1BEEF /* Contacts OrganizerTests/RecentActivitySectionsTests.swift */; };
+		D9C500052F90000000A1BEEF /* GroupMessageComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C500152F90000000A1BEEF /* GroupMessageComposer.swift */; };
+		D9C500062F90000000A1BEEF /* Contacts OrganizerTests/GroupMessageComposerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C500162F90000000A1BEEF /* Contacts OrganizerTests/GroupMessageComposerTests.swift */; };
 		D9F1E0A22F79B00100ABCDEF /* SettingsPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F1E0A12F79B00100ABCDEF /* SettingsPreferences.swift */; };
 /* End PBXBuildFile section */
 
@@ -96,6 +102,12 @@
 		D9B2F70C2F90000000A1BEEF /* AppStateFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStateFlow.swift; sourceTree = "<group>"; };
 		D9B2F70D2F7E1A4C00A1BEEF /* Views/Dashboard/OverviewNavigator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Dashboard/OverviewNavigator.swift; sourceTree = "<group>"; };
 		D9B2F70E2F7E1A4C00A1BEEF /* ViewModels/OverviewDashboardModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModels/OverviewDashboardModel.swift; sourceTree = "<group>"; };
+		D9C500112F90000000A1BEEF /* HealthActivityFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthActivityFactory.swift; sourceTree = "<group>"; };
+		D9C500122F90000000A1BEEF /* RecentActivitySections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentActivitySections.swift; sourceTree = "<group>"; };
+		D9C500132F90000000A1BEEF /* Contacts OrganizerTests/HealthActivityFactoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contacts OrganizerTests/HealthActivityFactoryTests.swift"; sourceTree = "<group>"; };
+		D9C500142F90000000A1BEEF /* Contacts OrganizerTests/RecentActivitySectionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contacts OrganizerTests/RecentActivitySectionsTests.swift"; sourceTree = "<group>"; };
+		D9C500152F90000000A1BEEF /* GroupMessageComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupMessageComposer.swift; sourceTree = "<group>"; };
+		D9C500162F90000000A1BEEF /* Contacts OrganizerTests/GroupMessageComposerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contacts OrganizerTests/GroupMessageComposerTests.swift"; sourceTree = "<group>"; };
 		D9F1E0A12F79B00100ABCDEF /* SettingsPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPreferences.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -142,6 +154,8 @@
 		7D3B461F2EC48EDB00862138 /* Recovered References */ = {
 			isa = PBXGroup;
 			children = (
+				D9C500142F90000000A1BEEF /* Contacts OrganizerTests/RecentActivitySectionsTests.swift */,
+				D9C500132F90000000A1BEEF /* Contacts OrganizerTests/HealthActivityFactoryTests.swift */,
 				D9B2F70A2F7E1A4C00A1BEEF /* Contacts OrganizerTests/SettingsPreferenceStoreTests.swift */,
 				D9B2F70C2F7E1A4C00A1BEEF /* Contacts OrganizerTests/SettingsActionControllerTests.swift */,
 				D9B2F70E2F7E1A4C00A1BEEF /* ViewModels/OverviewDashboardModel.swift */,
@@ -187,6 +201,8 @@
 		7D7093D52EB6D1B60073F556 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				D9C500112F90000000A1BEEF /* HealthActivityFactory.swift */,
+				D9C500122F90000000A1BEEF /* RecentActivitySections.swift */,
 				D99999312EC1FA0400544B56 /* RecentActivity.swift */,
 				D9555C322EC008F900114EE2 /* PrivacyModels.swift */,
 				7D7093D32EB6D1B60073F556 /* AppState.swift */,
@@ -207,6 +223,7 @@
 		7D7093DA2EB6D1B60073F556 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				D9C500152F90000000A1BEEF /* GroupMessageComposer.swift */,
 				D9B2F7082F7E1A4C00A1BEEF /* SettingsActionController.swift */,
 				D9B2F7062F7E1A4C00A1BEEF /* SettingsPreferenceStore.swift */,
 				D9B2F7092F90000000A1BEEF /* MergeEngine.swift */,
@@ -427,6 +444,9 @@
 				D9B2F7042F7E1A4C00A1BEEF /* ManualGroupActionExecutor.swift in Sources */,
 				D9B2F7012F7E1A4C00A1BEEF /* SmartGroupActionExecutor.swift in Sources */,
 				D9B2F70D2F90000000A1BEEF /* AppStateFlow.swift in Sources */,
+				D9C500012F90000000A1BEEF /* HealthActivityFactory.swift in Sources */,
+				D9C500022F90000000A1BEEF /* RecentActivitySections.swift in Sources */,
+				D9C500052F90000000A1BEEF /* GroupMessageComposer.swift in Sources */,
 				D9B2F70A2F90000000A1BEEF /* MergeEngine.swift in Sources */,
 				D9B2F7102F7E1A4C00A1BEEF /* ViewModels/OverviewDashboardModel.swift in Sources */,
 				D9B2F7122F7E1A4C00A1BEEF /* Views/Dashboard/OverviewNavigator.swift in Sources */,
@@ -440,6 +460,9 @@
 			files = (
 				D9B2F7092F7E1A4C00A1BEEF /* Contacts OrganizerTests/SettingsPreferenceStoreTests.swift in Sources */,
 				D9B2F70B2F7E1A4C00A1BEEF /* Contacts OrganizerTests/SettingsActionControllerTests.swift in Sources */,
+				D9C500032F90000000A1BEEF /* Contacts OrganizerTests/HealthActivityFactoryTests.swift in Sources */,
+				D9C500042F90000000A1BEEF /* Contacts OrganizerTests/RecentActivitySectionsTests.swift in Sources */,
+				D9C500062F90000000A1BEEF /* Contacts OrganizerTests/GroupMessageComposerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

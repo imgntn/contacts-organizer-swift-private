@@ -147,13 +147,17 @@ class ContactsManager: ObservableObject {
     }
 
     @MainActor
-    func logActivity(kind: RecentActivity.Kind, title: String, detail: String, icon: String) {
-        let entry = RecentActivity(kind: kind, title: title, detail: detail, icon: icon)
+    func logActivity(_ entry: RecentActivity) {
         recentActivities.insert(entry, at: 0)
         if recentActivities.count > 12 {
             recentActivities = Array(recentActivities.prefix(12))
         }
         persistRecentActivities()
+    }
+
+    @MainActor
+    func logActivity(kind: RecentActivity.Kind, title: String, detail: String, icon: String) {
+        logActivity(RecentActivity(kind: kind, title: title, detail: detail, icon: icon))
     }
 
     @MainActor
@@ -653,7 +657,7 @@ class ContactsManager: ObservableObject {
         return existingGroups.first(where: { $0.name == groupName })
     }
 
-    func createGroup(name: String, contactIds: [String], allowDuplicateNames: Bool = false) async -> Bool {
+    func createGroup(name: String, contactIds: [String], allowDuplicateNames: Bool = false, replaceExisting: Bool = false) async -> Bool {
         guard authorizationStatus == .authorized else { return false }
 
         // Use the dedicated queue instead of Task.detached
@@ -665,16 +669,23 @@ class ContactsManager: ObservableObject {
                 }
 
                 do {
-                    if !allowDuplicateNames {
-                        // Check if group with this name already exists
-                        let existingGroups = try self.store.groups(matching: nil)
-                        if existingGroups.contains(where: { $0.name == name }) {
+                    let existingGroups = try self.store.groups(matching: nil)
+                    if let existing = existingGroups.first(where: { $0.name == name }) {
+                        if replaceExisting {
+                            let deleteRequest = CNSaveRequest()
+                            deleteRequest.delete(existing.mutableCopy() as! CNMutableGroup)
+                            try self.store.execute(deleteRequest)
+                        } else if !allowDuplicateNames {
                             Task { @MainActor in
                                 self.errorMessage = "Group '\(name)' already exists"
                             }
                             continuation.resume(returning: false)
                             return
                         }
+                    }
+
+                    if !allowDuplicateNames {
+                        // Duplicate check already handled above
                     }
 
                     let group = CNMutableGroup()
@@ -1954,6 +1965,17 @@ extension ContactsUndoManager {
                 await contactsManager.updateFullName(contactId, fullName: newValue)
             }
         }
+    }
+}
+
+extension ContactsManager {
+    func createGroup(name: String, contactIds: [String], allowDuplicateNames: Bool) async -> Bool {
+        await createGroup(
+            name: name,
+            contactIds: contactIds,
+            allowDuplicateNames: allowDuplicateNames,
+            replaceExisting: false
+        )
     }
 }
 
