@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		13AF35E7BD3E482FB60315A9 /* ContactChangeHistoryWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C551234E156413D8F696509 /* ContactChangeHistoryWrapper.m */; };
 		7D3B4B7A2EC6A30400862138 /* Contacts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D3B4B792EC6A30400862138 /* Contacts.framework */; };
 		7D3B4B7C2EC6A35300862138 /* ContactsUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D3B4B7B2EC6A35300862138 /* ContactsUI.framework */; };
 		7D7093EB2EB6D1B60073F556 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 7D7093DC2EB6D1B60073F556 /* Info.plist */; };
@@ -27,12 +28,15 @@
 		7D8C3D642EB7159C0090A507 /* FirstBackupSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D8C3D632EB7159C0090A507 /* FirstBackupSheet.swift */; };
 		7D8C3D822EBA01430090A507 /* ImportExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D8C3D802EBA01430090A507 /* ImportExportService.swift */; };
 		7D8C3D832EBA01430090A507 /* TestDataGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D8C3D812EBA01430090A507 /* TestDataGenerator.swift */; };
+		9945159F2F594B8F9258B029 /* Contacts OrganizerTests/ContactsManagerChangeHistoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5A946F7E7B94C309EF5DDEB /* Contacts OrganizerTests/ContactsManagerChangeHistoryTests.swift */; };
+		7AB3B9C3EC014B9097B0632F /* DiagnosticsCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F3A5D33E8384713AD44D85F /* DiagnosticsCenter.swift */; };
+		5D3F2FFE782B4A23AE42BCF5 /* DiagnosticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AD6C34130EF49518ABDB409 /* DiagnosticsView.swift */; };
+		663EC35D208E489AB2C42BDF /* Contacts OrganizerTests/DiagnosticsCenterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C89D86B86143DDB57A3D81 /* Contacts OrganizerTests/DiagnosticsCenterTests.swift */; };
 		D9555C332EC008F900114EE2 /* PrivacyModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9555C322EC008F900114EE2 /* PrivacyModels.swift */; };
 		D9555C352EC0091200114EE2 /* PrivacyMonitorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9555C342EC0091200114EE2 /* PrivacyMonitorService.swift */; };
 		D9844D4C2EC00E250027876E /* GroupExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9844D4B2EC00E250027876E /* GroupExportService.swift */; };
 		D9844D502EC00E9E0027876E /* PrivacyDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9844D4E2EC00E9E0027876E /* PrivacyDashboardView.swift */; };
 		D9844D522EC01EA40027876E /* TextScaleEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9844D512EC01EA40027876E /* TextScaleEnvironment.swift */; };
-		13AF35E7BD3E482FB60315A9 /* ContactChangeHistoryWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C551234E156413D8F696509 /* ContactChangeHistoryWrapper.m */; };
 		D99999322EC1FA0400544B56 /* RecentActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = D99999312EC1FA0400544B56 /* RecentActivity.swift */; };
 		D9B2F7012F7E1A4C00A1BEEF /* SmartGroupActionExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9B2F7002F7E1A4C00A1BEEF /* SmartGroupActionExecutor.swift */; };
 		D9B2F7042F7E1A4C00A1BEEF /* ManualGroupActionExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9B2F7032F7E1A4C00A1BEEF /* ManualGroupActionExecutor.swift */; };
@@ -64,6 +68,11 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0A3E5002BFC54058B2169544 /* ContactsOrganizer-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ContactsOrganizer-Bridging-Header.h"; sourceTree = "<group>"; };
+		49D489ADCAEB47B189DE9363 /* ContactChangeHistoryWrapper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ContactChangeHistoryWrapper.h; sourceTree = "<group>"; };
+		4C551234E156413D8F696509 /* ContactChangeHistoryWrapper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ContactChangeHistoryWrapper.m; sourceTree = "<group>"; };
+		2F3A5D33E8384713AD44D85F /* DiagnosticsCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsCenter.swift; sourceTree = "<group>"; };
+		4AD6C34130EF49518ABDB409 /* DiagnosticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsView.swift; sourceTree = "<group>"; };
 		7D3B4B792EC6A30400862138 /* Contacts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Contacts.framework; path = System/Library/Frameworks/Contacts.framework; sourceTree = SDKROOT; };
 		7D3B4B7B2EC6A35300862138 /* ContactsUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ContactsUI.framework; path = System/Library/Frameworks/ContactsUI.framework; sourceTree = SDKROOT; };
 		7D4C9A912EBC5E070023330A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -88,12 +97,10 @@
 		7D7093E92EB6D1B60073F556 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		7D8C3D622EB70B6F0090A507 /* NSContactsUsageDescription.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = NSContactsUsageDescription.txt; sourceTree = "<group>"; };
 		7D8C3D632EB7159C0090A507 /* FirstBackupSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstBackupSheet.swift; sourceTree = "<group>"; };
+		E4C89D86B86143DDB57A3D81 /* Contacts OrganizerTests/DiagnosticsCenterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contacts OrganizerTests/DiagnosticsCenterTests.swift"; sourceTree = "<group>"; };
 		7D8C3D692EB9A60D0090A507 /* Contacts OrganizerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Contacts OrganizerTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7D8C3D802EBA01430090A507 /* ImportExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportExportService.swift; sourceTree = "<group>"; };
 		7D8C3D812EBA01430090A507 /* TestDataGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestDataGenerator.swift; sourceTree = "<group>"; };
-		49D489ADCAEB47B189DE9363 /* ContactChangeHistoryWrapper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ContactChangeHistoryWrapper.h; sourceTree = "<group>"; };
-		4C551234E156413D8F696509 /* ContactChangeHistoryWrapper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ContactChangeHistoryWrapper.m; sourceTree = "<group>"; };
-		0A3E5002BFC54058B2169544 /* ContactsOrganizer-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ContactsOrganizer-Bridging-Header.h"; sourceTree = "<group>"; };
 		D9555C322EC008F900114EE2 /* PrivacyModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyModels.swift; sourceTree = "<group>"; };
 		D9555C342EC0091200114EE2 /* PrivacyMonitorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyMonitorService.swift; sourceTree = "<group>"; };
 		D9844D4B2EC00E250027876E /* GroupExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupExportService.swift; sourceTree = "<group>"; };
@@ -117,6 +124,7 @@
 		D9C500152F90000000A1BEEF /* GroupMessageComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupMessageComposer.swift; sourceTree = "<group>"; };
 		D9C500162F90000000A1BEEF /* Contacts OrganizerTests/GroupMessageComposerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contacts OrganizerTests/GroupMessageComposerTests.swift"; sourceTree = "<group>"; };
 		D9F1E0A12F79B00100ABCDEF /* SettingsPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPreferences.swift; sourceTree = "<group>"; };
+		E5A946F7E7B94C309EF5DDEB /* Contacts OrganizerTests/ContactsManagerChangeHistoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contacts OrganizerTests/ContactsManagerChangeHistoryTests.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -168,6 +176,8 @@
 				D9C500132F90000000A1BEEF /* Contacts OrganizerTests/HealthActivityFactoryTests.swift */,
 				D9B2F70A2F7E1A4C00A1BEEF /* Contacts OrganizerTests/SettingsPreferenceStoreTests.swift */,
 				D9B2F70C2F7E1A4C00A1BEEF /* Contacts OrganizerTests/SettingsActionControllerTests.swift */,
+				E4C89D86B86143DDB57A3D81 /* Contacts OrganizerTests/DiagnosticsCenterTests.swift */,
+				E5A946F7E7B94C309EF5DDEB /* Contacts OrganizerTests/ContactsManagerChangeHistoryTests.swift */,
 				D9B2F70E2F7E1A4C00A1BEEF /* ViewModels/OverviewDashboardModel.swift */,
 				D9B2F70D2F7E1A4C00A1BEEF /* Views/Dashboard/OverviewNavigator.swift */,
 				D9C500162F90000000A1BEEF /* Contacts OrganizerTests/GroupMessageComposerTests.swift */,
@@ -244,6 +254,7 @@
 		7D7093DA2EB6D1B60073F556 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				2F3A5D33E8384713AD44D85F /* DiagnosticsCenter.swift */,
 				D9C500152F90000000A1BEEF /* GroupMessageComposer.swift */,
 				D9B2F7082F7E1A4C00A1BEEF /* SettingsActionController.swift */,
 				D9B2F7062F7E1A4C00A1BEEF /* SettingsPreferenceStore.swift */,
@@ -313,6 +324,7 @@
 		7D7093EA2EB6D1B60073F556 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				4AD6C34130EF49518ABDB409 /* DiagnosticsView.swift */,
 				D9844D512EC01EA40027876E /* TextScaleEnvironment.swift */,
 				D9844D4F2EC00E9E0027876E /* Privacy */,
 				7D7093DF2EB6D1B60073F556 /* HealthReport */,
@@ -454,6 +466,7 @@
 				7D8C3D832EBA01430090A507 /* TestDataGenerator.swift in Sources */,
 				7D7093F12EB6D1B60073F556 /* AppState.swift in Sources */,
 				7D7093F22EB6D1B60073F556 /* DuplicateDetector.swift in Sources */,
+				7AB3B9C3EC014B9097B0632F /* DiagnosticsCenter.swift in Sources */,
 				D9844D522EC01EA40027876E /* TextScaleEnvironment.swift in Sources */,
 				7D7093F32EB6D1B60073F556 /* HealthReportView.swift in Sources */,
 				D9844D4C2EC00E250027876E /* GroupExportService.swift in Sources */,
@@ -464,6 +477,7 @@
 				7D7093F62EB6D1B60073F556 /* ContactsManager.swift in Sources */,
 				7D7093F72EB6D1B60073F556 /* GroupsView.swift in Sources */,
 				7D7093F82EB6D1B60073F556 /* ContentView.swift in Sources */,
+				5D3F2FFE782B4A23AE42BCF5 /* DiagnosticsView.swift in Sources */,
 				7D7093F92EB6D1B60073F556 /* SettingsView.swift in Sources */,
 				7D8C3D642EB7159C0090A507 /* FirstBackupSheet.swift in Sources */,
 				D9B2F7042F7E1A4C00A1BEEF /* ManualGroupActionExecutor.swift in Sources */,
@@ -488,6 +502,8 @@
 				D9C500032F90000000A1BEEF /* Contacts OrganizerTests/HealthActivityFactoryTests.swift in Sources */,
 				D9C500042F90000000A1BEEF /* Contacts OrganizerTests/RecentActivitySectionsTests.swift in Sources */,
 				D9C500062F90000000A1BEEF /* Contacts OrganizerTests/GroupMessageComposerTests.swift in Sources */,
+				9945159F2F594B8F9258B029 /* Contacts OrganizerTests/ContactsManagerChangeHistoryTests.swift in Sources */,
+				663EC35D208E489AB2C42BDF /* Contacts OrganizerTests/DiagnosticsCenterTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -686,9 +702,9 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "SupportingFiles/ContactsOrganizer-Bridging-Header.h";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				SWIFT_OBJC_BRIDGING_HEADER = "SupportingFiles/ContactsOrganizer-Bridging-Header.h";
 			};
 			name = Debug;
 		};
@@ -742,9 +758,9 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "SupportingFiles/ContactsOrganizer-Bridging-Header.h";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				SWIFT_OBJC_BRIDGING_HEADER = "SupportingFiles/ContactsOrganizer-Bridging-Header.h";
 			};
 			name = Release;
 		};

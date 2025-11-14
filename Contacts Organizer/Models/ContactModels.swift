@@ -368,9 +368,9 @@ struct HealthIssueAction: Identifiable, Equatable {
 }
 
 enum HealthIssueActionCatalog {
-    static let phoneFollowUpGroupName = "Needs Phone Follow-Up"
-    static let emailFollowUpGroupName = "Needs Email Follow-Up"
-    static let generalFollowUpGroupName = "Needs Contact Cleanup"
+    static let phoneFollowUpGroupName = "Needs Phone Follow Up"
+    static let emailFollowUpGroupName = "Needs Email Follow Up"
+    static let generalFollowUpGroupName = "Needs Follow Up"
     static let archiveGroupName = "Archive - Needs Info"
     static let reviewedGroupName = "Reviewed Health Issues"
 
@@ -386,7 +386,7 @@ enum HealthIssueActionCatalog {
                 inputPrompt: "Enter the full name for this contact.",
                 inputPlaceholder: "Full Name"
             ))
-            actions.append(addToGroupAction(title: "Add to Follow-Up", groupName: generalFollowUpGroupName))
+            actions.append(addToGroupAction(title: "Add to Follow Up", groupName: generalFollowUpGroupName))
 
         case .missingPhone:
             actions.append(HealthIssueAction(
@@ -409,7 +409,7 @@ enum HealthIssueActionCatalog {
             actions.append(addToGroupAction(title: "Move to Needs Email Group", groupName: emailFollowUpGroupName))
 
         case .noContactInfo:
-            actions.append(addToGroupAction(title: "Add to Follow-Up Group", groupName: generalFollowUpGroupName))
+            actions.append(addToGroupAction(title: "Add to Follow Up Group", groupName: generalFollowUpGroupName))
             actions.append(HealthIssueAction(
                 title: "Archive Contact",
                 icon: "archivebox",
@@ -419,7 +419,7 @@ enum HealthIssueActionCatalog {
             ))
 
         case .invalidFormat, .incompleteData, .suggestion:
-            actions.append(addToGroupAction(title: "Add to Follow-Up Group", groupName: generalFollowUpGroupName))
+            actions.append(addToGroupAction(title: "Add to Follow Up Group", groupName: generalFollowUpGroupName))
         }
 
         actions.append(markReviewedAction)

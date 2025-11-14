@@ -40,13 +40,13 @@ final class HealthIssueActionExecutorTests: XCTestCase {
         let mock = MockPerformer()
         let executor = HealthIssueActionExecutor(performer: mock)
         let issue = DataQualityIssue(contactId: "42", contactName: "Test", issueType: .missingPhone, description: "", severity: .medium)
-        let action = HealthIssueAction(title: "Follow Up", icon: "", type: .addToGroup(name: "Needs Contact Cleanup"), inputPrompt: nil, inputPlaceholder: nil)
+        let action = HealthIssueAction(title: "Follow Up", icon: "", type: .addToGroup(name: HealthIssueActionCatalog.generalFollowUpGroupName), inputPrompt: nil, inputPlaceholder: nil)
 
         let result = await executor.execute(action, for: issue, inputValue: nil)
 
         XCTAssertTrue(result.success)
         XCTAssertEqual(mock.addToGroupCalls.count, 1)
-        XCTAssertEqual(mock.addToGroupCalls.first?.groupName, "Needs Contact Cleanup")
+        XCTAssertEqual(mock.addToGroupCalls.first?.groupName, HealthIssueActionCatalog.generalFollowUpGroupName)
         XCTAssertEqual(mock.addToGroupCalls.first?.contactId, "42")
     }
 

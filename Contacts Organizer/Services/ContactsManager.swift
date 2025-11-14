@@ -23,8 +23,22 @@ class ContactsManager: ObservableObject {
     }
     static let shared = ContactsManager()
 
-    nonisolated(unsafe) private let store = CNContactStore()
-    private lazy var changeHistoryWrapper = ContactChangeHistoryWrapper(store: store)
+    nonisolated(unsafe) private let store: CNContactStore
+    private let changeHistoryFetcher: ChangeHistoryFetching
+
+    init(
+        store: CNContactStore = CNContactStore(),
+        changeHistoryFetcher: ChangeHistoryFetching? = nil
+    ) {
+        self.store = store
+        self.changeHistoryFetcher = changeHistoryFetcher ?? ContactStoreChangeHistoryFetcher(store: store)
+        updateAuthorizationStatus()
+        loadRecencyState()
+        Task { @MainActor in
+            loadRecentActivities()
+        }
+        startContactStoreObservation()
+    }
 
     @Published var authorizationStatus: CNAuthorizationStatus = .notDetermined
     @Published var contacts: [ContactSummary] = []
@@ -80,13 +94,8 @@ class ContactsManager: ObservableObject {
     nonisolated(unsafe) static var mergeOverride: MergeOverride?
 #endif
 
-    private init() {
-        updateAuthorizationStatus()
-        loadRecencyState()
-        Task { @MainActor in
-            loadRecentActivities()
-        }
-        startContactStoreObservation()
+    private convenience init() {
+        self.init(store: CNContactStore(), changeHistoryFetcher: nil)
     }
 
     deinit {
@@ -1916,6 +1925,24 @@ class ContactsManager: ObservableObject {
     func resetError() {
         errorMessage = nil
     }
+
+#if DEBUG
+    func testRecencyInfo(for contactId: String) -> ContactRecencyInfo? {
+        contactRecencyInfo[contactId]
+    }
+
+    func testSetRecencyInfo(_ info: ContactRecencyInfo?, for contactId: String) {
+        contactRecencyInfo[contactId] = info
+    }
+
+    func testSetChangeHistoryAnchor(_ data: Data?) {
+        changeHistoryAnchor = data
+    }
+
+    func testCurrentHistoryAnchor() -> Data? {
+        changeHistoryAnchor
+    }
+#endif
 }
 
 // MARK: - Undo Manager
@@ -2047,7 +2074,54 @@ extension ContactsManager {
 extension ContactsManager: SmartGroupContactPerforming {}
 extension ContactsManager: ManualGroupContactPerforming {}
 
-private extension ContactsManager {
+struct ChangeHistoryEvent {
+    enum Kind {
+        case add(contact: CNContact)
+        case update(contact: CNContact)
+        case delete(id: String)
+        case dropEverything
+    }
+
+    let kind: Kind
+
+    init(kind: Kind) {
+        self.kind = kind
+    }
+
+    nonisolated init?(nativeEvent: CNChangeHistoryEvent) {
+        switch nativeEvent {
+        case let addEvent as CNChangeHistoryAddContactEvent:
+            self.kind = .add(contact: addEvent.contact)
+        case let updateEvent as CNChangeHistoryUpdateContactEvent:
+            self.kind = .update(contact: updateEvent.contact)
+        case let deleteEvent as CNChangeHistoryDeleteContactEvent:
+            self.kind = .delete(id: deleteEvent.contactIdentifier)
+        case _ as CNChangeHistoryDropEverythingEvent:
+            self.kind = .dropEverything
+        default:
+            return nil
+        }
+    }
+}
+
+protocol ChangeHistoryFetching: AnyObject {
+    func fetchEvents(using request: CNChangeHistoryFetchRequest, currentToken: inout NSData?) throws -> [ChangeHistoryEvent]
+}
+
+final class ContactStoreChangeHistoryFetcher: ChangeHistoryFetching {
+    private let wrapper: ContactChangeHistoryWrapper
+
+    init(store: CNContactStore) {
+        self.wrapper = ContactChangeHistoryWrapper(store: store)
+    }
+
+    func fetchEvents(using request: CNChangeHistoryFetchRequest, currentToken: inout NSData?) throws -> [ChangeHistoryEvent] {
+        let native = try wrapper.fetchChangeHistory(with: request, currentHistoryToken: &currentToken)
+        return native.compactMap(ChangeHistoryEvent.init(nativeEvent:))
+    }
+}
+
+extension ContactsManager {
     func loadRecencyState() {
         let defaults = UserDefaults.standard
         if let cachedData = defaults.data(forKey: recencyCacheDefaultsKey),
@@ -2068,18 +2142,16 @@ private extension ContactsManager {
     func refreshRecencyInfoFromHistory(retryOnReset: Bool = true) {
         guard authorizationStatus == .authorized else { return }
 
+        let refreshStart = Date()
         var recencyChanged = false
         let request = CNChangeHistoryFetchRequest()
         request.startingToken = changeHistoryAnchor
         request.shouldUnifyResults = true
 
         var currentToken: NSData?
-        let events: [CNChangeHistoryEvent]
+        let events: [ChangeHistoryEvent]
         do {
-            events = try changeHistoryWrapper.fetchChangeHistory(
-                with: request,
-                currentHistoryToken: &currentToken
-            )
+            events = try changeHistoryFetcher.fetchEvents(using: request, currentToken: &currentToken)
         } catch let nsError as NSError {
             handleChangeHistoryError(nsError, retryOnReset: retryOnReset)
             return
@@ -2087,15 +2159,15 @@ private extension ContactsManager {
 
         for event in events {
             let now = Date()
-            switch event {
-            case let addEvent as CNChangeHistoryAddContactEvent:
-                contactRecencyInfo[addEvent.contact.identifier] = ContactRecencyInfo(
+            switch event.kind {
+            case .add(let contact):
+                contactRecencyInfo[contact.identifier] = ContactRecencyInfo(
                     createdAt: now,
                     modifiedAt: now
                 )
                 recencyChanged = true
-            case let updateEvent as CNChangeHistoryUpdateContactEvent:
-                let identifier = updateEvent.contact.identifier
+            case .update(let contact):
+                let identifier = contact.identifier
                 if var info = contactRecencyInfo[identifier] {
                     info.updateModified(date: now)
                     contactRecencyInfo[identifier] = info
@@ -2103,16 +2175,14 @@ private extension ContactsManager {
                     contactRecencyInfo[identifier] = ContactRecencyInfo(createdAt: now, modifiedAt: now)
                 }
                 recencyChanged = true
-            case let deleteEvent as CNChangeHistoryDeleteContactEvent:
-                if contactRecencyInfo.removeValue(forKey: deleteEvent.contactIdentifier) != nil {
+            case .delete(let identifier):
+                if contactRecencyInfo.removeValue(forKey: identifier) != nil {
                     recencyChanged = true
                 }
-            case _ as CNChangeHistoryDropEverythingEvent:
+            case .dropEverything:
                 contactRecencyInfo.removeAll()
                 changeHistoryAnchor = nil
                 recencyChanged = true
-            default:
-                break
             }
         }
 
@@ -2123,6 +2193,13 @@ private extension ContactsManager {
         }
 
         persistRecencyState(recencyChanged: recencyChanged)
+
+        let duration = Date().timeIntervalSince(refreshStart)
+        DiagnosticsCenter.logPerformance(
+            operation: "Change history refresh",
+            duration: duration,
+            threshold: DiagnosticsThresholds.changeHistoryRefresh
+        )
     }
 
     private func handleChangeHistoryError(_ error: NSError, retryOnReset: Bool) {
@@ -2134,8 +2211,16 @@ private extension ContactsManager {
             changeHistoryAnchor = nil
             persistRecencyState(recencyChanged: true)
             refreshRecencyInfoFromHistory(retryOnReset: false)
+            DiagnosticsCenter.log(
+                "Contact change history expired. Resetting anchor and refetching.",
+                severity: .warning
+            )
         } else {
             print("❌ Change history fetch failed: \(error)")
+            DiagnosticsCenter.log(
+                "Change history fetch failed: \(error.localizedDescription)",
+                severity: .error
+            )
         }
     }
 }

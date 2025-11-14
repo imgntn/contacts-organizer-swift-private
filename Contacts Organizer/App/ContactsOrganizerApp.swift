@@ -13,6 +13,7 @@ struct ContactsOrganizerApp: App {
     @StateObject private var contactsManager = ContactsManager.shared
     @StateObject private var appState = AppState()
     @StateObject private var privacyMonitor = PrivacyMonitorService.shared
+    @StateObject private var diagnosticsCenter = DiagnosticsCenter.shared
     @StateObject private var undoManager = ContactsUndoManager()
 
     @AppStorage("textScalePreference") private var textScalePreference = "normal"
@@ -28,6 +29,7 @@ struct ContactsOrganizerApp: App {
                 .environmentObject(appState)
                 .environmentObject(privacyMonitor)
                 .environmentObject(undoManager)
+                .environmentObject(diagnosticsCenter)
                 .environment(\.textScale, textScale)
                 .frame(minWidth: 900, minHeight: 600)
         }
@@ -54,6 +56,7 @@ struct ContactsOrganizerApp: App {
                 .environmentObject(appState)
                 .environmentObject(privacyMonitor)
                 .environmentObject(undoManager)
+                .environmentObject(diagnosticsCenter)
                 .environment(\.textScale, textScale)
         }
     }

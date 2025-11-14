@@ -91,19 +91,19 @@ final class ContactsUndoManagerTests: XCTestCase {
         let manager = await MainActor.run { ContactsUndoManager() }
         let mock = MockUndoPerformer()
         await MainActor.run {
-            manager.register(effect: .addedToGroup(contactId: "3", groupName: "Needs Contact Cleanup"), actionTitle: "Follow Up", contactsManager: mock)
+            manager.register(effect: .addedToGroup(contactId: "3", groupName: HealthIssueActionCatalog.generalFollowUpGroupName), actionTitle: "Follow Up", contactsManager: mock)
         }
 
         await MainActor.run { manager.undo() }
         await manager.waitForIdle()
         XCTAssertEqual(mock.removeGroupCalls.count, 1)
         XCTAssertEqual(mock.removeGroupCalls.first?.0, "3")
-        XCTAssertEqual(mock.removeGroupCalls.first?.1, "Needs Contact Cleanup")
+        XCTAssertEqual(mock.removeGroupCalls.first?.1, HealthIssueActionCatalog.generalFollowUpGroupName)
         await MainActor.run { manager.redo() }
         await manager.waitForIdle()
         XCTAssertEqual(mock.addGroupCalls.count, 1)
         XCTAssertEqual(mock.addGroupCalls.first?.0, "3")
-        XCTAssertEqual(mock.addGroupCalls.first?.1, "Needs Contact Cleanup")
+        XCTAssertEqual(mock.addGroupCalls.first?.1, HealthIssueActionCatalog.generalFollowUpGroupName)
     }
 
     func testArchivedContactEffectUndoRedo() async {
@@ -139,6 +139,75 @@ final class ContactsUndoManagerTests: XCTestCase {
         XCTAssertEqual(mock.updatedNamesRedo.count, 1)
         XCTAssertEqual(mock.updatedNamesRedo.first?.0, "5")
         XCTAssertEqual(mock.updatedNamesRedo.first?.1, "New Name")
+    }
+
+    func testMultiplePhoneAdditionsUndoRedo() async {
+        let manager = await MainActor.run { ContactsUndoManager() }
+        let mock = MockUndoPerformer()
+        await MainActor.run {
+            manager.register(effect: .addedPhone(contactId: "1", value: "111"), actionTitle: "Add Phone", contactsManager: mock)
+            manager.register(effect: .addedPhone(contactId: "2", value: "222"), actionTitle: "Add Phone", contactsManager: mock)
+        }
+
+        await MainActor.run { manager.undo() }
+        await manager.waitForIdle()
+        await MainActor.run { manager.undo() }
+        await manager.waitForIdle()
+        XCTAssertEqual(mock.removePhoneCalls.map(\.0), ["222", "111"])
+        XCTAssertEqual(mock.removePhoneCalls.map(\.1), ["2", "1"])
+
+        await MainActor.run { manager.redo() }
+        await manager.waitForIdle()
+        await MainActor.run { manager.redo() }
+        await manager.waitForIdle()
+        XCTAssertEqual(mock.addPhoneCalls.map(\.0), ["111", "222"])
+        XCTAssertEqual(mock.addPhoneCalls.map(\.1), ["1", "2"])
+    }
+
+    func testMultipleEmailAdditionsUndoRedo() async {
+        let manager = await MainActor.run { ContactsUndoManager() }
+        let mock = MockUndoPerformer()
+        await MainActor.run {
+            manager.register(effect: .addedEmail(contactId: "10", value: "first@example.com"), actionTitle: "Add Email", contactsManager: mock)
+            manager.register(effect: .addedEmail(contactId: "20", value: "second@example.com"), actionTitle: "Add Email", contactsManager: mock)
+        }
+
+        await MainActor.run { manager.undo() }
+        await manager.waitForIdle()
+        await MainActor.run { manager.undo() }
+        await manager.waitForIdle()
+        XCTAssertEqual(mock.removeEmailCalls.map(\.0), ["second@example.com", "first@example.com"])
+        XCTAssertEqual(mock.removeEmailCalls.map(\.1), ["20", "10"])
+
+        await MainActor.run { manager.redo() }
+        await manager.waitForIdle()
+        await MainActor.run { manager.redo() }
+        await manager.waitForIdle()
+        XCTAssertEqual(mock.addEmailCalls.map(\.0), ["first@example.com", "second@example.com"])
+        XCTAssertEqual(mock.addEmailCalls.map(\.1), ["10", "20"])
+    }
+
+    func testMultipleArchiveActionsUndoRedo() async {
+        let manager = await MainActor.run { ContactsUndoManager() }
+        let mock = MockUndoPerformer()
+        await MainActor.run {
+            manager.register(effect: .archivedContact(contactId: "alpha"), actionTitle: "Archive", contactsManager: mock)
+            manager.register(effect: .archivedContact(contactId: "beta"), actionTitle: "Archive", contactsManager: mock)
+        }
+
+        await MainActor.run { manager.undo() }
+        await manager.waitForIdle()
+        await MainActor.run { manager.undo() }
+        await manager.waitForIdle()
+        let removed = mock.removeGroupCalls.suffix(2)
+        XCTAssertEqual(removed.map(\.0), ["beta", "alpha"])
+        XCTAssertEqual(removed.map(\.1), Array(repeating: HealthIssueActionCatalog.archiveGroupName, count: 2))
+
+        await MainActor.run { manager.redo() }
+        await manager.waitForIdle()
+        await MainActor.run { manager.redo() }
+        await manager.waitForIdle()
+        XCTAssertEqual(mock.archiveCalls.suffix(2), ["alpha", "beta"])
     }
 }
 

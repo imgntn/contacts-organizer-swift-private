@@ -17,6 +17,7 @@ class DuplicateDetector: @unchecked Sendable {
     nonisolated func findDuplicates(in contacts: [ContactSummary]) -> [DuplicateGroup] {
         let startTime = Date()
         var duplicateGroups: [DuplicateGroup] = []
+        let operationName = "Duplicate detection (\(contacts.count) contacts)"
         var processedIds: Set<String> = []
 
         // OPTIMIZATION: Build hash maps for O(n) lookups instead of O(n²)
@@ -129,6 +130,11 @@ class DuplicateDetector: @unchecked Sendable {
             Task { @MainActor in
                 PrivacyMonitorService.shared.recordDuplicateDetection(duration: duration)
             }
+            DiagnosticsCenter.logPerformance(
+                operation: operationName,
+                duration: duration,
+                threshold: DiagnosticsThresholds.duplicateDetection
+            )
             return duplicateGroups.sorted { $0.confidence > $1.confidence }
         }
 
@@ -179,6 +185,11 @@ class DuplicateDetector: @unchecked Sendable {
             Task { @MainActor in
                 PrivacyMonitorService.shared.recordDuplicateDetection(duration: duration)
             }
+            DiagnosticsCenter.logPerformance(
+                operation: operationName,
+                duration: duration,
+                threshold: DiagnosticsThresholds.duplicateDetection
+            )
             return duplicateGroups.sorted { $0.confidence > $1.confidence }
         }
 
@@ -238,6 +249,11 @@ class DuplicateDetector: @unchecked Sendable {
         Task { @MainActor in
             PrivacyMonitorService.shared.recordDuplicateDetection(duration: duration)
         }
+        DiagnosticsCenter.logPerformance(
+            operation: operationName,
+            duration: duration,
+            threshold: DiagnosticsThresholds.duplicateDetection
+        )
         return duplicateGroups.sorted { $0.confidence > $1.confidence }
     }
 

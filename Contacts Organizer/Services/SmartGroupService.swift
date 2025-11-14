@@ -15,6 +15,7 @@ class SmartGroupService: @unchecked Sendable {
     // MARK: - Generate Smart Groups
 
     nonisolated func generateSmartGroups(from contacts: [ContactSummary], definitions: [SmartGroupDefinition]) -> [SmartGroupResult] {
+        let startTime = Date()
         var results: [SmartGroupResult] = []
 
         for definition in definitions where definition.isEnabled {
@@ -29,6 +30,13 @@ class SmartGroupService: @unchecked Sendable {
                 results.append(contentsOf: groupByCustomCriteria(contacts, name: definition.name, criteria: criteria))
             }
         }
+
+        let duration = Date().timeIntervalSince(startTime)
+        DiagnosticsCenter.logPerformance(
+            operation: "Smart group generation (\(contacts.count) contacts)",
+            duration: duration,
+            threshold: DiagnosticsThresholds.smartGroupGeneration
+        )
 
         return results
     }

@@ -80,6 +80,7 @@ struct GeneralSettingsView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var contactsManager: ContactsManager
     @EnvironmentObject var undoManager: ContactsUndoManager
+    @EnvironmentObject var diagnosticsCenter: DiagnosticsCenter
     @AppStorage("autoRefresh") private var autoRefresh = true
     @AppStorage("showCompletedActions") private var showCompletedActions = false
     @AppStorage("textScalePreference") private var textScalePreference = "normal"
@@ -96,6 +97,7 @@ struct GeneralSettingsView: View {
     @State private var showSuccessAlert = false
     @State private var successMessage = ""
     private let preferenceStore = SettingsPreferenceStore.shared
+    @State private var showingDiagnostics = false
 
     var body: some View {
         ScrollView {
@@ -252,6 +254,46 @@ struct GeneralSettingsView: View {
                             .foregroundColor(.secondary)
                     }
                 }
+                
+                SettingsCard(
+                    icon: "stethoscope",
+                    title: "Diagnostics & Logs",
+                    subtitle: "Review recent warnings, errors, and performance notes",
+                    accentColor: .gray.opacity(0.8)
+                ) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        if let latest = diagnosticsCenter.entries.first {
+                            HStack {
+                                Label(latest.severity.rawValue.capitalized, systemImage: latest.severity.iconName)
+                                    .foregroundStyle(latest.severity.tint)
+                                Spacer()
+                                Text(latest.timestamp.formatted(date: .omitted, time: .shortened))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            Text(latest.message)
+                                .font(.subheadline)
+                                .lineLimit(2)
+                            if let metadata = latest.metadata {
+                                Text(metadata)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        } else {
+                            Text("Everything looks clear. We’ll log issues and performance spikes here automatically.")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+
+                        Button {
+                            showingDiagnostics = true
+                        } label: {
+                            Label("Open Diagnostics Console", systemImage: "arrow.up.right.square")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                }
             }
             .padding(.horizontal, 24)
             .padding(.vertical, 30)
@@ -305,6 +347,10 @@ struct GeneralSettingsView: View {
         }
         .onChange(of: autoRefresh) { _, newValue in
             preferenceStore.updateAutoRefresh(to: newValue, undoManager: undoManager)
+        }
+        .sheet(isPresented: $showingDiagnostics) {
+            DiagnosticsView()
+                .environmentObject(diagnosticsCenter)
         }
     }
 

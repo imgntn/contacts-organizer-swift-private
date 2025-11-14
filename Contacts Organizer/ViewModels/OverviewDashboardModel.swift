@@ -105,13 +105,16 @@ final class OverviewDashboardModel: ObservableObject {
 
     func dismissBackupReminder() {
         guard showBackupReminder else { return }
+        showBackupReminder = false
         appState.markBackupReminderSeen()
         undoManager.register(description: "Dismiss backup reminder") { [weak self] in
             guard let self else { return false }
+            self.showBackupReminder = true
             self.appState.resetBackupReminder()
             return true
         } redo: { [weak self] in
             guard let self else { return false }
+            self.showBackupReminder = false
             self.appState.markBackupReminderSeen()
             return true
         }

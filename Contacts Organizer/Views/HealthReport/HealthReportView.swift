@@ -275,7 +275,7 @@ struct HealthReportView: View {
 
             if isSelectionMode {
                 Menu {
-                    Button("Add to Follow-Up Group") {
+                    Button("Add to Follow Up Group") {
                         performBulkAction(.followUp)
                     }
                     Button("Archive Contacts") {
@@ -365,7 +365,7 @@ struct HealthReportView: View {
                 switch action {
                 case .followUp:
                     actionDefinition = HealthIssueAction(
-                        title: "Add to Follow-Up",
+                        title: "Add to Follow Up",
                         icon: "folder.badge.plus",
                         type: .addToGroup(name: HealthIssueActionCatalog.generalFollowUpGroupName),
                         inputPrompt: nil,
@@ -450,7 +450,7 @@ struct HealthReportView: View {
 
         var bulkTitle: String {
             switch self {
-            case .followUp: return "Add to Follow-Up"
+            case .followUp: return "Add to Follow Up"
             case .archive: return "Archive"
             case .markResolved: return "Mark Reviewed"
             }

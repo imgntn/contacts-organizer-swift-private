@@ -47,12 +47,14 @@ final class MergeEngineTests: XCTestCase {
             phones: ["333", "555"],
             emails: ["new@example.com", "keep@example.com"]
         )
+        let destinationId = destination.identifier
+        let sourceId = source.identifier
 
         let configuration = MergeConfiguration(
-            primaryContactId: "dest",
-            mergingContactIds: ["dest", "source"],
-            preferredNameSourceId: "source",
-            preferredOrganizationSourceId: "source",
+            primaryContactId: destinationId,
+            mergingContactIds: [destinationId, sourceId],
+            preferredNameSourceId: sourceId,
+            preferredOrganizationSourceId: sourceId,
             preferredPhotoSourceId: nil,
             includedPhoneNumbers: ["111", "333"],
             includedEmailAddresses: ["keep@example.com"]
@@ -95,7 +97,6 @@ final class MergeEngineTests: XCTestCase {
         contact.emailAddresses = emails.map {
             CNLabeledValue(label: CNLabelWork, value: $0 as NSString)
         }
-        contact.setValue(id, forKey: "identifier")
         return contact.copy() as! CNContact
     }
 }
