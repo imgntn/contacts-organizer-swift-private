@@ -2079,7 +2079,7 @@ private extension ContactsManager {
             events = try changeHistoryWrapper.fetchChangeHistory(
                 with: request,
                 currentHistoryToken: &currentToken
-            ) ?? []
+            )
         } catch let nsError as NSError {
             handleChangeHistoryError(nsError, retryOnReset: retryOnReset)
             return

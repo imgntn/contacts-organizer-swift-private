@@ -205,7 +205,7 @@ struct ContactRecencyInfo: Codable, Sendable {
 // MARK: - Normalization Helpers
 
 enum ContactNormalization {
-    static func normalizePhoneNumber(_ value: String) -> String {
+    nonisolated static func normalizePhoneNumber(_ value: String) -> String {
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return "" }
 
@@ -220,19 +220,19 @@ enum ContactNormalization {
         return normalized
     }
 
-    static func normalizeEmailAddress(_ value: String) -> String {
+    nonisolated static func normalizeEmailAddress(_ value: String) -> String {
         value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
 }
 
 extension ContactSummary {
-    var normalizedPhoneNumbers: [String] {
+    nonisolated var normalizedPhoneNumbers: [String] {
         phoneNumbers
             .map { ContactNormalization.normalizePhoneNumber($0) }
             .filter { !$0.isEmpty }
     }
 
-    var normalizedEmailAddresses: [String] {
+    nonisolated var normalizedEmailAddresses: [String] {
         emailAddresses
             .map { ContactNormalization.normalizeEmailAddress($0) }
             .filter { !$0.isEmpty }
