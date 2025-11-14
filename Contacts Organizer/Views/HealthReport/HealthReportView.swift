@@ -52,35 +52,9 @@ struct HealthReportView: View {
                 )
             } else {
                 ScrollView {
-                    VStack(spacing: 24) {
-                        // Header
-                        HStack {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Data Quality")
-                                    .responsiveFont(42, weight: .bold)
+                    LazyVStack(spacing: 24, pinnedViews: [.sectionHeaders]) {
+                        summaryHeader(summary: summary, workingIssues: workingIssues)
 
-                                Text("\(workingIssues.count) issues found")
-                                    .font(.title2)
-                                    .foregroundColor(.secondary)
-                            }
-                            Spacer()
-
-                            // Health score
-                            VStack(spacing: 4) {
-                                Text(String(format: "%.0f%%", summary.healthScore))
-                                    .responsiveFont(32, weight: .bold)
-                                    .foregroundColor(healthScoreColor)
-
-                                Text("Health Score")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            .padding()
-                            .background(Color.secondary.opacity(0.1))
-                            .cornerRadius(12)
-                        }
-
-                        // Summary cards
                         LazyVGrid(columns: [
                             GridItem(.flexible()),
                             GridItem(.flexible()),
@@ -120,85 +94,33 @@ struct HealthReportView: View {
                             }
                         }
 
-                        selectionControls
-
-                        // Issue type filters
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 12) {
-                                FilterChip(
-                                    title: "All Issues",
-                                    count: workingIssues.count,
-                                    isSelected: selectedIssueType == nil
-                                ) {
-                                    selectedIssueType = nil
+                        Section(header: pinnedSelectionControls(summary: summary, workingIssues: workingIssues)) {
+                            LazyVStack(spacing: 12) {
+                                ForEach(filteredIssues) { issue in
+                                    IssueRowView(
+                                        issue: issue,
+                                        actions: HealthIssueActionCatalog.actions(for: issue),
+                                        selectionMode: isSelectionMode,
+                                        isSelected: selectedIssueIDs.contains(issue.id),
+                                        toggleSelection: { toggleSelection(for: issue) },
+                                        onAction: { handleQuickAction($0, for: issue) }
+                                    )
                                 }
 
-                                if summary.missingNameCount > 0 {
-                                    FilterChip(
-                                        title: "Missing Name",
-                                        count: summary.missingNameCount,
-                                        isSelected: selectedIssueType == .missingName
-                                    ) {
-                                        toggleIssueTypeFilter(.missingName)
+                                if filteredIssues.isEmpty {
+                                    VStack(spacing: 12) {
+                                        Image(systemName: "checkmark.seal")
+                                            .font(.largeTitle)
+                                            .foregroundColor(.green)
+                                        Text("You're all caught up!")
+                                            .font(.title2)
+                                            .bold()
+                                        Text("No issues match your current filters.")
+                                            .foregroundColor(.secondary)
                                     }
+                                    .padding()
+                                    .frame(maxWidth: .infinity)
                                 }
-
-                                if summary.noContactInfoCount > 0 {
-                                    FilterChip(
-                                        title: "No Contact Info",
-                                        count: summary.noContactInfoCount,
-                                        isSelected: selectedIssueType == .noContactInfo
-                                    ) {
-                                        toggleIssueTypeFilter(.noContactInfo)
-                                    }
-                                }
-
-                                if summary.missingPhoneCount > 0 {
-                                    FilterChip(
-                                        title: "Missing Phone",
-                                        count: summary.missingPhoneCount,
-                                        isSelected: selectedIssueType == .missingPhone
-                                    ) {
-                                        toggleIssueTypeFilter(.missingPhone)
-                                    }
-                                }
-
-                                if summary.missingEmailCount > 0 {
-                                    FilterChip(
-                                        title: "Missing Email",
-                                        count: summary.missingEmailCount,
-                                        isSelected: selectedIssueType == .missingEmail
-                                    ) {
-                                        toggleIssueTypeFilter(.missingEmail)
-                                    }
-                                }
-
-                                // Exclude filter
-                                FilterChip(
-                                    title: excludeMissingEmail ? "Show Missing Email" : "Hide Missing Email",
-                                    count: summary.missingEmailCount,
-                                    isSelected: excludeMissingEmail
-                                ) {
-                                    excludeMissingEmail.toggle()
-                                    // Clear specific email filter if we're excluding
-                                    if excludeMissingEmail && selectedIssueType == .missingEmail {
-                                        selectedIssueType = nil
-                                    }
-                                }
-                            }
-                        }
-
-                        // Issues list
-                        LazyVStack(spacing: 12) {
-                            ForEach(filteredIssues) { issue in
-                                IssueRowView(
-                                    issue: issue,
-                                    actions: HealthIssueActionCatalog.actions(for: issue),
-                                    selectionMode: isSelectionMode,
-                                    isSelected: selectedIssueIDs.contains(issue.id),
-                                    toggleSelection: { toggleSelection(for: issue) },
-                                    onAction: { handleQuickAction($0, for: issue) }
-                                )
                             }
                         }
                     }
@@ -261,41 +183,170 @@ struct HealthReportView: View {
         }
     }
 
-    private var selectionControls: some View {
-        HStack(spacing: 12) {
-            Button(isSelectionMode ? "Done Selecting" : "Select Issues") {
-                withAnimation {
-                    isSelectionMode.toggle()
-                    if !isSelectionMode {
-                        selectedIssueIDs.removeAll()
+    private var selectionControlsContent: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 12) {
+                Button(isSelectionMode ? "Done Selecting" : "Select Issues") {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        isSelectionMode.toggle()
+                        if !isSelectionMode {
+                            selectedIssueIDs.removeAll()
+                        }
                     }
                 }
+                .buttonStyle(.bordered)
+
+                if isSelectionMode {
+                    let disabled = selectedIssueIDs.isEmpty || isPerformingBulkAction
+                    HStack(spacing: 8) {
+                        BulkActionButton(
+                            title: "Follow Up",
+                            icon: "tray.and.arrow.down.fill",
+                            tint: .blue,
+                            disabled: disabled
+                        ) {
+                            performBulkAction(.followUp)
+                        }
+                        BulkActionButton(
+                            title: "Archive",
+                            icon: "archivebox.fill",
+                            tint: .red,
+                            disabled: disabled,
+                            role: .destructive
+                        ) {
+                            performBulkAction(.archive)
+                        }
+                        BulkActionButton(
+                            title: "Mark Reviewed",
+                            icon: "checkmark.seal.fill",
+                            tint: .green,
+                            disabled: disabled
+                        ) {
+                            performBulkAction(.markResolved)
+                        }
+                    }
+
+                    if isPerformingBulkAction {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                            .padding(.leading, 4)
+                    }
+                }
+
+                Spacer()
             }
-            .buttonStyle(.bordered)
 
             if isSelectionMode {
-                Menu {
-                    Button("Add to Follow Up Group") {
-                        performBulkAction(.followUp)
-                    }
-                    Button("Archive Contacts") {
-                        performBulkAction(.archive)
-                    }
-                    Button("Mark Resolved") {
-                        performBulkAction(.markResolved)
-                    }
-                } label: {
-                    Label("Bulk Actions", systemImage: "tray.full.fill")
-                }
-                .disabled(selectedIssueIDs.isEmpty || isPerformingBulkAction)
+                let count = selectedIssueIDs.count
+                Text(count > 0 ? "\(count) issues selected" : "Select issues to enable bulk actions")
+                    .font(.caption)
+                    .foregroundColor(count > 0 ? .primary : .secondary)
+            }
+        }
+    }
 
-                if isPerformingBulkAction {
-                    ProgressView()
-                        .scaleEffect(0.7)
+    private func pinnedSelectionControls(summary: DataQualitySummary, workingIssues: [DataQualityIssue]) -> some View {
+        VStack(spacing: 12) {
+            selectionControlsContent
+            pinnedFilters(summary: summary, workingIssues: workingIssues)
+        }
+        .padding(.vertical, 10)
+        .padding(.horizontal, 12)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.secondary.opacity(0.2)))
+        .padding(.bottom, 8)
+    }
+
+    private func summaryHeader(summary: DataQualitySummary, workingIssues: [DataQualityIssue]) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Data Quality")
+                    .responsiveFont(42, weight: .bold)
+
+                Text("\(workingIssues.count) issues found")
+                    .font(.title2)
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+
+            VStack(spacing: 4) {
+                Text(String(format: "%.0f%%", summary.healthScore))
+                    .responsiveFont(32, weight: .bold)
+                    .foregroundColor(healthScoreColor)
+
+                Text("Health Score")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding()
+            .background(Color.secondary.opacity(0.1))
+            .cornerRadius(12)
+        }
+        .padding(.bottom, 4)
+    }
+
+    private func pinnedFilters(summary: DataQualitySummary, workingIssues: [DataQualityIssue]) -> some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 12) {
+                FilterChip(
+                    title: "All Issues",
+                    count: workingIssues.count,
+                    isSelected: selectedIssueType == nil
+                ) {
+                    selectedIssueType = nil
+                }
+
+                if summary.missingNameCount > 0 {
+                    FilterChip(
+                        title: "Missing Name",
+                        count: summary.missingNameCount,
+                        isSelected: selectedIssueType == .missingName
+                    ) {
+                        toggleIssueTypeFilter(.missingName)
+                    }
+                }
+
+                if summary.noContactInfoCount > 0 {
+                    FilterChip(
+                        title: "No Contact Info",
+                        count: summary.noContactInfoCount,
+                        isSelected: selectedIssueType == .noContactInfo
+                    ) {
+                        toggleIssueTypeFilter(.noContactInfo)
+                    }
+                }
+
+                if summary.missingPhoneCount > 0 {
+                    FilterChip(
+                        title: "Missing Phone",
+                        count: summary.missingPhoneCount,
+                        isSelected: selectedIssueType == .missingPhone
+                    ) {
+                        toggleIssueTypeFilter(.missingPhone)
+                    }
+                }
+
+                if summary.missingEmailCount > 0 {
+                    FilterChip(
+                        title: "Missing Email",
+                        count: summary.missingEmailCount,
+                        isSelected: selectedIssueType == .missingEmail
+                    ) {
+                        toggleIssueTypeFilter(.missingEmail)
+                    }
+                }
+
+                FilterChip(
+                    title: excludeMissingEmail ? "Show Missing Email" : "Hide Missing Email",
+                    count: summary.missingEmailCount,
+                    isSelected: excludeMissingEmail
+                ) {
+                    excludeMissingEmail.toggle()
+                    if excludeMissingEmail && selectedIssueType == .missingEmail {
+                        selectedIssueType = nil
+                    }
                 }
             }
-
-            Spacer()
         }
     }
 
@@ -547,6 +598,26 @@ struct FilterChip: View {
             .cornerRadius(16)
         }
         .buttonStyle(.plain)
+    }
+}
+
+private struct BulkActionButton: View {
+    let title: String
+    let icon: String
+    let tint: Color
+    let disabled: Bool
+    var role: ButtonRole? = nil
+    let action: () -> Void
+
+    var body: some View {
+        Button(role: role, action: action) {
+            Label(title, systemImage: icon)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(tint)
+        .disabled(disabled)
     }
 }
 

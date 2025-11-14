@@ -3,9 +3,9 @@ import SwiftUI
 import Combine
 
 struct DiagnosticsThresholds {
-    nonisolated(unsafe) static var duplicateDetection: TimeInterval = 0.75
-    nonisolated(unsafe) static var smartGroupGeneration: TimeInterval = 0.5
-    nonisolated(unsafe) static var changeHistoryRefresh: TimeInterval = 1.0
+    static let duplicateDetection: TimeInterval = 0.75
+    static let smartGroupGeneration: TimeInterval = 0.5
+    static let changeHistoryRefresh: TimeInterval = 1.0
 }
 
 @MainActor

@@ -247,51 +247,22 @@ struct GeneralSettingsView: View {
                     subtitle: "Expose developer-focused tooling when needed",
                     accentColor: .gray
                 ) {
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 10) {
                         Toggle("Show developer options", isOn: $showDeveloperSettings)
                         Text("Enable this when you need access to the Developer tab for QA or support.")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
                 }
-                
+
                 SettingsCard(
                     icon: "stethoscope",
                     title: "Diagnostics & Logs",
                     subtitle: "Review recent warnings, errors, and performance notes",
                     accentColor: .gray.opacity(0.8)
                 ) {
-                    VStack(alignment: .leading, spacing: 12) {
-                        if let latest = diagnosticsCenter.entries.first {
-                            HStack {
-                                Label(latest.severity.rawValue.capitalized, systemImage: latest.severity.iconName)
-                                    .foregroundStyle(latest.severity.tint)
-                                Spacer()
-                                Text(latest.timestamp.formatted(date: .omitted, time: .shortened))
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            Text(latest.message)
-                                .font(.subheadline)
-                                .lineLimit(2)
-                            if let metadata = latest.metadata {
-                                Text(metadata)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        } else {
-                            Text("Everything looks clear. We’ll log issues and performance spikes here automatically.")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
-
-                        Button {
-                            showingDiagnostics = true
-                        } label: {
-                            Label("Open Diagnostics Console", systemImage: "arrow.up.right.square")
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(.borderedProminent)
+                    DiagnosticsPreviewCard(entry: diagnosticsCenter.entries.first) {
+                        showingDiagnostics = true
                     }
                 }
             }
@@ -351,6 +322,8 @@ struct GeneralSettingsView: View {
         .sheet(isPresented: $showingDiagnostics) {
             DiagnosticsView()
                 .environmentObject(diagnosticsCenter)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
         }
     }
 
@@ -556,6 +529,62 @@ private struct InfoCallout: View {
     }
 }
 
+private struct DiagnosticsPreviewCard: View {
+    let entry: DiagnosticsCenter.Entry?
+    let onOpen: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            if let entry {
+                HStack {
+                    SeverityBadge(severity: entry.severity)
+                    Spacer()
+                    Text(entry.timestamp.formatted(date: .omitted, time: .shortened))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                Text(entry.message)
+                    .font(.subheadline)
+                    .lineLimit(2)
+                    .foregroundColor(.primary)
+                if let metadata = entry.metadata {
+                    Text(metadata)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            } else {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("All quiet for now.")
+                        .font(.headline)
+                    Text("We’ll surface warnings and slow operations here as they happen.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            Button {
+                onOpen()
+            } label: {
+                Label("Open Diagnostics Console", systemImage: "arrow.up.right.square")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.gray)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [Color.gray.opacity(0.15), Color.gray.opacity(0.05)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+        )
+    }
+}
+
 private struct GeneralSettingsActionButton: View {
     let title: String
     let icon: String
@@ -580,7 +609,7 @@ private struct GeneralSettingsActionButton: View {
             .padding(.vertical, 10)
             .frame(maxWidth: .infinity)
         }
-        .buttonStyle(.bordered)
+        .buttonStyle(.borderedProminent)
     }
 }
 
