@@ -49,14 +49,13 @@ class DataQualityAnalyzer: @unchecked Sendable {
         }
 
         // Check for no contact information
-        if contact.phoneNumbers.isEmpty && contact.emailAddresses.isEmpty {
-            // DEBUG: Log when flagging contact as having no contact info
+        if contact.normalizedPhoneNumbers.isEmpty && contact.normalizedEmailAddresses.isEmpty {
+#if DEBUG
             print("🚨 DEBUG DataQualityAnalyzer - Flagging contact with NO contact info:")
             print("   Contact: \(contact.fullName) (\(contact.id))")
             print("   phoneNumbers.isEmpty: \(contact.phoneNumbers.isEmpty)")
             print("   emailAddresses.isEmpty: \(contact.emailAddresses.isEmpty)")
-            print("   phoneNumbers array: \(contact.phoneNumbers)")
-            print("   emailAddresses array: \(contact.emailAddresses)")
+#endif
 
             issues.append(
                 DataQualityIssue(
@@ -70,7 +69,7 @@ class DataQualityAnalyzer: @unchecked Sendable {
         }
 
         // Check for missing phone
-        if contact.phoneNumbers.isEmpty && !contact.emailAddresses.isEmpty {
+        if contact.normalizedPhoneNumbers.isEmpty && !contact.normalizedEmailAddresses.isEmpty {
             issues.append(
                 DataQualityIssue(
                     contactId: contact.id,
@@ -83,7 +82,7 @@ class DataQualityAnalyzer: @unchecked Sendable {
         }
 
         // Check for missing email
-        if contact.emailAddresses.isEmpty && !contact.phoneNumbers.isEmpty {
+        if contact.normalizedEmailAddresses.isEmpty && !contact.normalizedPhoneNumbers.isEmpty {
             issues.append(
                 DataQualityIssue(
                     contactId: contact.id,
@@ -97,8 +96,8 @@ class DataQualityAnalyzer: @unchecked Sendable {
 
         // Check for incomplete data (no organization when it might be expected)
         if contact.organization == nil &&
-           !contact.phoneNumbers.isEmpty &&
-           !contact.emailAddresses.isEmpty {
+           !contact.normalizedPhoneNumbers.isEmpty &&
+           !contact.normalizedEmailAddresses.isEmpty {
             // This is a suggestion, not an issue
             issues.append(
                 DataQualityIssue(

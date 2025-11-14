@@ -24,6 +24,7 @@ class ContactsManager: ObservableObject {
     static let shared = ContactsManager()
 
     nonisolated(unsafe) private let store = CNContactStore()
+    private lazy var changeHistoryWrapper = ContactChangeHistoryWrapper(store: store)
 
     @Published var authorizationStatus: CNAuthorizationStatus = .notDetermined
     @Published var contacts: [ContactSummary] = []
@@ -37,8 +38,12 @@ class ContactsManager: ObservableObject {
     // Use a dedicated queue for CNContactStore I/O to avoid QoS inversions
     private let contactsQueue = DispatchQueue(label: "com.playablefuture.contactsorganizer.contacts", qos: .utility)
     private let recentActivityDefaultsKey = "recentActivityLog"
+    private let recencyCacheDefaultsKey = "contactRecencyInfoCache"
+    private let changeHistoryTokenDefaultsKey = "contactChangeHistoryAnchor"
     private var contactStoreObserver: NSObjectProtocol?
     private var refreshDebounceWorkItem: DispatchWorkItem?
+    private var contactRecencyInfo: [String: ContactRecencyInfo] = [:]
+    private var changeHistoryAnchor: Data?
     private let editableContactKeys: [CNKeyDescriptor] = [
         CNContactGivenNameKey as CNKeyDescriptor,
         CNContactFamilyNameKey as CNKeyDescriptor,
@@ -77,6 +82,7 @@ class ContactsManager: ObservableObject {
 
     private init() {
         updateAuthorizationStatus()
+        loadRecencyState()
         Task { @MainActor in
             loadRecentActivities()
         }
@@ -203,6 +209,8 @@ class ContactsManager: ObservableObject {
                 }
 
                 do {
+                    self.refreshRecencyInfoFromHistory()
+
                     let keysToFetch: [CNKeyDescriptor] = [
                         CNContactGivenNameKey as CNKeyDescriptor,
                         CNContactFamilyNameKey as CNKeyDescriptor,
@@ -228,7 +236,8 @@ class ContactsManager: ObservableObject {
                     var fetchedContacts: [ContactSummary] = []
 
                     try self.store.enumerateContacts(with: request) { contact, _ in
-                        fetchedContacts.append(ContactSummary(from: contact))
+                        let recency = self.contactRecencyInfo[contact.identifier]
+                        fetchedContacts.append(ContactSummary(from: contact, recencyInfo: recency))
                     }
 
                     let stats = self.calculateStatistics(from: fetchedContacts)
@@ -294,6 +303,23 @@ class ContactsManager: ObservableObject {
             return dataPoints >= 5
         }.count
 
+        let now = Date()
+        let additionCutoff = Calendar.current.date(byAdding: .day, value: -30, to: now) ?? now
+        let updateCutoff = Calendar.current.date(byAdding: .day, value: -14, to: now) ?? now
+
+        let mostRecentAddition = contacts.compactMap { $0.creationDate ?? $0.modificationDate }.max()
+        let mostRecentUpdate = contacts.compactMap { $0.modificationDate }.max()
+
+        let recentlyAddedCount = contacts.filter { contact in
+            guard let created = contact.creationDate ?? contact.modificationDate else { return false }
+            return created >= additionCutoff
+        }.count
+
+        let recentlyUpdatedCount = contacts.filter { contact in
+            guard let modified = contact.modificationDate else { return false }
+            return modified >= updateCutoff
+        }.count
+
         return ContactStatistics(
             totalContacts: totalContacts,
             contactsWithPhone: contactsWithPhone,
@@ -313,7 +339,11 @@ class ContactsManager: ObservableObject {
             contactsWithWebsite: contactsWithWebsite,
             contactsWithNickname: contactsWithNickname,
             contactsWithInstantMessaging: contactsWithIM,
-            highDetailContacts: highDetailContacts
+            highDetailContacts: highDetailContacts,
+            recentlyAddedCount: recentlyAddedCount,
+            recentlyUpdatedCount: recentlyUpdatedCount,
+            mostRecentAddition: mostRecentAddition,
+            mostRecentUpdate: mostRecentUpdate
         )
     }
 
@@ -934,8 +964,13 @@ class ContactsManager: ObservableObject {
                     ]
 
                     let predicate = CNContact.predicateForContactsInGroup(withIdentifier: group.identifier)
+                    self.refreshRecencyInfoFromHistory()
+
                     let contacts = try self.store.unifiedContacts(matching: predicate, keysToFetch: keysToFetch)
-                    let summaries = contacts.map { ContactSummary(from: $0) }
+                    let summaries = contacts.map { contact -> ContactSummary in
+                        let recency = self.contactRecencyInfo[contact.identifier]
+                        return ContactSummary(from: contact, recencyInfo: recency)
+                    }
 
                     continuation.resume(returning: summaries)
                 } catch {
@@ -1326,24 +1361,62 @@ class ContactsManager: ObservableObject {
         )]
     }
 
+    nonisolated private static func evaluateCondition(_ matches: Bool, condition: CustomCriteria.Rule.Condition) -> Bool {
+        switch condition {
+        case .exists:
+            return matches
+        case .notExists:
+            return !matches
+        case .contains:
+            return matches
+        }
+    }
+
+    nonisolated private static func daysThreshold(from value: String?, defaultValue: Int) -> Int {
+        guard let value = value?.trimmingCharacters(in: .whitespacesAndNewlines),
+              let parsed = Int(value),
+              parsed > 0 else {
+            return defaultValue
+        }
+        return parsed
+    }
+
+    nonisolated private static func cutoffDate(daysAgo: Int) -> Date {
+        Calendar.current.date(byAdding: .day, value: -daysAgo, to: Date()) ?? Date.distantPast
+    }
+
+    nonisolated private static func contactDetailScore(_ contact: ContactSummary) -> Int {
+        var dataPoints = 0
+        if !contact.phoneNumbers.isEmpty { dataPoints += 1 }
+        if !contact.emailAddresses.isEmpty { dataPoints += 1 }
+        if contact.organization != nil { dataPoints += 1 }
+        if contact.jobTitle != nil { dataPoints += 1 }
+        if !contact.postalAddresses.isEmpty { dataPoints += 1 }
+        if !contact.socialProfiles.isEmpty { dataPoints += 1 }
+        if !contact.urlAddresses.isEmpty { dataPoints += 1 }
+        if contact.birthday != nil { dataPoints += 1 }
+        return dataPoints
+    }
+
     nonisolated private static func matchesRule(contact: ContactSummary, rule: CustomCriteria.Rule) -> Bool {
         switch rule.field {
         case .hasPhone:
-            return rule.condition == .exists ? !contact.phoneNumbers.isEmpty : contact.phoneNumbers.isEmpty
+            return evaluateCondition(!contact.phoneNumbers.isEmpty, condition: rule.condition)
 
         case .hasEmail:
-            return rule.condition == .exists ? !contact.emailAddresses.isEmpty : contact.emailAddresses.isEmpty
+            return evaluateCondition(!contact.emailAddresses.isEmpty, condition: rule.condition)
 
         case .hasOrganization:
             let hasOrg = contact.organization != nil && !contact.organization!.isEmpty
-            return rule.condition == .exists ? hasOrg : !hasOrg
+            return evaluateCondition(hasOrg, condition: rule.condition)
 
         case .hasPhoto:
-            return rule.condition == .exists ? contact.hasProfileImage : !contact.hasProfileImage
+            return evaluateCondition(contact.hasProfileImage, condition: rule.condition)
 
         case .organizationContains:
-            guard let org = contact.organization, let value = rule.value else { return false }
-            return org.localizedCaseInsensitiveContains(value)
+            guard let value = rule.value, !value.isEmpty else { return false }
+            let contains = (contact.organization ?? "").localizedCaseInsensitiveContains(value)
+            return evaluateCondition(contains, condition: rule.condition)
 
         case .nameContains:
             guard let value = rule.value else { return false }
@@ -1353,7 +1426,7 @@ class ContactsManager: ObservableObject {
 
             // Split name into words and check if any word matches
             let words = name.components(separatedBy: .whitespaces)
-            return words.contains { word in
+            let matches = words.contains { word in
                 // Exact match or starts with search value and isn't too long
                 // (e.g., "Johnny" matches "John", but "Johnson" doesn't)
                 if word == searchValue {
@@ -1365,38 +1438,42 @@ class ContactsManager: ObservableObject {
                 }
                 return false
             }
+            return evaluateCondition(matches, condition: rule.condition)
 
         // Phase 1: Quick wins using existing data
         case .phoneOnly:
-            return !contact.phoneNumbers.isEmpty && contact.emailAddresses.isEmpty
+            return evaluateCondition(!contact.phoneNumbers.isEmpty && contact.emailAddresses.isEmpty, condition: rule.condition)
 
         case .emailOnly:
-            return !contact.emailAddresses.isEmpty && contact.phoneNumbers.isEmpty
+            return evaluateCondition(!contact.emailAddresses.isEmpty && contact.phoneNumbers.isEmpty, condition: rule.condition)
 
         case .noCriticalInfo:
-            return contact.phoneNumbers.isEmpty && contact.emailAddresses.isEmpty
+            return evaluateCondition(contact.phoneNumbers.isEmpty && contact.emailAddresses.isEmpty, condition: rule.condition)
 
         case .multiplePhones:
-            return contact.phoneNumbers.count >= 2
+            return evaluateCondition(contact.phoneNumbers.count >= 2, condition: rule.condition)
 
         case .multipleEmails:
-            return contact.emailAddresses.count >= 2
+            return evaluateCondition(contact.emailAddresses.count >= 2, condition: rule.condition)
 
         // Phase 2: Time-based criteria
         case .recentlyAdded:
-            guard let creationDate = contact.creationDate else { return false }
-            let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: Date())!
-            return creationDate >= thirtyDaysAgo
+            let threshold = daysThreshold(from: rule.value, defaultValue: 30)
+            guard let createdDate = contact.creationDate ?? contact.modificationDate else { return false }
+            let matches = createdDate >= cutoffDate(daysAgo: threshold)
+            return evaluateCondition(matches, condition: rule.condition)
 
         case .recentlyModified:
-            guard let modificationDate = contact.modificationDate else { return false }
-            let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: Date())!
-            return modificationDate >= thirtyDaysAgo
+            let threshold = daysThreshold(from: rule.value, defaultValue: 30)
+            guard let modifiedDate = contact.modificationDate ?? contact.creationDate else { return false }
+            let matches = modifiedDate >= cutoffDate(daysAgo: threshold)
+            return evaluateCondition(matches, condition: rule.condition)
 
         case .staleContact:
-            guard let modificationDate = contact.modificationDate else { return false }
-            let oneYearAgo = Calendar.current.date(byAdding: .year, value: -1, to: Date())!
-            return modificationDate < oneYearAgo
+            let threshold = daysThreshold(from: rule.value, defaultValue: 365)
+            guard let lastActivity = contact.modificationDate ?? contact.creationDate else { return false }
+            let matches = lastActivity < cutoffDate(daysAgo: threshold)
+            return evaluateCondition(matches, condition: rule.condition)
 
         case .birthdayThisMonth:
             guard let birthday = contact.birthday else { return false }
@@ -1404,24 +1481,21 @@ class ContactsManager: ObservableObject {
             let now = Date()
             let birthdayMonth = calendar.component(.month, from: birthday)
             let currentMonth = calendar.component(.month, from: now)
-            return birthdayMonth == currentMonth
+            let matches = birthdayMonth == currentMonth
+            return evaluateCondition(matches, condition: rule.condition)
 
         case .birthdayThisWeek:
             guard let birthday = contact.birthday else { return false }
             let calendar = Calendar.current
             let now = Date()
 
-            // Get current week's start and end dates
-            guard let weekStart = calendar.dateInterval(of: .weekOfYear, for: now)?.start,
-                  let weekEnd = calendar.dateInterval(of: .weekOfYear, for: now)?.end else {
+            guard let weekInterval = calendar.dateInterval(of: .weekOfYear, for: now) else {
                 return false
             }
 
-            // Get birthday's day and month
             let birthdayDay = calendar.component(.day, from: birthday)
             let birthdayMonth = calendar.component(.month, from: birthday)
 
-            // Create this year's birthday date
             var birthdayComponents = DateComponents()
             birthdayComponents.month = birthdayMonth
             birthdayComponents.day = birthdayDay
@@ -1431,32 +1505,32 @@ class ContactsManager: ObservableObject {
                 return false
             }
 
-            // Check if birthday falls within this week
-            return thisYearBirthday >= weekStart && thisYearBirthday < weekEnd
+            let matches = (thisYearBirthday >= weekInterval.start) && (thisYearBirthday < weekInterval.end)
+            return evaluateCondition(matches, condition: rule.condition)
 
         // Phase 3: Social Media & Digital Presence
         case .hasSocialProfile:
-            return rule.condition == .exists ? !contact.socialProfiles.isEmpty : contact.socialProfiles.isEmpty
+            return evaluateCondition(!contact.socialProfiles.isEmpty, condition: rule.condition)
 
         case .hasLinkedIn:
             let hasLinkedIn = contact.socialProfiles.contains { $0.service.lowercased().contains("linkedin") }
-            return rule.condition == .exists ? hasLinkedIn : !hasLinkedIn
+            return evaluateCondition(hasLinkedIn, condition: rule.condition)
 
         case .hasTwitter:
             let hasTwitter = contact.socialProfiles.contains {
                 let service = $0.service.lowercased()
                 return service.contains("twitter") || service.contains("x")
             }
-            return rule.condition == .exists ? hasTwitter : !hasTwitter
+            return evaluateCondition(hasTwitter, condition: rule.condition)
 
         case .multipleSocialProfiles:
-            return contact.socialProfiles.count >= 2
+            return evaluateCondition(contact.socialProfiles.count >= 2, condition: rule.condition)
 
         case .hasWebsite:
-            return rule.condition == .exists ? !contact.urlAddresses.isEmpty : contact.urlAddresses.isEmpty
+            return evaluateCondition(!contact.urlAddresses.isEmpty, condition: rule.condition)
 
         case .hasInstantMessaging:
-            return rule.condition == .exists ? !contact.instantMessageAddresses.isEmpty : contact.instantMessageAddresses.isEmpty
+            return evaluateCondition(!contact.instantMessageAddresses.isEmpty, condition: rule.condition)
 
         case .digitallyConnected:
             // Has at least 2 of: social profiles, instant messaging, or website
@@ -1465,90 +1539,81 @@ class ContactsManager: ObservableObject {
                 !contact.instantMessageAddresses.isEmpty,
                 !contact.urlAddresses.isEmpty
             ].filter { $0 }.count
-            return hasCategories >= 2
+            return evaluateCondition(hasCategories >= 2, condition: rule.condition)
 
         // Phase 3: Geographic & Address
         case .hasAddress:
-            return rule.condition == .exists ? !contact.postalAddresses.isEmpty : contact.postalAddresses.isEmpty
+            return evaluateCondition(!contact.postalAddresses.isEmpty, condition: rule.condition)
 
         case .missingAddress:
-            return contact.postalAddresses.isEmpty
+            return evaluateCondition(contact.postalAddresses.isEmpty, condition: rule.condition)
 
         case .multipleAddresses:
-            return contact.postalAddresses.count >= 2
+            return evaluateCondition(contact.postalAddresses.count >= 2, condition: rule.condition)
 
         case .cityMatches:
-            guard let value = rule.value else { return false }
-            return contact.postalAddresses.contains { $0.localizedCaseInsensitiveContains(value) }
+            guard let value = rule.value, !value.isEmpty else { return false }
+            let matches = contact.postalAddresses.contains { $0.localizedCaseInsensitiveContains(value) }
+            return evaluateCondition(matches, condition: rule.condition)
 
         // Phase 3: Professional Information
         case .hasJobTitle:
             let hasTitle = contact.jobTitle != nil && !contact.jobTitle!.isEmpty
-            return rule.condition == .exists ? hasTitle : !hasTitle
+            return evaluateCondition(hasTitle, condition: rule.condition)
 
         case .hasDepartment:
             let hasDept = contact.departmentName != nil && !contact.departmentName!.isEmpty
-            return rule.condition == .exists ? hasDept : !hasDept
+            return evaluateCondition(hasDept, condition: rule.condition)
 
         case .jobTitleContains:
-            guard let jobTitle = contact.jobTitle, let value = rule.value else { return false }
-            return jobTitle.localizedCaseInsensitiveContains(value)
+            guard let jobTitle = contact.jobTitle, let value = rule.value, !value.isEmpty else { return false }
+            let matches = jobTitle.localizedCaseInsensitiveContains(value)
+            return evaluateCondition(matches, condition: rule.condition)
 
         case .professionalContact:
             // Has organization, job title, and email
             let hasOrg = contact.organization != nil && !contact.organization!.isEmpty
             let hasTitle = contact.jobTitle != nil && !contact.jobTitle!.isEmpty
             let hasEmail = !contact.emailAddresses.isEmpty
-            return hasOrg && hasTitle && hasEmail
+            return evaluateCondition(hasOrg && hasTitle && hasEmail, condition: rule.condition)
 
         case .careerNetwork:
             // Has job title and LinkedIn
             let hasTitle = contact.jobTitle != nil && !contact.jobTitle!.isEmpty
             let hasLinkedIn = contact.socialProfiles.contains { $0.service.lowercased().contains("linkedin") }
-            return hasTitle && hasLinkedIn
+            return evaluateCondition(hasTitle && hasLinkedIn, condition: rule.condition)
 
         // Phase 3: Nickname & Detail Level
         case .hasNickname:
             let hasNick = contact.nickname != nil && !contact.nickname!.isEmpty
-            return rule.condition == .exists ? hasNick : !hasNick
+            return evaluateCondition(hasNick, condition: rule.condition)
 
         case .nicknameContains:
-            guard let nickname = contact.nickname, let value = rule.value else { return false }
-            return nickname.localizedCaseInsensitiveContains(value)
+            guard let nickname = contact.nickname, let value = rule.value, !value.isEmpty else { return false }
+            let matches = nickname.localizedCaseInsensitiveContains(value)
+            return evaluateCondition(matches, condition: rule.condition)
 
         case .highDetailContact:
-            // Count number of non-empty data points
-            var dataPoints = 0
-            if !contact.phoneNumbers.isEmpty { dataPoints += 1 }
-            if !contact.emailAddresses.isEmpty { dataPoints += 1 }
-            if contact.organization != nil { dataPoints += 1 }
-            if contact.jobTitle != nil { dataPoints += 1 }
-            if !contact.postalAddresses.isEmpty { dataPoints += 1 }
-            if !contact.socialProfiles.isEmpty { dataPoints += 1 }
-            if !contact.urlAddresses.isEmpty { dataPoints += 1 }
-            if contact.birthday != nil { dataPoints += 1 }
-            return dataPoints >= 5
+            let matches = contactDetailScore(contact) >= 5
+            return evaluateCondition(matches, condition: rule.condition)
 
         case .basicContact:
-            // Only has 1-2 data points
-            var dataPoints = 0
-            if !contact.phoneNumbers.isEmpty { dataPoints += 1 }
-            if !contact.emailAddresses.isEmpty { dataPoints += 1 }
-            if contact.organization != nil { dataPoints += 1 }
-            return dataPoints <= 2 && dataPoints >= 1
+            let score = contactDetailScore(contact)
+            let matches = score <= 2 && score >= 1
+            return evaluateCondition(matches, condition: rule.condition)
 
         case .businessContact:
             // Has organization, job title, and website
             let hasOrg = contact.organization != nil && !contact.organization!.isEmpty
             let hasTitle = contact.jobTitle != nil && !contact.jobTitle!.isEmpty
             let hasWebsite = !contact.urlAddresses.isEmpty
-            return hasOrg && hasTitle && hasWebsite
+            return evaluateCondition(hasOrg && hasTitle && hasWebsite, condition: rule.condition)
 
         case .personalContact:
             // No organization or job title
             let hasOrg = contact.organization != nil && !contact.organization!.isEmpty
             let hasTitle = contact.jobTitle != nil && !contact.jobTitle!.isEmpty
-            return !hasOrg && !hasTitle
+            return evaluateCondition(!hasOrg && !hasTitle, condition: rule.condition)
         }
     }
 
@@ -1616,19 +1681,19 @@ class ContactsManager: ObservableObject {
             SmartGroupDefinition(
                 name: "Recently Added (Last 30 Days)",
                 groupingType: .custom(CustomCriteria(rules: [
-                    CustomCriteria.Rule(field: .recentlyAdded, condition: .exists)
+                    CustomCriteria.Rule(field: .recentlyAdded, condition: .exists, value: "30")
                 ]))
             ),
             SmartGroupDefinition(
                 name: "Recently Modified (Last 30 Days)",
                 groupingType: .custom(CustomCriteria(rules: [
-                    CustomCriteria.Rule(field: .recentlyModified, condition: .exists)
+                    CustomCriteria.Rule(field: .recentlyModified, condition: .exists, value: "30")
                 ]))
             ),
             SmartGroupDefinition(
                 name: "Stale Contacts (1+ Year)",
                 groupingType: .custom(CustomCriteria(rules: [
-                    CustomCriteria.Rule(field: .staleContact, condition: .exists)
+                    CustomCriteria.Rule(field: .staleContact, condition: .exists, value: "365")
                 ]))
             ),
             SmartGroupDefinition(
@@ -1981,3 +2046,96 @@ extension ContactsManager {
 
 extension ContactsManager: SmartGroupContactPerforming {}
 extension ContactsManager: ManualGroupContactPerforming {}
+
+private extension ContactsManager {
+    func loadRecencyState() {
+        let defaults = UserDefaults.standard
+        if let cachedData = defaults.data(forKey: recencyCacheDefaultsKey),
+           let decoded = try? JSONDecoder().decode([String: ContactRecencyInfo].self, from: cachedData) {
+            contactRecencyInfo = decoded
+        }
+        changeHistoryAnchor = defaults.data(forKey: changeHistoryTokenDefaultsKey)
+    }
+
+    func persistRecencyState(recencyChanged: Bool) {
+        let defaults = UserDefaults.standard
+        if recencyChanged, let cacheData = try? JSONEncoder().encode(contactRecencyInfo) {
+            defaults.set(cacheData, forKey: recencyCacheDefaultsKey)
+        }
+        defaults.set(changeHistoryAnchor, forKey: changeHistoryTokenDefaultsKey)
+    }
+
+    func refreshRecencyInfoFromHistory(retryOnReset: Bool = true) {
+        guard authorizationStatus == .authorized else { return }
+
+        var recencyChanged = false
+        let request = CNChangeHistoryFetchRequest()
+        request.startingToken = changeHistoryAnchor
+        request.shouldUnifyResults = true
+
+        var currentToken: NSData?
+        let events: [CNChangeHistoryEvent]
+        do {
+            events = try changeHistoryWrapper.fetchChangeHistory(
+                with: request,
+                currentHistoryToken: &currentToken
+            ) ?? []
+        } catch let nsError as NSError {
+            handleChangeHistoryError(nsError, retryOnReset: retryOnReset)
+            return
+        }
+
+        for event in events {
+            let now = Date()
+            switch event {
+            case let addEvent as CNChangeHistoryAddContactEvent:
+                contactRecencyInfo[addEvent.contact.identifier] = ContactRecencyInfo(
+                    createdAt: now,
+                    modifiedAt: now
+                )
+                recencyChanged = true
+            case let updateEvent as CNChangeHistoryUpdateContactEvent:
+                let identifier = updateEvent.contact.identifier
+                if var info = contactRecencyInfo[identifier] {
+                    info.updateModified(date: now)
+                    contactRecencyInfo[identifier] = info
+                } else {
+                    contactRecencyInfo[identifier] = ContactRecencyInfo(createdAt: now, modifiedAt: now)
+                }
+                recencyChanged = true
+            case let deleteEvent as CNChangeHistoryDeleteContactEvent:
+                if contactRecencyInfo.removeValue(forKey: deleteEvent.contactIdentifier) != nil {
+                    recencyChanged = true
+                }
+            case _ as CNChangeHistoryDropEverythingEvent:
+                contactRecencyInfo.removeAll()
+                changeHistoryAnchor = nil
+                recencyChanged = true
+            default:
+                break
+            }
+        }
+
+        if let newToken = currentToken as Data? {
+            changeHistoryAnchor = newToken
+        } else {
+            changeHistoryAnchor = store.currentHistoryToken
+        }
+
+        persistRecencyState(recencyChanged: recencyChanged)
+    }
+
+    private func handleChangeHistoryError(_ error: NSError, retryOnReset: Bool) {
+        if error.domain == CNErrorDomain,
+           let code = CNError.Code(rawValue: error.code),
+           code == .changeHistoryExpired,
+           retryOnReset {
+            contactRecencyInfo.removeAll()
+            changeHistoryAnchor = nil
+            persistRecencyState(recencyChanged: true)
+            refreshRecencyInfoFromHistory(retryOnReset: false)
+        } else {
+            print("❌ Change history fetch failed: \(error)")
+        }
+    }
+}

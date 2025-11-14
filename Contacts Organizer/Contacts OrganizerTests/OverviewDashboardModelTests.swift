@@ -22,6 +22,7 @@ final class OverviewDashboardModelTests: XCTestCase {
     }
 
     func testMetricsUpdateWhenStatisticsChange() async {
+        let now = Date()
         let stats = ContactStatistics(
             totalContacts: 42,
             contactsWithPhone: 0,
@@ -41,11 +42,19 @@ final class OverviewDashboardModelTests: XCTestCase {
             contactsWithWebsite: 0,
             contactsWithNickname: 0,
             contactsWithInstantMessaging: 0,
-            highDetailContacts: 0
+            highDetailContacts: 0,
+            recentlyAddedCount: 4,
+            recentlyUpdatedCount: 10,
+            mostRecentAddition: now,
+            mostRecentUpdate: now
         )
         contactsPublisher.statisticsSubject.send(stats)
         await Task.yield()
         XCTAssertEqual(model.totalContacts, 42)
+        XCTAssertEqual(model.recentlyAddedCount, 4)
+        XCTAssertEqual(model.recentlyUpdatedCount, 10)
+        XCTAssertEqual(model.mostRecentAddition, now)
+        XCTAssertEqual(model.mostRecentUpdate, now)
     }
 
     func testDuplicateAndIssueCountsTrackUpdates() async {

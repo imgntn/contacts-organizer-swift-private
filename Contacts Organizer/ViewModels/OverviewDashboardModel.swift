@@ -22,6 +22,10 @@ final class OverviewDashboardModel: ObservableObject {
     @Published private(set) var recentActivities: [RecentActivity] = []
     @Published private(set) var manualGroupCount: Int = 0
     @Published private(set) var showBackupReminder: Bool
+    @Published private(set) var recentlyAddedCount: Int = 0
+    @Published private(set) var recentlyUpdatedCount: Int = 0
+    @Published private(set) var mostRecentAddition: Date?
+    @Published private(set) var mostRecentUpdate: Date?
 
     private let contactsProvider: OverviewContactsProviding
     private let appState: OverviewAppStateProviding
@@ -46,8 +50,15 @@ final class OverviewDashboardModel: ObservableObject {
     private func bind() {
         contactsProvider.statisticsPublisher
             .receive(on: DispatchQueue.main)
-            .map { $0?.totalContacts ?? 0 }
-            .assign(to: &$totalContacts)
+            .sink { [weak self] stats in
+                guard let self else { return }
+                self.totalContacts = stats?.totalContacts ?? 0
+                self.recentlyAddedCount = stats?.recentlyAddedCount ?? 0
+                self.recentlyUpdatedCount = stats?.recentlyUpdatedCount ?? 0
+                self.mostRecentAddition = stats?.mostRecentAddition
+                self.mostRecentUpdate = stats?.mostRecentUpdate
+            }
+            .store(in: &cancellables)
 
         contactsProvider.recentActivitiesPublisher
             .receive(on: DispatchQueue.main)

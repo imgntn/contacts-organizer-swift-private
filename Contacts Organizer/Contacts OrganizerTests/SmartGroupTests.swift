@@ -219,6 +219,88 @@ final class SmartGroupTests: XCTestCase {
         XCTAssertEqual(firstId, "1", "Should be the contact with photo")
     }
 
+    func testRecentlyAddedCriteriaHonorsThreshold() async {
+        let now = Date()
+        let contacts = await MainActor.run {
+            [
+                ContactSummary(
+                    id: "recent",
+                    fullName: "New Contact",
+                    organization: nil,
+                    phoneNumbers: [],
+                    emailAddresses: [],
+                    hasProfileImage: false,
+                    creationDate: Calendar.current.date(byAdding: .day, value: -5, to: now),
+                    modificationDate: now
+                ),
+                ContactSummary(
+                    id: "old",
+                    fullName: "Older Contact",
+                    organization: nil,
+                    phoneNumbers: [],
+                    emailAddresses: [],
+                    hasProfileImage: false,
+                    creationDate: Calendar.current.date(byAdding: .day, value: -90, to: now),
+                    modificationDate: Calendar.current.date(byAdding: .day, value: -60, to: now)
+                )
+            ]
+        }
+        let criteria = await MainActor.run {
+            CustomCriteria(rules: [
+                CustomCriteria.Rule(field: .recentlyAdded, condition: .exists, value: "30")
+            ])
+        }
+        let definition = await MainActor.run {
+            SmartGroupDefinition(name: "Recently Added", groupingType: .custom(criteria))
+        }
+        let manager = await MainActor.run { ContactsManager.shared }
+        let results = await manager.generateSmartGroups(definitions: [definition], using: contacts)
+
+        let ids = await MainActor.run { results.first?.contacts.map { $0.id } ?? [] }
+        XCTAssertEqual(ids, ["recent"])
+    }
+
+    func testStaleContactCriteriaUsesLastActivity() async {
+        let now = Date()
+        let contacts = await MainActor.run {
+            [
+                ContactSummary(
+                    id: "stale",
+                    fullName: "Dormant Contact",
+                    organization: nil,
+                    phoneNumbers: [],
+                    emailAddresses: [],
+                    hasProfileImage: false,
+                    creationDate: Calendar.current.date(byAdding: .day, value: -800, to: now),
+                    modificationDate: Calendar.current.date(byAdding: .day, value: -400, to: now)
+                ),
+                ContactSummary(
+                    id: "active",
+                    fullName: "Active Contact",
+                    organization: nil,
+                    phoneNumbers: [],
+                    emailAddresses: [],
+                    hasProfileImage: false,
+                    creationDate: Calendar.current.date(byAdding: .day, value: -600, to: now),
+                    modificationDate: Calendar.current.date(byAdding: .day, value: -30, to: now)
+                )
+            ]
+        }
+        let criteria = await MainActor.run {
+            CustomCriteria(rules: [
+                CustomCriteria.Rule(field: .staleContact, condition: .exists, value: "365")
+            ])
+        }
+        let definition = await MainActor.run {
+            SmartGroupDefinition(name: "Stale Contacts", groupingType: .custom(criteria))
+        }
+        let manager = await MainActor.run { ContactsManager.shared }
+        let results = await manager.generateSmartGroups(definitions: [definition], using: contacts)
+
+        let ids = await MainActor.run { results.first?.contacts.map { $0.id } ?? [] }
+        XCTAssertEqual(ids, ["stale"])
+    }
+
     // MARK: - Multiple Definitions
 
     func testMultipleDefinitions() async {
@@ -647,4 +729,3 @@ final class SmartGroupTests: XCTestCase {
         XCTAssertGreaterThan(results.count, 0, "Should generate at least some smart groups from 1000 contacts")
     }
 }
-

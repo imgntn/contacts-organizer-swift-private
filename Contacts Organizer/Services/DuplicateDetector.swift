@@ -31,7 +31,7 @@ class DuplicateDetector: @unchecked Sendable {
         // 2. Group by phone numbers
         var phoneMap: [String: [ContactSummary]] = [:]
         for contact in contacts {
-            for phone in contact.phoneNumbers {
+            for phone in contact.normalizedPhoneNumbers {
                 phoneMap[phone, default: []].append(contact)
             }
         }
@@ -39,7 +39,7 @@ class DuplicateDetector: @unchecked Sendable {
         // 3. Group by email addresses
         var emailMap: [String: [ContactSummary]] = [:]
         for contact in contacts {
-            for email in contact.emailAddresses {
+            for email in contact.normalizedEmailAddresses {
                 emailMap[email, default: []].append(contact)
             }
         }
@@ -50,11 +50,13 @@ class DuplicateDetector: @unchecked Sendable {
             let unprocessed = contactsGroup.filter { !processedIds.contains($0.id) }
             if unprocessed.count > 1 {
                 // Check if these contacts ALSO match on phone or email
-                let hasPhoneMatch = unprocessed.allSatisfy { contact in
-                    !contact.phoneNumbers.isEmpty && Set(unprocessed[0].phoneNumbers).intersection(Set(contact.phoneNumbers)).count > 0
+                let referencePhones = Set(unprocessed[0].normalizedPhoneNumbers)
+                let referenceEmails = Set(unprocessed[0].normalizedEmailAddresses)
+                let hasPhoneMatch = !referencePhones.isEmpty && unprocessed.allSatisfy { contact in
+                    !Set(contact.normalizedPhoneNumbers).intersection(referencePhones).isEmpty
                 }
-                let hasEmailMatch = unprocessed.allSatisfy { contact in
-                    !contact.emailAddresses.isEmpty && Set(unprocessed[0].emailAddresses).intersection(Set(contact.emailAddresses)).count > 0
+                let hasEmailMatch = !referenceEmails.isEmpty && unprocessed.allSatisfy { contact in
+                    !Set(contact.normalizedEmailAddresses).intersection(referenceEmails).isEmpty
                 }
 
                 if hasPhoneMatch || hasEmailMatch {
@@ -252,13 +254,13 @@ class DuplicateDetector: @unchecked Sendable {
         }
 
         // Check for same phone number
-        let sharedPhones = Set(contact1.phoneNumbers).intersection(Set(contact2.phoneNumbers))
+        let sharedPhones = Set(contact1.normalizedPhoneNumbers).intersection(Set(contact2.normalizedPhoneNumbers))
         if !sharedPhones.isEmpty {
             return (true, .samePhone, 0.95)
         }
 
         // Check for same email
-        let sharedEmails = Set(contact1.emailAddresses).intersection(Set(contact2.emailAddresses))
+        let sharedEmails = Set(contact1.normalizedEmailAddresses).intersection(Set(contact2.normalizedEmailAddresses))
         if !sharedEmails.isEmpty {
             return (true, .sameEmail, 0.95)
         }

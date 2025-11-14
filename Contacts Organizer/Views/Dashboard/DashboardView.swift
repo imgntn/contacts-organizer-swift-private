@@ -416,6 +416,10 @@ struct OverviewView: View {
                     )
                 }
 
+                if viewModel.totalContacts > 0 {
+                    contactActivitySection
+                }
+
                 if !viewModel.recentActivities.isEmpty {
                     recentActivitySection
                 }
@@ -531,6 +535,51 @@ struct OverviewView: View {
         return formatter
     }()
 
+    private static let recencyRelativeFormatter: RelativeDateTimeFormatter = {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .full
+        return formatter
+    }()
+
+    private var contactActivitySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Label("Contact Activity", systemImage: "calendar.badge.clock")
+                    .responsiveFont(16, weight: .semibold)
+                Spacer()
+            }
+
+            HStack(alignment: .top, spacing: 16) {
+                recencyTile(
+                    title: "Added in the last 30 days",
+                    value: viewModel.recentlyAddedCount,
+                    detail: recencyDetail(
+                        for: viewModel.mostRecentAddition,
+                        fallback: "No additions tracked yet",
+                        verb: "Last added"
+                    ),
+                    icon: "person.badge.plus",
+                    tint: .accentColor
+                )
+
+                recencyTile(
+                    title: "Updated in the last 14 days",
+                    value: viewModel.recentlyUpdatedCount,
+                    detail: recencyDetail(
+                        for: viewModel.mostRecentUpdate,
+                        fallback: "No edits detected yet",
+                        verb: "Last updated"
+                    ),
+                    icon: "square.and.pencil",
+                    tint: .pink
+                )
+            }
+        }
+        .padding(16)
+        .background(Color.secondary.opacity(0.06))
+        .cornerRadius(14)
+    }
+
     private var recentActivitySection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -573,6 +622,52 @@ struct OverviewView: View {
 
     private func relativeTimeDescription(for date: Date) -> String {
         OverviewView.relativeFormatter.localizedString(for: date, relativeTo: Date())
+    }
+
+    private func recencyDetail(for date: Date?, fallback: String, verb: String) -> String {
+        guard let date else { return fallback }
+        let relative = OverviewView.recencyRelativeFormatter.localizedString(for: date, relativeTo: Date())
+        return "\(verb) \(relative)"
+    }
+
+    private func recencyTile(
+        title: String,
+        value: Int,
+        detail: String,
+        icon: String,
+        tint: Color
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                ZStack {
+                    Circle()
+                        .fill(tint.opacity(0.15))
+                        .frame(width: 32, height: 32)
+                    Image(systemName: icon)
+                        .foregroundColor(tint)
+                        .imageScale(.medium)
+                }
+                Text(title)
+                    .responsiveFont(16, weight: .semibold)
+            }
+
+            Text(formattedContactCount(value))
+                .responsiveFont(30, weight: .bold)
+
+            Text(detail)
+                .font(.footnote)
+                .foregroundColor(.secondary)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.secondary.opacity(0.08))
+        )
+    }
+
+    private func formattedContactCount(_ count: Int) -> String {
+        count == 1 ? "1 contact" : "\(count) contacts"
     }
 
     private func openGeneralSettings() {

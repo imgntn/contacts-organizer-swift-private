@@ -37,15 +37,17 @@ struct ContactSummary: Identifiable, Hashable, Sendable {
     let socialProfiles: [SocialProfile]  // Social media profiles
     let instantMessageAddresses: [String] // IM service handles
 
-    init(from contact: CNContact) {
+    init(from contact: CNContact, recencyInfo: ContactRecencyInfo? = nil) {
         self.id = contact.identifier
         self.fullName = CNContactFormatter.string(from: contact, style: .fullName) ?? "No Name"
         self.organization = contact.organizationName.isEmpty ? nil : contact.organizationName
-        self.phoneNumbers = contact.phoneNumbers.map { $0.value.stringValue }
-        self.emailAddresses = contact.emailAddresses.map { $0.value as String }
+        let rawPhoneNumbers = contact.phoneNumbers.map { $0.value.stringValue }
+        self.phoneNumbers = rawPhoneNumbers.filter { !ContactNormalization.normalizePhoneNumber($0).isEmpty }
+        let rawEmailAddresses = contact.emailAddresses.map { $0.value as String }
+        self.emailAddresses = rawEmailAddresses.filter { !ContactNormalization.normalizeEmailAddress($0).isEmpty }
         self.hasProfileImage = contact.imageDataAvailable
-        self.creationDate = contact.dates.first?.value as? Date
-        self.modificationDate = contact.dates.last?.value as? Date
+        self.creationDate = recencyInfo?.createdAt
+        self.modificationDate = recencyInfo?.modifiedAt
         self.birthday = contact.birthday?.date
 
         // Extended contact information
@@ -81,23 +83,13 @@ struct ContactSummary: Identifiable, Hashable, Sendable {
         }
 
         // DEBUG: Log contact data extraction for validation debugging
-        if !phoneNumbers.isEmpty || !emailAddresses.isEmpty {
+#if DEBUG
+        if (!phoneNumbers.isEmpty || !emailAddresses.isEmpty) {
             print("📞 DEBUG ContactSummary - Contact: \(fullName) (\(id))")
             print("   📱 Raw CNContact phones count: \(contact.phoneNumbers.count)")
             print("   📧 Raw CNContact emails count: \(contact.emailAddresses.count)")
-            print("   📱 Extracted phoneNumbers: \(phoneNumbers)")
-            print("   📧 Extracted emailAddresses: \(emailAddresses)")
-
-            // Check for empty strings
-            let emptyPhones = phoneNumbers.filter { $0.trimmingCharacters(in: .whitespaces).isEmpty }
-            let emptyEmails = emailAddresses.filter { $0.trimmingCharacters(in: .whitespaces).isEmpty }
-            if !emptyPhones.isEmpty {
-                print("   ⚠️  Found \(emptyPhones.count) empty phone number(s)")
-            }
-            if !emptyEmails.isEmpty {
-                print("   ⚠️  Found \(emptyEmails.count) empty email address(es)")
-            }
         }
+#endif
     }
 
     // Initializer for testing
@@ -122,8 +114,8 @@ struct ContactSummary: Identifiable, Hashable, Sendable {
         self.id = id
         self.fullName = fullName
         self.organization = organization
-        self.phoneNumbers = phoneNumbers
-        self.emailAddresses = emailAddresses
+        self.phoneNumbers = phoneNumbers.filter { !ContactNormalization.normalizePhoneNumber($0).isEmpty }
+        self.emailAddresses = emailAddresses.filter { !ContactNormalization.normalizeEmailAddress($0).isEmpty }
         self.hasProfileImage = hasProfileImage
         self.creationDate = creationDate
         self.modificationDate = modificationDate
@@ -196,6 +188,54 @@ struct DataQualityIssue: Identifiable, Sendable {
             case .suggestion: return "blue"
             }
         }
+    }
+}
+
+// MARK: - Contact Recency
+
+struct ContactRecencyInfo: Codable, Sendable {
+    var createdAt: Date
+    var modifiedAt: Date
+
+    mutating func updateModified(date: Date) {
+        modifiedAt = date
+    }
+}
+
+// MARK: - Normalization Helpers
+
+enum ContactNormalization {
+    static func normalizePhoneNumber(_ value: String) -> String {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "" }
+
+        let hasPlusPrefix = trimmed.hasPrefix("+")
+        let digits = trimmed.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0) }
+        guard !digits.isEmpty else { return "" }
+
+        var normalized = String(String.UnicodeScalarView(digits))
+        if hasPlusPrefix {
+            normalized = "+" + normalized
+        }
+        return normalized
+    }
+
+    static func normalizeEmailAddress(_ value: String) -> String {
+        value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+}
+
+extension ContactSummary {
+    var normalizedPhoneNumbers: [String] {
+        phoneNumbers
+            .map { ContactNormalization.normalizePhoneNumber($0) }
+            .filter { !$0.isEmpty }
+    }
+
+    var normalizedEmailAddresses: [String] {
+        emailAddresses
+            .map { ContactNormalization.normalizeEmailAddress($0) }
+            .filter { !$0.isEmpty }
     }
 }
 
@@ -444,6 +484,10 @@ struct ContactStatistics {
     let contactsWithNickname: Int
     let contactsWithInstantMessaging: Int
     let highDetailContacts: Int
+    let recentlyAddedCount: Int
+    let recentlyUpdatedCount: Int
+    let mostRecentAddition: Date?
+    let mostRecentUpdate: Date?
 
     var dataQualityScore: Double {
         guard totalContacts > 0 else { return 100.0 }
