@@ -11,6 +11,7 @@ struct DashboardView: View {
     @EnvironmentObject var contactsManager: ContactsManager
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var undoManager: ContactsUndoManager
+    @EnvironmentObject var diagnosticsCenter: DiagnosticsCenter
     @Environment(\.dismiss) private var dismiss
     @State private var selectedTab: DashboardTab? = .overview
     @State private var navigationHistory: [DashboardTab] = []
@@ -42,6 +43,8 @@ struct DashboardView: View {
 
     @State private var sidebarItems: [DashboardTab] = DashboardTab.allCases
     @State private var isReordering: Bool = false
+    @State private var showErrorBanner = false
+    @State private var isShowingDiagnosticsSheet = false
 
     enum DashboardTab: String, CaseIterable, Hashable {
         case overview = "Overview"
@@ -118,35 +121,51 @@ struct DashboardView: View {
             .navigationTitle("Contacts Organizer")
             .frame(minWidth: 200)
         } detail: {
-            detailContent()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .overlay {
-                    if contactsManager.isLoading || isAnalyzing {
-                        ZStack {
-                            Color.black.opacity(0.3)
-                                .ignoresSafeArea()
+            ZStack(alignment: .top) {
+                detailContent()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .overlay {
+                        if contactsManager.isLoading || isAnalyzing {
+                            ZStack {
+                                Color.black.opacity(0.3)
+                                    .ignoresSafeArea()
 
-                            VStack(spacing: 16) {
-                                ProgressView()
-                                    .scaleEffect(1.5)
-                                    .frame(width: 40, height: 40)
+                                VStack(spacing: 16) {
+                                    ProgressView()
+                                        .scaleEffect(1.5)
+                                        .frame(width: 40, height: 40)
 
-                                Text(loadingMessage)
-                                    .font(.headline)
+                                    Text(loadingMessage)
+                                        .font(.headline)
 
-                                if isAnalyzing {
-                                    Text("This may take a moment for large contact lists")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
+                                    if isAnalyzing {
+                                        Text("This may take a moment for large contact lists")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
                                 }
+                                .padding(32)
+                                .background(.ultraThinMaterial)
+                                .cornerRadius(16)
+                                .shadow(radius: 10)
                             }
-                            .padding(32)
-                            .background(.ultraThinMaterial)
-                            .cornerRadius(16)
-                            .shadow(radius: 10)
                         }
                     }
+
+                if showErrorBanner, let errorMessage = contactsManager.errorMessage {
+                    DashboardErrorBanner(
+                        message: errorMessage,
+                        isRetryDisabled: contactsManager.isLoading || isAnalyzing,
+                        onRetry: { Task { await loadData() } },
+                        onDiagnostics: { isShowingDiagnosticsSheet = true },
+                        onDismiss: dismissErrorMessage
+                    )
+                    .padding(.horizontal, 24)
+                    .padding(.top, 16)
+                    .transition(.move(edge: .top).combined(with: .opacity))
                 }
+            }
+            .animation(.spring(response: 0.4, dampingFraction: 0.85), value: showErrorBanner)
         }
         .onAppear {
             // Restore sidebar order if previously saved
@@ -172,6 +191,8 @@ struct DashboardView: View {
                     await loadData()
                 }
             }
+
+            showErrorBanner = contactsManager.errorMessage != nil
         }
         .onChange(of: selectedTab) { oldValue, newValue in
             // Push previous tab into history if it exists and isn't the same as new
@@ -203,6 +224,16 @@ struct DashboardView: View {
                 }
                 .disabled(contactsManager.isLoading || isAnalyzing)
             }
+        }
+        .onChange(of: contactsManager.errorMessage) { _, newValue in
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                showErrorBanner = newValue != nil
+            }
+        }
+        .sheet(isPresented: $isShowingDiagnosticsSheet) {
+            DiagnosticsView()
+                .environmentObject(diagnosticsCenter)
+                .frame(minWidth: 520, minHeight: 420)
         }
     }
 
@@ -275,6 +306,13 @@ struct DashboardView: View {
         if !isReordering {
             setSidebarOrder(sidebarItems.map { $0.rawValue })
         }
+    }
+
+    private func dismissErrorMessage() {
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+            showErrorBanner = false
+        }
+        contactsManager.errorMessage = nil
     }
 }
 
@@ -746,6 +784,63 @@ struct OverviewView: View {
                         .stroke(color.opacity(0.2), lineWidth: 1)
                 )
         )
+    }
+}
+
+// MARK: - Dashboard Error Banner
+
+private struct DashboardErrorBanner: View {
+    let message: String
+    let isRetryDisabled: Bool
+    let onRetry: () -> Void
+    let onDiagnostics: () -> Void
+    let onDismiss: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 10) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundColor(.orange)
+                Text("We couldn’t refresh your contacts")
+                    .font(.headline)
+                Spacer(minLength: 12)
+                Button(role: .cancel, action: onDismiss) {
+                    Image(systemName: "xmark.circle.fill")
+                        .imageScale(.large)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+
+            Text(message)
+                .font(.callout)
+                .foregroundColor(.primary)
+
+            HStack(spacing: 12) {
+                Button(action: onRetry) {
+                    Label("Try Again", systemImage: "arrow.clockwise")
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(isRetryDisabled)
+
+                Button(action: onDiagnostics) {
+                    Label("View Diagnostics", systemImage: "waveform.path.ecg")
+                }
+                .buttonStyle(.bordered)
+
+                Spacer()
+            }
+        }
+        .padding(18)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.orange.opacity(0.12))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Color.orange.opacity(0.35), lineWidth: 1)
+                )
+        )
+        .shadow(color: Color.black.opacity(0.08), radius: 12, x: 0, y: 8)
     }
 }
 

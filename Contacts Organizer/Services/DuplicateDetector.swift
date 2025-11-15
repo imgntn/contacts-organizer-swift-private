@@ -129,12 +129,12 @@ class DuplicateDetector: @unchecked Sendable {
             let duration = Date().timeIntervalSince(startTime)
             Task { @MainActor in
                 PrivacyMonitorService.shared.recordDuplicateDetection(duration: duration)
+                DiagnosticsCenter.logPerformance(
+                    operation: operationName,
+                    duration: duration,
+                    threshold: DiagnosticsThresholds.duplicateDetection
+                )
             }
-            DiagnosticsCenter.logPerformance(
-                operation: operationName,
-                duration: duration,
-                threshold: DiagnosticsThresholds.duplicateDetection
-            )
             return duplicateGroups.sorted { $0.confidence > $1.confidence }
         }
 
@@ -184,12 +184,12 @@ class DuplicateDetector: @unchecked Sendable {
             let duration = Date().timeIntervalSince(startTime)
             Task { @MainActor in
                 PrivacyMonitorService.shared.recordDuplicateDetection(duration: duration)
+                DiagnosticsCenter.logPerformance(
+                    operation: operationName,
+                    duration: duration,
+                    threshold: DiagnosticsThresholds.duplicateDetection
+                )
             }
-            DiagnosticsCenter.logPerformance(
-                operation: operationName,
-                duration: duration,
-                threshold: DiagnosticsThresholds.duplicateDetection
-            )
             return duplicateGroups.sorted { $0.confidence > $1.confidence }
         }
 
@@ -248,12 +248,12 @@ class DuplicateDetector: @unchecked Sendable {
         let duration = Date().timeIntervalSince(startTime)
         Task { @MainActor in
             PrivacyMonitorService.shared.recordDuplicateDetection(duration: duration)
+            DiagnosticsCenter.logPerformance(
+                operation: operationName,
+                duration: duration,
+                threshold: DiagnosticsThresholds.duplicateDetection
+            )
         }
-        DiagnosticsCenter.logPerformance(
-            operation: operationName,
-            duration: duration,
-            threshold: DiagnosticsThresholds.duplicateDetection
-        )
         return duplicateGroups.sorted { $0.confidence > $1.confidence }
     }
 
@@ -384,3 +384,4 @@ struct DuplicateAnalysis {
     let phoneMatches: Int
     let emailMatches: Int
 }
+

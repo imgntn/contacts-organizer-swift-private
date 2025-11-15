@@ -8,6 +8,9 @@
 import SwiftUI
 import Contacts
 import ApplicationServices
+#if os(macOS)
+import AppKit
+#endif
 
 struct GroupsView: View {
     @EnvironmentObject var contactsManager: ContactsManager
@@ -31,6 +34,7 @@ struct GroupsView: View {
     @State private var selectedGroupForModal: SmartGroupResult?
     @AppStorage("smartGroupSavedFilters") private var savedFiltersRaw: String = "[]"
     @State private var savedFilters: [String] = []
+    @State private var smartGroupSearchIndex: [UUID: SmartGroupSearchMetadata] = [:]
 
     init(initialTab: GroupTab = .smart, targetSmartGroupName: Binding<String?>) {
         self._targetSmartGroupName = targetSmartGroupName
@@ -148,18 +152,17 @@ struct GroupsView: View {
     }
 
     private var filteredSmartGroups: [SmartGroupResult] {
-        if searchText.isEmpty {
+        let query = trimmedSearchText
+        guard !query.isEmpty else {
             return smartGroupResults
         }
+        let queryTokens = SmartGroupSearchIndexBuilder.queryTokens(from: query)
+        guard !queryTokens.isEmpty else {
+            return smartGroupResults
+        }
+
         return smartGroupResults.filter { result in
-            // Match group name
-            if result.groupName.localizedCaseInsensitiveContains(searchText) {
-                return true
-            }
-            // Match any contact name in the group
-            return result.contacts.contains { contact in
-                contact.fullName.localizedCaseInsensitiveContains(searchText)
-            }
+            smartGroupNameMatches(result, tokens: queryTokens)
         }
     }
 
@@ -171,26 +174,14 @@ struct GroupsView: View {
 
                 Divider()
 
-                // Search bar
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(.secondary)
-                    TextField("Search groups...", text: $searchText)
-                        .textFieldStyle(.plain)
-                    if !searchText.isEmpty {
-                        Button(action: { searchText = "" }) {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.secondary)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                .padding(.horizontal, 24)
-                .padding(.vertical, 12)
-                .background(Color.secondary.opacity(0.05))
+                GroupsSearchBar(text: $searchText)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
 
                 if groupTab == .smart {
                     savedFiltersBar
+                        .padding(.horizontal, 24)
+                        .padding(.bottom, 8)
                 }
 
                 Divider()
@@ -435,6 +426,23 @@ struct GroupsView: View {
         searchText = filter
     }
 
+    private func rebuildSmartGroupIndex(with results: [SmartGroupResult]) {
+        Task.detached(priority: .utility) {
+            let index = SmartGroupSearchIndexBuilder.buildIndex(from: results)
+            await MainActor.run {
+                self.smartGroupSearchIndex = index
+            }
+        }
+    }
+
+    private func smartGroupNameMatches(_ result: SmartGroupResult, tokens: [String]) -> Bool {
+        guard !tokens.isEmpty else { return true }
+        if let metadata = smartGroupSearchIndex[result.id] {
+            return metadata.matches(queryTokens: tokens)
+        }
+        let lowercasedName = result.groupName.lowercased()
+        return tokens.allSatisfy { lowercasedName.contains($0) }
+    }
 
     @ViewBuilder
     private var manualGroupsContent: some View {
@@ -610,6 +618,7 @@ struct GroupsView: View {
         defer { isLoadingSmartGroups = false }
         let results = await contactsManager.generateSmartGroups(definitions: ContactsManager.defaultSmartGroups)
         smartGroupResults = results
+        rebuildSmartGroupIndex(with: results)
     }
 
     @MainActor
@@ -707,6 +716,121 @@ struct GroupsView: View {
         }
     }
 
+}
+
+private struct GroupsSearchBar: View {
+    @Binding var text: String
+
+    var body: some View {
+        #if os(macOS)
+        NativeSearchFieldRepresentable(text: $text, prompt: "Search groups")
+            .frame(minHeight: 34)
+        #else
+        HStack {
+            Image(systemName: "magnifyingglass")
+                .foregroundColor(.secondary)
+            TextField("Search groups...", text: $text)
+                .textFieldStyle(.roundedBorder)
+            if !text.isEmpty {
+                Button(action: { text = "" }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 10).fill(Color.secondary.opacity(0.08))
+        )
+        #endif
+    }
+}
+
+#if os(macOS)
+private struct NativeSearchFieldRepresentable: NSViewRepresentable {
+    @Binding var text: String
+    var prompt: String
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    func makeNSView(context: Context) -> NSSearchField {
+        let field = NSSearchField()
+        field.placeholderString = prompt
+        field.delegate = context.coordinator
+        field.sendsWholeSearchString = false
+        field.translatesAutoresizingMaskIntoConstraints = false
+        field.controlSize = .large
+        field.focusRingType = .default
+        return field
+    }
+
+    func updateNSView(_ nsView: NSSearchField, context: Context) {
+        if nsView.stringValue != text {
+            nsView.stringValue = text
+        }
+    }
+
+    final class Coordinator: NSObject, NSSearchFieldDelegate {
+        var parent: NativeSearchFieldRepresentable
+
+        init(_ parent: NativeSearchFieldRepresentable) {
+            self.parent = parent
+        }
+
+        func controlTextDidChange(_ notification: Notification) {
+            guard let field = notification.object as? NSSearchField else { return }
+            parent.text = field.stringValue
+        }
+    }
+}
+#endif
+
+private struct SmartGroupSearchMetadata {
+    let tokens: [String]
+
+    func matches(queryTokens: [String]) -> Bool {
+        guard !queryTokens.isEmpty else { return true }
+        return queryTokens.allSatisfy { query in
+            tokens.contains(where: { $0.contains(query) })
+        }
+    }
+}
+
+private enum SmartGroupSearchIndexBuilder {
+    private static let splitCharacters = CharacterSet.alphanumerics.inverted
+
+    static func buildIndex(from results: [SmartGroupResult], maxContactsPerGroup: Int = 40) -> [UUID: SmartGroupSearchMetadata] {
+        var index: [UUID: SmartGroupSearchMetadata] = [:]
+        for result in results {
+            var tokens = tokenize(result.groupName)
+
+            if !result.contacts.isEmpty {
+                // Index only a subset of contact names per group to keep filtering cheap.
+                for contact in result.contacts.prefix(maxContactsPerGroup) {
+                    tokens.append(contentsOf: tokenize(contact.fullName))
+                }
+            }
+
+            let uniqueTokens = Array(Set(tokens))
+            index[result.id] = SmartGroupSearchMetadata(tokens: uniqueTokens)
+        }
+        return index
+    }
+
+    static func queryTokens(from searchText: String) -> [String] {
+        tokenize(searchText)
+    }
+
+    private static func tokenize(_ text: String) -> [String] {
+        text
+            .lowercased()
+            .components(separatedBy: splitCharacters)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+    }
 }
 
 // MARK: - Smart Group Tile (Compact View)
